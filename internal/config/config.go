@@ -85,6 +85,21 @@ func getEnv(key, defaultValue string) string {
 	return defaultValue
 }
 
+// time.Duration `os.LookupEnv` wrapper with support for default value specs
+/*
+	The env variable could be something like `2h` or `30m` or `1000ms` or something like that
+	this method will take that value, convert it into a `time` friendly format
+
+	here are all the time units:
+	* "ns"
+	* "us"
+	* "µs"
+	* "μs"
+	* "ms"
+	* "s"
+	* "m"
+	* "h"
+*/
 func getDurationEnv(key string, defaultValue time.Duration) time.Duration {
 	if value, exists := os.LookupEnv(key); exists {
 		if duration, err := time.ParseDuration(value); err == nil {
@@ -94,6 +109,11 @@ func getDurationEnv(key string, defaultValue time.Duration) time.Duration {
 	return defaultValue
 }
 
+// int `os.LookupEnv` wrapper with support for default value specs
+/*
+	It would make sense to format it like export RATE_LIMIT_REQUESTS=100 where this would easily ensure that it isn't
+	trying to work with "100" as a string or something.
+*/
 func getIntEnv(key string, defaultValue int) int {
 	if value, exists := os.LookupEnv(key); exists {
 		if intValue, err := strconv.Atoi(value); err == nil {
@@ -103,6 +123,12 @@ func getIntEnv(key string, defaultValue int) int {
 	return defaultValue
 }
 
+// bool `os.LookupEnv` wrapper with support for default value specs
+/*
+	This method works with t, true, 1, f, false, 0 (case insensitive)
+	you can do something like export DEBUG_MODE=true and that will work as expected
+	(alternatively, you could do DEBUG_MODE=F and that would return false as the value)
+*/
 func getBoolEnv(key string, defaultValue bool) bool {
 	if value, exists := os.LookupEnv(key); exists {
 		if boolValue, err := strconv.ParseBool(value); err == nil {
@@ -112,6 +138,12 @@ func getBoolEnv(key string, defaultValue bool) bool {
 	return defaultValue
 }
 
+// slice `os.LookupEnv` wrapper with support for default value specs
+/*
+	This method takes in a comma-separated string and turns it into a slice of individual strings
+	export CORS_ORIGINS="http://localhost:3000,http://website.com" would be a slice of len 2
+
+*/
 func getSliceEnv(key string, defaultValue []string) []string {
 	if value, exists := os.LookupEnv(key); exists {
 		return strings.Split(value, ",")
