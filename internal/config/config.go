@@ -1,3 +1,7 @@
+/// config.go is a file that provides the primary, persistent settings for the application. We load the configurations in cmd/api/main.go primarily to ensure that services can easily import settings.
+/// This file loads in environment variables with default fallback values. Feel free to change defaults, but ensure that you do not expose sensitive values in version controlled files.
+/// If you save the env variables securely and match the key names, you can leverage this file safely.
+
 package config
 
 import (
@@ -42,6 +46,8 @@ type Config struct {
 		Requests int
 		Duration time.Duration
 	}
+
+	// feel free to add any additional service settings, such as Redis, message queueing, etc.
 }
 
 func Load() *Config {
