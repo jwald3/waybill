@@ -16,24 +16,32 @@ type DB struct {
 	*sql.DB
 }
 
+// utilize the config file to load an instance of DB with defined settings
 func NewPostgresConnection(cfg config.Config) (*DB, error) {
 	dsn := cfg.GetDSN()
 
+	// uses the DSN we build using the config class to open the connection with the postgres engine. the first arg will be the engine you're using (postgres, mysql, etc.)
 	db, err := sql.Open("postgres", dsn)
 	if err != nil {
 		return nil, fmt.Errorf("error opening database: %w", err)
 	}
 
+	// use all of the predefined values as found in the config file
 	db.SetMaxOpenConns(cfg.Database.MaxOpenConns)
 	db.SetMaxIdleConns(cfg.Database.MaxIdleConns)
 	db.SetConnMaxLifetime(cfg.Database.ConnMaxLifetime)
 
+	// this bit is a "sanity check" to make sure that the connection works.
+	// If the configurations aren't correct, this will throw an error.
+	// Feel free to remove or comment out after ensuring the connection works
+	database := &DB{db}
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
-	if err := db.PingContext(ctx); err != nil {
+	if err := database.HealthCheck(ctx); err != nil {
 		return nil, fmt.Errorf("error connecting to the database: %w", err)
 	}
+	// end sanity check
 
 	return &DB{db}, nil
 }
@@ -42,6 +50,7 @@ type Transaction struct {
 	*sql.Tx
 }
 
+// creates a transaction used
 func (db *DB) BeginTx(ctx context.Context) (*Transaction, error) {
 	tx, err := db.DB.BeginTx(ctx, &sql.TxOptions{
 		Isolation: sql.LevelSerializable,
@@ -135,10 +144,15 @@ func (db *DB) QueryContext(ctx context.Context, query string, args ...any) (*sql
 	return rows, nil
 }
 
+// leverages `DB.QueryRowContext` to populate a SQL query string by forwarding a variadic number of arguments.
+// we
 func (db *DB) QueryRowContext(ctx context.Context, query string, args ...any) *sql.Row {
 	return db.DB.QueryRowContext(ctx, query, args...)
 }
 
+// a (non-exhaustive) mapper between common postgres error codes and a neatly-formatted error message
+// you can find more error codes here: https://www.postgresql.org/docs/current/errcodes-appendix.html
+// (skipped codes are uncommon errors or errors that may not be applicable based on operations used)
 func formatPostgresError(err *pq.Error) error {
 	switch err.Code {
 	case "23505":

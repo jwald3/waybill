@@ -157,6 +157,7 @@ func getSliceEnv(key string, defaultValue []string) []string {
 	return defaultValue
 }
 
+// creates the database connection string using the config object
 func (c *Config) GetDSN() string {
 	return fmt.Sprintf(
 		"host=%s port=%s user=%s password=%s dbname=%s sslmode=%s",

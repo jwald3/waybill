@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/jwald3/go_rest_template/internal/database"
 	"github.com/jwald3/go_rest_template/internal/domain"
 )
 
@@ -15,11 +16,20 @@ type userRepository struct {
 
 type UserRepository interface {
 	Create(ctx context.Context, user *domain.User) error
+	CreateTx(ctx context.Context, tx *database.Transaction, user *domain.User) error
+
 	GetByID(ctx context.Context, id int64) (*domain.User, error)
+
 	Update(ctx context.Context, user *domain.User) error
+	UpdateTx(ctx context.Context, tx *database.Transaction, user *domain.User) error
+
 	Delete(ctx context.Context, id int64) error
+	DeleteTx(ctx context.Context, tx *database.Transaction, id int64) error
+
 	List(ctx context.Context, limit, offset int) ([]*domain.User, error)
+
 	ExistsByEmail(ctx context.Context, email string) (bool, error)
+	ExistsByEmailTx(ctx context.Context, tx *database.Transaction, email string) (bool, error)
 }
 
 func NewUserRepository(db *sql.DB) UserRepository {
@@ -35,6 +45,31 @@ func (r *userRepository) Create(ctx context.Context, user *domain.User) error {
 
 	now := time.Now()
 	err := r.db.QueryRowContext(ctx, query,
+		user.Email,
+		user.Password.Hash(),
+		user.Status,
+		now,
+		now,
+	).Scan(&user.ID)
+
+	if err != nil {
+		return fmt.Errorf("failed to create user: %w", err)
+	}
+
+	user.CreatedAt = now
+	user.UpdatedAt = now
+	return nil
+}
+
+func (r *userRepository) CreateTx(ctx context.Context, tx *database.Transaction, user *domain.User) error {
+	query := `
+		INSERT INTO users (email, password_hash, status, created_at, updated_at)
+		VALUES ($1, $2, $3, $4, $5)
+		RETURNING id
+	`
+
+	now := time.Now()
+	err := tx.QueryRowContext(ctx, query,
 		user.Email,
 		user.Password.Hash(),
 		user.Status,
@@ -110,6 +145,30 @@ func (r *userRepository) Update(ctx context.Context, user *domain.User) error {
 	return nil
 }
 
+func (r *userRepository) UpdateTx(ctx context.Context, tx *database.Transaction, user *domain.User) error {
+	query := `
+		UPDATE users
+		SET email = $1, password_hash = $2, status = $3, updated_at = $4
+		WHERE id = $5
+	`
+
+	now := time.Now()
+	_, err := tx.ExecContext(ctx, query,
+		user.Email,
+		user.Password.Hash(),
+		user.Status,
+		now,
+		user.ID,
+	)
+
+	if err != nil {
+		return fmt.Errorf("failed to update user: %w", err)
+	}
+
+	user.UpdatedAt = now
+	return nil
+}
+
 func (r *userRepository) Delete(ctx context.Context, id int64) error {
 	query := `
 		DELETE FROM users
@@ -117,6 +176,19 @@ func (r *userRepository) Delete(ctx context.Context, id int64) error {
 	`
 
 	_, err := r.db.ExecContext(ctx, query, id)
+	if err != nil {
+		return fmt.Errorf("failed to delete user: %w", err)
+	}
+	return nil
+}
+
+func (r *userRepository) DeleteTx(ctx context.Context, tx *database.Transaction, id int64) error {
+	query := `
+		DELETE FROM users
+		WHERE id = $1
+	`
+
+	_, err := tx.ExecContext(ctx, query, id)
 	if err != nil {
 		return fmt.Errorf("failed to delete user: %w", err)
 	}
@@ -171,6 +243,20 @@ func (r *userRepository) ExistsByEmail(ctx context.Context, email string) (bool,
 	`
 	var count int
 	err := r.db.QueryRowContext(ctx, query, email).Scan(&count)
+	if err != nil {
+		return false, fmt.Errorf("failed to check email existence: %w", err)
+	}
+	return count > 0, nil
+}
+
+func (r *userRepository) ExistsByEmailTx(ctx context.Context, tx *database.Transaction, email string) (bool, error) {
+	query := `
+		SELECT COUNT(*)
+		FROM users
+		WHERE email = $1
+	`
+	var count int
+	err := tx.QueryRowContext(ctx, query, email).Scan(&count)
 	if err != nil {
 		return false, fmt.Errorf("failed to check email existence: %w", err)
 	}

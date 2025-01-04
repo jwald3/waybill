@@ -19,6 +19,11 @@ import (
 	"go.uber.org/zap"
 )
 
+var (
+	usersBase   = "/api/v1/users"
+	usersWithId = "/api/v1/users/{id}"
+)
+
 func main() {
 	cfg := config.Load()
 
@@ -33,17 +38,17 @@ func main() {
 
 	userRepo := repository.NewUserRepository(db.DB)
 
-	userService := service.NewUserService(userRepo)
+	userService := service.NewUserService(db, userRepo)
 
 	userHandler := handler.NewUserHandler(userService)
 
 	router := mux.NewRouter()
 
-	router.HandleFunc("/api/v1/users", userHandler.List).Methods(http.MethodGet)
-	router.HandleFunc("/api/v1/users", userHandler.Create).Methods(http.MethodPost)
-	router.HandleFunc("/api/v1/users/{id}", userHandler.Update).Methods(http.MethodPut)
-	router.HandleFunc("/api/v1/users/{id}", userHandler.Get).Methods(http.MethodGet)
-	router.HandleFunc("/api/v1/users/{id}", userHandler.Delete).Methods(http.MethodDelete)
+	router.HandleFunc(usersBase, userHandler.List).Methods(http.MethodGet)
+	router.HandleFunc(usersBase, userHandler.Create).Methods(http.MethodPost)
+	router.HandleFunc(usersWithId, userHandler.Update).Methods(http.MethodPut)
+	router.HandleFunc(usersWithId, userHandler.Get).Methods(http.MethodGet)
+	router.HandleFunc(usersWithId, userHandler.Delete).Methods(http.MethodDelete)
 
 	server := &http.Server{
 		Addr:         fmt.Sprintf("%s:%s", cfg.Server.Host, cfg.Server.Port),
