@@ -5,7 +5,6 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
-	"strings"
 	"time"
 
 	"github.com/jwald3/go_rest_template/internal/config"
@@ -50,7 +49,7 @@ type Transaction struct {
 	*sql.Tx
 }
 
-// creates a transaction used
+// begins a new transaction that will be terminated after success (with a commit) or failure (with a rollback). This function focuses solely on getting a working transaction up and running
 func (db *DB) BeginTx(ctx context.Context) (*Transaction, error) {
 	tx, err := db.DB.BeginTx(ctx, &sql.TxOptions{
 		Isolation: sql.LevelSerializable,
@@ -63,19 +62,27 @@ func (db *DB) BeginTx(ctx context.Context) (*Transaction, error) {
 	return &Transaction{tx}, nil
 }
 
+// the function we use to perform transactions within the service layer. this code allows you to start a transaction, use functions within that same sequence, and either rollback if
+// an error occurred or commit if everything was successful.
 func (db *DB) ExecuteTx(ctx context.Context, fn func(*Transaction) error) error {
 	tx, err := db.BeginTx(ctx)
 	if err != nil {
 		return err
 	}
 
+	// catch any panics using recover, perform the rollback to preserve DB integrity, then push the panic back out
+	//
 	defer func() {
+		// capture any panics. If this catches a panic, perform the rollback first
+		// this function is here to catch unexpected runtime errors
 		if p := recover(); p != nil {
 			_ = tx.Rollback()
 			panic(p)
 		}
 	}()
 
+	// attempt to perform the callback function, handling any errors with a rollback
+	// this function is here to catch errors with the input (logic violations, invalid queries, etc.)
 	if err := fn(tx); err != nil {
 		if rbErr := tx.Rollback(); rbErr != nil {
 			return fmt.Errorf("error rolling back: %v (original error: %w)", rbErr, err)
@@ -83,6 +90,7 @@ func (db *DB) ExecuteTx(ctx context.Context, fn func(*Transaction) error) error 
 		return err
 	}
 
+	// assuming that everything within the transaction succeeded, attempt to commit all changes.
 	if err := tx.Commit(); err != nil {
 		return fmt.Errorf("error committing: %w", err)
 	}
@@ -94,25 +102,12 @@ func (db *DB) HealthCheck(ctx context.Context) error {
 	ctx, cancel := context.WithTimeout(ctx, 1*time.Second)
 	defer cancel()
 
+	// attempt to ping the context to ensure the database connection succeeded
 	if err := db.PingContext(ctx); err != nil {
 		return fmt.Errorf("database health check failed: %w", err)
 	}
 
 	return nil
-}
-
-func (db *DB) PrepareNamedQuery(query string, params map[string]any) (string, []any, error) {
-	paramCount := 1
-	var values []any
-
-	for key, value := range params {
-		param := fmt.Sprintf(":%s", key)
-		query = strings.Replace(query, param, fmt.Sprintf("$%d", paramCount), 1)
-		values = append(values, value)
-		paramCount++
-	}
-
-	return query, values, nil
 }
 
 func (db *DB) ExecContext(ctx context.Context, query string, args ...any) (sql.Result, error) {
@@ -133,6 +128,8 @@ func (db *DB) ExecContext(ctx context.Context, query string, args ...any) (sql.R
 	return result, nil
 }
 
+// a wrapper of `db.DB.QueryContext` that formats postgres errors neatly in case of errors. Otherwise, this returns the
+// resulting rows from the provided SQL query string
 func (db *DB) QueryContext(ctx context.Context, query string, args ...any) (*sql.Rows, error) {
 	rows, err := db.DB.QueryContext(ctx, query, args...)
 	if err != nil {
@@ -145,7 +142,6 @@ func (db *DB) QueryContext(ctx context.Context, query string, args ...any) (*sql
 }
 
 // leverages `DB.QueryRowContext` to populate a SQL query string by forwarding a variadic number of arguments.
-// we
 func (db *DB) QueryRowContext(ctx context.Context, query string, args ...any) *sql.Row {
 	return db.DB.QueryRowContext(ctx, query, args...)
 }
