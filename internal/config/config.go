@@ -13,6 +13,7 @@ import (
 )
 
 type Config struct {
+	// include any additional properties needed for utilizing the server itself
 	Server struct {
 		Port         string
 		Host         string
@@ -21,6 +22,8 @@ type Config struct {
 		IdleTimeout  time.Duration
 	}
 
+	// these database configurations should be mostly standard across SQL dialects, but any
+	// additional information needed for establishing an effective connection with the db should be stored here
 	Database struct {
 		Host            string
 		Port            string
@@ -33,6 +36,8 @@ type Config struct {
 		ConnMaxLifetime time.Duration
 	}
 
+	// application-specific logic, i.e., what version of the app you're running on
+	// this is less about the database or server and more about the actual application itself
 	App struct {
 		Environment string
 		LogLevel    string
