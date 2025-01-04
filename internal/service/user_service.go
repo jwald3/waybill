@@ -24,13 +24,19 @@ type userService struct {
 
 func NewUserService(db *database.DB, userRepo repository.UserRepository) UserService {
 	return &userService{
+		// we include the database in the userService so we have access to the transaction methods.
+		// if you do not need transaction support, do not worry about including this
 		db:       db,
 		userRepo: userRepo,
 	}
 }
 
 func (s *userService) Create(ctx context.Context, user *domain.User) error {
+	// some routes' logic will require a series of actions to occur within a transaction in an all-or-nothing type of payload.
+	// either all items within the transaction pass and are saved or none are saved and any changes are rolled back. This type of
+	// architecture makes the most sense when you're including auditing or changing multiple resources in one sequence.
 	return s.db.ExecuteTx(ctx, func(tx *database.Transaction) error {
+
 		exists, err := s.userRepo.ExistsByEmailTx(ctx, tx, user.Email)
 
 		if err != nil {
@@ -41,9 +47,12 @@ func (s *userService) Create(ctx context.Context, user *domain.User) error {
 			return fmt.Errorf("email %s already in use", user.Email)
 		}
 
+		// we use the "transaction-friendly" method to ensure the action occurs along the same strand as all other transaction members
 		if err := s.userRepo.CreateTx(ctx, tx, user); err != nil {
 			return fmt.Errorf("failed to create user: %w", err)
 		}
+
+		// here is where you could add additional transaction members, such as updating an audit log, performing external services, etc.
 
 		return nil
 	})
@@ -71,6 +80,8 @@ func (s *userService) Update(ctx context.Context, user *domain.User) error {
 			return fmt.Errorf("failed to update user: %w", err)
 		}
 
+		// additional transaction members here...
+
 		return nil
 	})
 }
@@ -86,6 +97,8 @@ func (s *userService) Delete(ctx context.Context, id int64) error {
 		if err := s.userRepo.DeleteTx(ctx, tx, id); err != nil {
 			return fmt.Errorf("failed to delete user")
 		}
+
+		// additional transaction members here...
 
 		return nil
 	})

@@ -72,7 +72,7 @@ func (h *UserHandler) Create(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err := h.userService.Create(r.Context(), user); err != nil {
-		WriteJSON(w, http.StatusInternalServerError, Response{Error: "failed to create user"})
+		WriteJSON(w, http.StatusInternalServerError, Response{Error: err.Error()})
 		return
 	}
 
