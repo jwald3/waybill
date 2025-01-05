@@ -5,6 +5,7 @@ import (
 	"go.uber.org/zap/zapcore"
 )
 
+// take the env variable from the config file and map it into the value zap uses
 func New(level string) *zap.Logger {
 	config := zap.NewProductionConfig()
 	switch level {
