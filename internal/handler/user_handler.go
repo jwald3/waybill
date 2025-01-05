@@ -26,16 +26,7 @@ type ListUsersResponse struct {
 }
 
 func requestToDomain(req UserRequest) (*domain.User, error) {
-	pass, err := domain.NewPassword(req.Password)
-	if err != nil {
-		return nil, err
-	}
-
-	return &domain.User{
-		Email:    req.Email,
-		Password: pass,
-		Status:   domain.Status(req.Status),
-	}, nil
+	return domain.NewUser(req.Email, req.Password)
 }
 
 func domainToResponse(u *domain.User) UserResponse {
@@ -66,6 +57,8 @@ func (h *UserHandler) Create(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// by using the `requestToDomain` function, you're leveraging the constructor that hashes the
+	// password and assigns the default status
 	user, err := requestToDomain(req)
 	if err != nil {
 		WriteJSON(w, http.StatusBadRequest, Response{Error: err.Error()})

@@ -56,7 +56,6 @@ func (s *userService) Create(ctx context.Context, user *domain.User) error {
 
 		return nil
 	})
-
 }
 
 func (s *userService) Get(ctx context.Context, id int64) (*domain.User, error) {
