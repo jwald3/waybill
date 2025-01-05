@@ -71,6 +71,8 @@ func (s *userService) Get(ctx context.Context, id int64) (*domain.User, error) {
 
 func (s *userService) Update(ctx context.Context, user *domain.User) error {
 	return s.db.ExecuteTx(ctx, func(tx *database.Transaction) error {
+		// any database write should ensure that the data going in fits the business logic. We currently only check status,
+		// but you can add checks for the password, email, or anything else needed for your resource
 		if !user.Status.IsValid() {
 			return fmt.Errorf("invalid status %q", user.Status)
 		}

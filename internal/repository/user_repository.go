@@ -81,6 +81,7 @@ func (r *userRepository) GetByID(ctx context.Context, id int64) (*domain.User, e
 		passwordHash string
 	)
 
+	// scan the row into a User object
 	err := row.Scan(
 		&user.ID,
 		&user.Email,
@@ -90,14 +91,17 @@ func (r *userRepository) GetByID(ctx context.Context, id int64) (*domain.User, e
 		&user.UpdatedAt,
 	)
 
+	// if the row is empty, that may not necessarily be an "error" - it just means no data
 	if err == sql.ErrNoRows {
 		return nil, nil
 	}
 
+	// if there is an "actual error", handle appropriately
 	if err != nil {
 		return nil, fmt.Errorf("failed to get user: %w", err)
 	}
 
+	// get the de-hashed password - may not be a good idea if you expose it to the user (DTOs can help this)
 	user.Password = domain.NewPasswordFromHash(passwordHash)
 	return &user, nil
 }
@@ -152,12 +156,15 @@ func (r *userRepository) List(ctx context.Context, limit, offset int) ([]*domain
 	}
 	defer rows.Close()
 
+	// you're going to want to create a User object for each row.
 	var users []*domain.User
+	// for each row
 	for rows.Next() {
 		var (
 			u            domain.User
 			passwordHash string
 		)
+		// scan the user into the `u` User object
 		if err := rows.Scan(
 			&u.ID,
 			&u.Email,
@@ -169,6 +176,7 @@ func (r *userRepository) List(ctx context.Context, limit, offset int) ([]*domain
 			return nil, fmt.Errorf("failed to scan user: %w", err)
 		}
 		u.Password = domain.NewPasswordFromHash(passwordHash)
+		// add that `u` User object to the users slice
 		users = append(users, &u)
 	}
 
