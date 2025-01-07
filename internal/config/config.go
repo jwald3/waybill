@@ -41,6 +41,7 @@ type Config struct {
 	App struct {
 		Environment string
 		LogLevel    string
+		APIKey      string
 		APIVersion  string
 		CORSOrigins []string
 		DebugMode   bool
@@ -75,6 +76,7 @@ func Load() *Config {
 	config.Database.ConnMaxLifetime = getDurationEnv("DB_CONN_MAX_LIFETIME", 5*time.Minute)
 
 	config.App.Environment = getEnv("APP_ENV", "development")
+	config.App.APIKey = getEnv("API_KEY", "ABC123")
 	config.App.LogLevel = getEnv("LOG_LEVEL", "info")
 	config.App.APIVersion = getEnv("API_VERSION", "v1")
 	config.App.DebugMode = getBoolEnv("DEBUG_MODE", true)

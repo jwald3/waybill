@@ -14,6 +14,7 @@ import (
 	"github.com/jwald3/go_rest_template/internal/database"
 	"github.com/jwald3/go_rest_template/internal/handler"
 	"github.com/jwald3/go_rest_template/internal/logger"
+	"github.com/jwald3/go_rest_template/internal/middleware"
 	"github.com/jwald3/go_rest_template/internal/repository"
 	"github.com/jwald3/go_rest_template/internal/service"
 	"go.uber.org/zap"
@@ -45,6 +46,8 @@ func main() {
 
 	// the gorilla mux router - I went with this dependency to simplify the routing and make handling URL params less of a pain
 	router := mux.NewRouter()
+
+	router.Use(middleware.APIKeyAuth)
 
 	// registering each handler function onto the router (using variables for the route to avoid warnings of overused string literals).
 	// Register any additional routes below
