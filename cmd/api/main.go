@@ -31,17 +31,20 @@ func main() {
 	log := logger.New(cfg.App.LogLevel)
 	defer log.Sync()
 
-	db, err := database.NewPostgresConnection(*cfg)
+	var mongoDB *database.MongoDB
+	var err error
+
+	mongoDB, err = database.NewMongoConnection(*cfg)
 	if err != nil {
 		log.Fatal("failed to connect to database", zap.Error(err))
 	}
-	defer db.Close()
+	defer mongoDB.Close()
 
 	// the bit of dependency injection where you register repos, services, and handlers.
 	// If you're using additional or different resources, make sure you include them here as well
-	userRepo := repository.NewUserRepository(db.DB)
-	userService := service.NewUserService(db, userRepo)
-	userHandler := handler.NewUserHandler(userService)
+	userRepo := repository.NewUserMongoRepository(mongoDB)
+	userService := service.NewUserMongoService(mongoDB, userRepo)
+	userHandler := handler.NewUserMongoHandler(userService)
 
 	// the gorilla mux router - I went with this dependency to simplify the routing and make handling URL params less of a pain
 	router := mux.NewRouter()

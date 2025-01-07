@@ -5,6 +5,7 @@ import (
 	"regexp"
 	"time"
 
+	"go.mongodb.org/mongo-driver/bson/primitive"
 	"golang.org/x/crypto/bcrypt"
 )
 
@@ -21,12 +22,12 @@ var emailRegex = regexp.MustCompile(`^[A-Za-z0-9._%+\-]+@[A-Za-z0-9.\-]+\.[A-Za-
 // the domain model used in the application. This struct defines the information included in the model
 // and contains instructions on how to express the model when parsing it into JSON
 type User struct {
-	ID        int64  `json:"id"`
-	Email     string `json:"email"`
-	Password  Password
-	Status    Status
-	CreatedAt time.Time `json:"created_at"`
-	UpdatedAt time.Time `json:"updated_at"`
+	ID        primitive.ObjectID `json:"id" bson:"_id,omitempty"`
+	Email     string             `json:"email" bson:"email"`
+	Password  Password           `bson:"password"`
+	Status    Status             `bson:"status"`
+	CreatedAt time.Time          `json:"created_at" bson:"created_at"`
+	UpdatedAt time.Time          `json:"updated_at" bson:"updated_at"`
 }
 
 // constructor for new users armed with domain-specific logic and checks. You can create constructors for your own resources
@@ -45,6 +46,7 @@ func NewUser(email, plaintextPassword string) (*User, error) {
 	now := time.Now()
 
 	return &User{
+		ID:        primitive.NilObjectID,
 		Email:     email,
 		Password:  pass,
 		Status:    StatusActive,
@@ -131,7 +133,7 @@ func (u *User) Ban() error {
 
 // state management used when
 type UserEvent struct {
-	UserID    int64
+	UserID    primitive.ObjectID
 	EventType string
 	Timestamp time.Time
 }

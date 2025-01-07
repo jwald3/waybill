@@ -2,11 +2,24 @@ package handler
 
 import (
 	"net/http"
-	"strconv"
 
 	"github.com/gorilla/mux"
 	"github.com/jwald3/go_rest_template/internal/domain"
 	"github.com/jwald3/go_rest_template/internal/service"
+	"go.mongodb.org/mongo-driver/bson/primitive"
+)
+
+type UserMongoHandler struct {
+	userService service.UserMongoService
+}
+
+func NewUserMongoHandler(userService service.UserMongoService) *UserMongoHandler {
+	return &UserMongoHandler{userService: userService}
+}
+
+var (
+	invalidId   = "invalid user ID"
+	invalidPath = "invalid path"
 )
 
 // DTOs are a useful way to specify which data a user will be privy to during a request/response cycle
@@ -18,9 +31,9 @@ type UserRequest struct {
 }
 
 type UserResponse struct {
-	ID     int64  `json:"id"`
-	Email  string `json:"email"`
-	Status string `json:"status"`
+	ID     primitive.ObjectID `json:"id" bson:"_id"`
+	Email  string             `json:"email"`
+	Status string             `json:"status"`
 }
 
 // a convenient packaging for the methods that return multiple user objects under the `users` property
@@ -57,21 +70,7 @@ func domainToResponse(u *domain.User) UserResponse {
 	}
 }
 
-type UserHandler struct {
-	userService service.UserService
-}
-
-func NewUserHandler(userService service.UserService) *UserHandler {
-	return &UserHandler{userService: userService}
-}
-
-// you can define commonly used error messages here
-var (
-	invalidId   = "invalid user ID"
-	invalidPath = "invalid path"
-)
-
-func (h *UserHandler) Create(w http.ResponseWriter, r *http.Request) {
+func (h *UserMongoHandler) Create(w http.ResponseWriter, r *http.Request) {
 	var req UserRequest
 	// ensure that the request fits the DTO format before going any further
 	if err := ReadJSON(r, &req); err != nil {
@@ -96,17 +95,16 @@ func (h *UserHandler) Create(w http.ResponseWriter, r *http.Request) {
 	WriteJSON(w, http.StatusCreated, domainToResponse(user))
 }
 
-func (h *UserHandler) Get(w http.ResponseWriter, r *http.Request) {
+func (h *UserMongoHandler) Get(w http.ResponseWriter, r *http.Request) {
 	// use gorilla mux to attempt to extract out the ID from the URL
-	vars := mux.Vars(r)
-	idStr := vars["id"]
-	id, err := strconv.Atoi(idStr)
+	idStr := mux.Vars(r)["id"]
+	objectID, err := primitive.ObjectIDFromHex(idStr)
 	if err != nil {
 		WriteJSON(w, http.StatusBadRequest, Response{Error: err.Error()})
 		return
 	}
 
-	user, err := h.userService.Get(r.Context(), int64(id))
+	user, err := h.userService.Get(r.Context(), objectID)
 	if err != nil {
 		WriteJSON(w, http.StatusNotFound, Response{Error: "user not found"})
 		return
@@ -116,10 +114,9 @@ func (h *UserHandler) Get(w http.ResponseWriter, r *http.Request) {
 	WriteJSON(w, http.StatusOK, Response{Data: domainToResponse(user)})
 }
 
-func (h *UserHandler) Update(w http.ResponseWriter, r *http.Request) {
-	vars := mux.Vars(r)
-	idStr := vars["id"]
-	id, err := strconv.Atoi(idStr)
+func (h *UserMongoHandler) Update(w http.ResponseWriter, r *http.Request) {
+	idStr := mux.Vars(r)["id"]
+	objectID, err := primitive.ObjectIDFromHex(idStr)
 	if err != nil {
 		WriteJSON(w, http.StatusBadRequest, Response{Error: err.Error()})
 		return
@@ -139,7 +136,7 @@ func (h *UserHandler) Update(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	user.ID = int64(id)
+	user.ID = objectID
 
 	if err := h.userService.Update(r.Context(), user); err != nil {
 		WriteJSON(w, http.StatusInternalServerError, Response{Error: "failed to update user"})
@@ -149,16 +146,15 @@ func (h *UserHandler) Update(w http.ResponseWriter, r *http.Request) {
 	WriteJSON(w, http.StatusOK, Response{Data: domainToResponse(user)})
 }
 
-func (h *UserHandler) Delete(w http.ResponseWriter, r *http.Request) {
-	vars := mux.Vars(r)
-	idStr := vars["id"]
-	id, err := strconv.Atoi(idStr)
+func (h *UserMongoHandler) Delete(w http.ResponseWriter, r *http.Request) {
+	idStr := mux.Vars(r)["id"]
+	objectID, err := primitive.ObjectIDFromHex(idStr)
 	if err != nil {
 		WriteJSON(w, http.StatusBadRequest, Response{Error: err.Error()})
 		return
 	}
 
-	if err := h.userService.Delete(r.Context(), int64(id)); err != nil {
+	if err := h.userService.Delete(r.Context(), objectID); err != nil {
 		WriteJSON(w, http.StatusInternalServerError, Response{Error: "failed to delete user"})
 		return
 	}
@@ -166,11 +162,11 @@ func (h *UserHandler) Delete(w http.ResponseWriter, r *http.Request) {
 	WriteJSON(w, http.StatusOK, Response{Message: "user deleted successfully"})
 }
 
-func (h *UserHandler) List(w http.ResponseWriter, r *http.Request) {
+func (h *UserMongoHandler) List(w http.ResponseWriter, r *http.Request) {
 	limit := getQueryIntParam(r, "limit", 10)
 	offset := getQueryIntParam(r, "offset", 0)
 
-	users, err := h.userService.List(r.Context(), limit, offset)
+	users, err := h.userService.List(r.Context(), int64(limit), int64(offset))
 	if err != nil {
 		WriteJSON(w, http.StatusInternalServerError, Response{Error: "failed to fetch users"})
 		return
