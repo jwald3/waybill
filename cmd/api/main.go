@@ -18,6 +18,7 @@ import (
 	"github.com/jwald3/go_rest_template/internal/repository"
 	"github.com/jwald3/go_rest_template/internal/service"
 	"go.uber.org/zap"
+	"golang.org/x/time/rate"
 )
 
 // feel free to save other routes as variables here. You don't necessarily need to do this, I just didn't like having the warning for multiple routes using the same string literal
@@ -48,6 +49,16 @@ func main() {
 	router := mux.NewRouter()
 
 	router.Use(middleware.APIKeyAuth)
+
+	// if rate limiting is enabled, build a limiter that uses the config details to specify the number of requests in a given time frame
+	// otherwise, this is all skipped
+	if cfg.RateLimit.Enabled {
+		limiter := rate.NewLimiter(
+			rate.Every(cfg.RateLimit.Duration/time.Duration(cfg.RateLimit.Requests)),
+			cfg.RateLimit.Requests,
+		)
+		router.Use(middleware.RateLimitMiddleware(limiter))
+	}
 
 	// registering each handler function onto the router (using variables for the route to avoid warnings of overused string literals).
 	// Register any additional routes below
