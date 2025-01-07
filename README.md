@@ -19,6 +19,8 @@ This project includes the `User` resource as an example. You can expand on this 
 * github.com/gorilla/mux - A powerful HTTP router and URL matcher for building Go web servers with a focus on high performance and configurability
 * github.com/lib/pq v1.10.9 - A pure Go Postgres driver for Go's database/sql package
 * go.uber.org/zap v1.27.0 - Logging library for Go
+* golang.org/x/crypto - Go's cryptography packages, used for password hashing and verification in this project
+* golang.org/x/time - Go's time packages, used for rate limiting in this project
 
 ## Getting Started
 
