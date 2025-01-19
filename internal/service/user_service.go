@@ -4,9 +4,9 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/jwald3/go_rest_template/internal/database"
-	"github.com/jwald3/go_rest_template/internal/domain"
-	"github.com/jwald3/go_rest_template/internal/repository"
+	"github.com/jwald3/waybill/internal/database"
+	"github.com/jwald3/waybill/internal/domain"
+	"github.com/jwald3/waybill/internal/repository"
 )
 
 type UserService interface {

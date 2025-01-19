@@ -7,7 +7,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/jwald3/go_rest_template/internal/config"
+	"github.com/jwald3/waybill/internal/config"
 	"github.com/lib/pq"
 )
 

@@ -3,7 +3,7 @@ package middleware
 import (
 	"net/http"
 
-	"github.com/jwald3/go_rest_template/internal/config"
+	"github.com/jwald3/waybill/internal/config"
 )
 
 // this is a SUPER basic API key-based authentication that uses a key stored on the server and requires that clients provide the key in their request headers. If the client key matches the server key, they can access the resources. Otherwise, they cannot.

@@ -1,4 +1,4 @@
-module github.com/jwald3/go_rest_template
+module github.com/jwald3/waybill
 
 go 1.23.1
 

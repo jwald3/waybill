@@ -5,8 +5,8 @@ import (
 	"strconv"
 
 	"github.com/gorilla/mux"
-	"github.com/jwald3/go_rest_template/internal/domain"
-	"github.com/jwald3/go_rest_template/internal/service"
+	"github.com/jwald3/waybill/internal/domain"
+	"github.com/jwald3/waybill/internal/service"
 )
 
 // DTOs are a useful way to specify which data a user will be privy to during a request/response cycle
