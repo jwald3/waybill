@@ -10,4 +10,7 @@ require (
 	golang.org/x/time v0.9.0
 )
 
-require go.uber.org/multierr v1.10.0 // indirect
+require (
+	go.mongodb.org/mongo-driver v1.17.2 // indirect
+	go.uber.org/multierr v1.10.0 // indirect
+)
