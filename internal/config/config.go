@@ -66,14 +66,10 @@ func Load() *Config {
 	config.Server.IdleTimeout = getDurationEnv("SERVER_IDLE_TIMEOUT", 60*time.Second)
 
 	config.Database.Host = getEnv("DB_HOST", "localhost")
-	config.Database.Port = getEnv("DB_PORT", "5432")
-	config.Database.User = getEnv("DB_USER", "postgres")
-	config.Database.Password = getEnv("DB_PASSWORD", "postgres")
+	config.Database.Port = getEnv("DB_PORT", "27017")
+	config.Database.User = getEnv("DB_USER", "")
+	config.Database.Password = getEnv("DB_PASSWORD", "")
 	config.Database.DBName = getEnv("DB_NAME", "myapp")
-	config.Database.SSLMode = getEnv("DB_SSLMODE", "disable")
-	config.Database.MaxOpenConns = getIntEnv("DB_MAX_OPEN_CONNS", 25)
-	config.Database.MaxIdleConns = getIntEnv("DB_MAX_IDLE_CONNS", 25)
-	config.Database.ConnMaxLifetime = getDurationEnv("DB_CONN_MAX_LIFETIME", 5*time.Minute)
 
 	config.App.Environment = getEnv("APP_ENV", "development")
 	config.App.APIKey = getEnv("API_KEY", "ABC123")
