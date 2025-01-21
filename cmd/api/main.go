@@ -14,17 +14,15 @@ import (
 	"github.com/jwald3/waybill/internal/database"
 	"github.com/jwald3/waybill/internal/handler"
 	"github.com/jwald3/waybill/internal/logger"
-	"github.com/jwald3/waybill/internal/middleware"
 	"github.com/jwald3/waybill/internal/repository"
 	"github.com/jwald3/waybill/internal/service"
 	"go.uber.org/zap"
-	"golang.org/x/time/rate"
 )
 
 // feel free to save other routes as variables here. You don't necessarily need to do this, I just didn't like having the warning for multiple routes using the same string literal
 var (
-	usersBase   = "/api/v1/users"
-	usersWithId = "/api/v1/users/{id}"
+	driversBase   = "/api/v1/drivers"
+	driversWithId = "/api/v1/drivers/{id}"
 )
 
 func main() {
@@ -33,7 +31,7 @@ func main() {
 	log := logger.New(cfg.App.LogLevel)
 	defer log.Sync()
 
-	db, err := database.NewPostgresConnection(*cfg)
+	db, err := database.NewMongoConnection(*cfg)
 	if err != nil {
 		log.Fatal("failed to connect to database", zap.Error(err))
 	}
@@ -41,32 +39,20 @@ func main() {
 
 	// the bit of dependency injection where you register repos, services, and handlers.
 	// If you're using additional or different resources, make sure you include them here as well
-	userRepo := repository.NewUserRepository(db.DB)
-	userService := service.NewUserService(db, userRepo)
-	userHandler := handler.NewUserHandler(userService)
+	driverRepo := repository.NewDriverRepository(db)
+	driverService := service.NewDriverService(db, driverRepo)
+	driverHandler := handler.NewDriverHandler(driverService)
 
 	// the gorilla mux router - I went with this dependency to simplify the routing and make handling URL params less of a pain
 	router := mux.NewRouter()
 
-	router.Use(middleware.APIKeyAuth)
-
-	// if rate limiting is enabled, build a limiter that uses the config details to specify the number of requests in a given time frame
-	// otherwise, this is all skipped
-	if cfg.RateLimit.Enabled {
-		limiter := rate.NewLimiter(
-			rate.Every(cfg.RateLimit.Duration/time.Duration(cfg.RateLimit.Requests)),
-			cfg.RateLimit.Requests,
-		)
-		router.Use(middleware.RateLimitMiddleware(limiter))
-	}
-
 	// registering each handler function onto the router (using variables for the route to avoid warnings of overused string literals).
 	// Register any additional routes below
-	router.HandleFunc(usersBase, userHandler.List).Methods(http.MethodGet)
-	router.HandleFunc(usersBase, userHandler.Create).Methods(http.MethodPost)
-	router.HandleFunc(usersWithId, userHandler.Update).Methods(http.MethodPut)
-	router.HandleFunc(usersWithId, userHandler.Get).Methods(http.MethodGet)
-	router.HandleFunc(usersWithId, userHandler.Delete).Methods(http.MethodDelete)
+	router.HandleFunc(driversBase, driverHandler.List).Methods(http.MethodGet)
+	router.HandleFunc(driversBase, driverHandler.Create).Methods(http.MethodPost)
+	router.HandleFunc(driversWithId, driverHandler.GetById).Methods(http.MethodGet)
+	router.HandleFunc(driversWithId, driverHandler.Update).Methods(http.MethodPut)
+	router.HandleFunc(driversWithId, driverHandler.Delete).Methods(http.MethodDelete)
 
 	// start a server with the mux router we just armed with routes and the env variables as loaded into the config.go file
 	server := &http.Server{

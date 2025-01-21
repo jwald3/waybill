@@ -1,11 +1,15 @@
 package domain
 
-import "go.mongodb.org/mongo-driver/bson/primitive"
+import (
+	"time"
+
+	"go.mongodb.org/mongo-driver/bson/primitive"
+)
 
 type Driver struct {
 	ID                primitive.ObjectID `bson:"_id,omitempty"`
 	FirstName         string             `bson:"first_name"`
-	LastName          string             `bson:"lastname"`
+	LastName          string             `bson:"last_name"`
 	DOB               string             `bson:"dob"`
 	LicenseNumber     string             `bson:"license_number"`
 	LicenseState      string             `bson:"license_state"`
@@ -32,4 +36,35 @@ type TripHistory struct {
 	StartDate   string             `bson:"start_date"`
 	EndDate     string             `bson:"end_date"`
 	MilesDriven int                `bson:"miles_driven"`
+}
+
+func NewDriver(
+	firstName,
+	lastName,
+	dateOfBirth,
+	licenseNumber,
+	licenseState,
+	licenseExpiration,
+	phoneNumber,
+	email string,
+	address Address) (*Driver, error) {
+	now := time.Now()
+
+	return &Driver{
+		ID:                primitive.NilObjectID,
+		FirstName:         firstName,
+		LastName:          lastName,
+		DOB:               dateOfBirth,
+		LicenseNumber:     licenseNumber,
+		LicenseState:      licenseState,
+		LicenseExpiration: licenseExpiration,
+		Phone:             phoneNumber,
+		Email:             email,
+		Address:           address,
+		EmploymentStatus:  "active",
+		AssignedTruckID:   primitive.NilObjectID,
+		PastTrips:         make([]TripHistory, 0),
+		CreatedAt:         primitive.NewDateTimeFromTime(now),
+		UpdatedAt:         primitive.NewDateTimeFromTime(now),
+	}, nil
 }

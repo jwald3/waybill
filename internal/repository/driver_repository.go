@@ -10,6 +10,7 @@ import (
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
+	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
 type driverRepository struct {
@@ -89,5 +90,29 @@ func (r *driverRepository) Delete(ctx context.Context, id primitive.ObjectID) er
 }
 
 func (r *driverRepository) List(ctx context.Context, limit, offset int64) ([]*domain.Driver, error) {
-	return nil, nil
+	findOptions := options.Find()
+	findOptions.SetLimit(limit)
+	findOptions.SetSkip(offset)
+	findOptions.SetSort(bson.D{{Key: "_id", Value: -1}})
+
+	cursor, err := r.drivers.Find(ctx, bson.M{}, findOptions)
+	if err != nil {
+		return nil, fmt.Errorf("failed retrieve list of users: %w", err)
+	}
+	defer cursor.Close(ctx)
+
+	var drivers []*domain.Driver
+	for cursor.Next(ctx) {
+		var d domain.Driver
+		if err := cursor.Decode(&d); err != nil {
+			return nil, fmt.Errorf("failed to decode driver: %w", err)
+		}
+		drivers = append(drivers, &d)
+	}
+
+	if err := cursor.Err(); err != nil {
+		return nil, fmt.Errorf("cursor error: %w", err)
+	}
+
+	return drivers, nil
 }
