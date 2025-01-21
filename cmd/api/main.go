@@ -37,11 +37,11 @@ func main() {
 	}
 	defer db.Close()
 
-	// the bit of dependency injection where you register repos, services, and handlers.
-	// If you're using additional or different resources, make sure you include them here as well
 	driverRepo := repository.NewDriverRepository(db)
 	driverService := service.NewDriverService(db, driverRepo)
 	driverHandler := handler.NewDriverHandler(driverService)
+
+	truckRepo := repository.NewTruckRepository(db)
 
 	// the gorilla mux router - I went with this dependency to simplify the routing and make handling URL params less of a pain
 	router := mux.NewRouter()
