@@ -65,9 +65,9 @@ func Load() *Config {
 	config.Server.WriteTimeout = getDurationEnv("SERVER_WRITE_TIMEOUT", 15*time.Second)
 	config.Server.IdleTimeout = getDurationEnv("SERVER_IDLE_TIMEOUT", 60*time.Second)
 
-	config.Database.Host = getEnv("DB_HOST", "localhost")
-	config.Database.Port = getEnv("DB_PORT", "27017")
-	config.Database.User = getEnv("DB_USER", "")
+	config.Database.Host = getEnv("DB_HOST", "")
+	config.Database.Port = getEnv("DB_PORT", "")
+	config.Database.User = getEnv("DB_USER", "admin")
 	config.Database.Password = getEnv("DB_PASSWORD", "")
 	config.Database.DBName = getEnv("DB_NAME", "myapp")
 
@@ -163,13 +163,10 @@ func getSliceEnv(key string, defaultValue []string) []string {
 // creates the database connection string using the config object
 func (c *Config) GetDSN() string {
 	return fmt.Sprintf(
-		"host=%s port=%s user=%s password=%s dbname=%s sslmode=%s",
-		c.Database.Host,
-		c.Database.Port,
+		"mongodb+srv://%s:%s@%s/?retryWrites=true&w=majority&appName=Waybill",
 		c.Database.User,
 		c.Database.Password,
-		c.Database.DBName,
-		c.Database.SSLMode,
+		c.Database.Host,
 	)
 }
 
