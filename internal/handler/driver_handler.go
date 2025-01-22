@@ -208,7 +208,6 @@ func (h *DriverHandler) Delete(w http.ResponseWriter, r *http.Request) {
 	}
 
 	WriteJSON(w, http.StatusOK, Response{Message: "driver deleted successfully"})
-
 }
 
 func (h *DriverHandler) List(w http.ResponseWriter, r *http.Request) {

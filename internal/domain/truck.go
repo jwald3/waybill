@@ -1,6 +1,10 @@
 package domain
 
-import "go.mongodb.org/mongo-driver/bson/primitive"
+import (
+	"time"
+
+	"go.mongodb.org/mongo-driver/bson/primitive"
+)
 
 type Truck struct {
 	ID                 primitive.ObjectID  `bson:"_id,omitempty"`
@@ -32,4 +36,40 @@ type MaintenanceRecord struct {
 	ServiceType string  `bson:"service_type"`
 	Notes       string  `bson:"notes"`
 	Cost        float64 `bson:"cost"`
+}
+
+func NewTruck(
+	truckNumber,
+	vin,
+	vehicleMake,
+	model,
+	status,
+	trailerType,
+	fuelType,
+	LastMaintenance string,
+	year,
+	mileage int,
+	capacityTons float64,
+	licensePlate LicensePlate) (*Truck, error) {
+	now := time.Now()
+
+	return &Truck{
+		ID:                 primitive.NilObjectID,
+		TruckNumber:        truckNumber,
+		VIN:                vin,
+		Make:               vehicleMake,
+		Model:              model,
+		Year:               year,
+		LicensePlate:       licensePlate,
+		Mileage:            mileage,
+		Status:             status,
+		AssignedDriverID:   primitive.NilObjectID,
+		TrailerType:        trailerType,
+		CapacityTons:       capacityTons,
+		FuelType:           fuelType,
+		LastMaintenance:    LastMaintenance,
+		MaintenanceRecords: make([]MaintenanceRecord, 0),
+		CreatedAt:          primitive.NewDateTimeFromTime(now),
+		UpdatedAt:          primitive.NewDateTimeFromTime(now),
+	}, nil
 }

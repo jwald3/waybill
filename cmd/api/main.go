@@ -23,6 +23,9 @@ import (
 var (
 	driversBase   = "/api/v1/drivers"
 	driversWithId = "/api/v1/drivers/{id}"
+
+	trucksBase   = "/api/v1/trucks"
+	trucksWithId = "/api/v1/trucks/{id}"
 )
 
 func main() {
@@ -42,6 +45,8 @@ func main() {
 	driverHandler := handler.NewDriverHandler(driverService)
 
 	truckRepo := repository.NewTruckRepository(db)
+	truckService := service.NewTruckService(db, truckRepo)
+	truckHandler := handler.NewTruckHandler(truckService)
 
 	// the gorilla mux router - I went with this dependency to simplify the routing and make handling URL params less of a pain
 	router := mux.NewRouter()
@@ -53,6 +58,12 @@ func main() {
 	router.HandleFunc(driversWithId, driverHandler.GetById).Methods(http.MethodGet)
 	router.HandleFunc(driversWithId, driverHandler.Update).Methods(http.MethodPut)
 	router.HandleFunc(driversWithId, driverHandler.Delete).Methods(http.MethodDelete)
+
+	router.HandleFunc(trucksBase, truckHandler.List).Methods(http.MethodGet)
+	router.HandleFunc(trucksBase, truckHandler.Create).Methods(http.MethodPost)
+	router.HandleFunc(trucksWithId, truckHandler.GetById).Methods(http.MethodGet)
+	router.HandleFunc(trucksWithId, truckHandler.Update).Methods(http.MethodPut)
+	router.HandleFunc(trucksWithId, truckHandler.Delete).Methods(http.MethodDelete)
 
 	// start a server with the mux router we just armed with routes and the env variables as loaded into the config.go file
 	server := &http.Server{
