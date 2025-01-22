@@ -125,6 +125,7 @@ func truckRequestToDomainUpdate(req TruckUpdateRequest) (*domain.Truck, error) {
 
 func truckDomainToResponse(t *domain.Truck) TruckResponse {
 	return TruckResponse{
+		ID:               t.ID,
 		TruckNumber:      t.TruckNumber,
 		VIN:              t.VIN,
 		Make:             t.Make,

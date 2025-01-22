@@ -55,7 +55,6 @@ func NewTruck(
 	now := time.Now()
 
 	return &Truck{
-		ID:                 primitive.NilObjectID,
 		TruckNumber:        truckNumber,
 		VIN:                vin,
 		Make:               vehicleMake,
