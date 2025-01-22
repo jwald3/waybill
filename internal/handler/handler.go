@@ -9,7 +9,6 @@ import (
 // a custom response format you can use in your own handlers. Successful operations can use the `Message` property
 // while unsuccessful operations can use the `Error` property
 type Response struct {
-	Status  int    `json:"status"`
 	Data    any    `json:"data,omitempty"`
 	Error   string `json:"error,omitempty"`
 	Message string `json:"message,omitempty"`
