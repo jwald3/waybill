@@ -148,15 +148,18 @@ func (h *TruckHandler) Create(w http.ResponseWriter, r *http.Request) {
 
 	if err := ReadJSON(r, &req); err != nil {
 		WriteJSON(w, http.StatusBadRequest, Response{Error: "invalid request payload"})
+		return
 	}
 
 	truck, err := truckRequestToDomainCreate(req)
 	if err != nil {
 		WriteJSON(w, http.StatusBadRequest, Response{Error: err.Error()})
+		return
 	}
 
 	if err := h.truckService.Create(r.Context(), truck); err != nil {
 		WriteJSON(w, http.StatusInternalServerError, Response{Error: err.Error()})
+		return
 	}
 
 	WriteJSON(w, http.StatusCreated, truckDomainToResponse(truck))
@@ -173,6 +176,7 @@ func (h *TruckHandler) GetById(w http.ResponseWriter, r *http.Request) {
 	truck, err := h.truckService.GetById(r.Context(), objectID)
 	if err != nil {
 		WriteJSON(w, http.StatusNotFound, Response{Error: "truck not found"})
+		return
 	}
 
 	WriteJSON(w, http.StatusOK, Response{Data: truckDomainToResponse(truck)})

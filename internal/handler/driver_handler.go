@@ -133,15 +133,18 @@ func (h *DriverHandler) Create(w http.ResponseWriter, r *http.Request) {
 
 	if err := ReadJSON(r, &req); err != nil {
 		WriteJSON(w, http.StatusBadRequest, Response{Error: "invalid request payload"})
+		return
 	}
 
 	driver, err := driverRequestToDomainCreate(req)
 	if err != nil {
 		WriteJSON(w, http.StatusBadRequest, Response{Error: err.Error()})
+		return
 	}
 
 	if err := h.driverService.Create(r.Context(), driver); err != nil {
 		WriteJSON(w, http.StatusInternalServerError, Response{Error: err.Error()})
+		return
 	}
 
 	WriteJSON(w, http.StatusCreated, driverDomainToResponse(driver))
