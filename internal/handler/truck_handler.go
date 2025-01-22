@@ -26,19 +26,19 @@ var (
 // DTOS =======================================================
 
 type TruckCreateRequest struct {
-	TruckNumber      string              `bson:"truck_number"`
-	VIN              string              `bson:"vin"`
-	Make             string              `bson:"make"`
-	Model            string              `bson:"model"`
-	Year             int                 `bson:"year"`
-	LicensePlate     domain.LicensePlate `bson:"license_plate"`
-	Mileage          int                 `bson:"mileage"`
-	Status           string              `bson:"status"`
-	AssignedDriverID primitive.ObjectID  `bson:"assigned_driver_id,omitempty"`
-	TrailerType      string              `bson:"trailer_type"`
-	CapacityTons     float64             `bson:"capacity_tons"`
-	FuelType         string              `bson:"fuel_type"`
-	LastMaintenance  string              `bson:"last_maintenance"`
+	TruckNumber      string              `json:"truck_number"`
+	VIN              string              `json:"vin"`
+	Make             string              `json:"make"`
+	Model            string              `json:"model"`
+	Year             int                 `json:"year"`
+	LicensePlate     domain.LicensePlate `json:"license_plate"`
+	Mileage          int                 `json:"mileage"`
+	Status           string              `json:"status"`
+	AssignedDriverID primitive.ObjectID  `json:"assigned_driver_id,omitempty"`
+	TrailerType      string              `json:"trailer_type"`
+	CapacityTons     float64             `json:"capacity_tons"`
+	FuelType         string              `json:"fuel_type"`
+	LastMaintenance  string              `json:"last_maintenance"`
 }
 
 type TruckUpdateRequest struct {
@@ -96,6 +96,7 @@ func truckRequestToDomainCreate(req TruckCreateRequest) (*domain.Truck, error) {
 		req.Year,
 		req.Mileage,
 		req.CapacityTons,
+		req.AssignedDriverID,
 		req.LicensePlate,
 	)
 }

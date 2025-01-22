@@ -50,6 +50,7 @@ func NewTruck(
 	year,
 	mileage int,
 	capacityTons float64,
+	assignedDriverID primitive.ObjectID,
 	licensePlate LicensePlate) (*Truck, error) {
 	now := time.Now()
 
@@ -63,7 +64,7 @@ func NewTruck(
 		LicensePlate:       licensePlate,
 		Mileage:            mileage,
 		Status:             status,
-		AssignedDriverID:   primitive.NilObjectID,
+		AssignedDriverID:   assignedDriverID,
 		TrailerType:        trailerType,
 		CapacityTons:       capacityTons,
 		FuelType:           fuelType,
