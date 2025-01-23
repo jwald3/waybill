@@ -1,6 +1,10 @@
 package domain
 
-import "go.mongodb.org/mongo-driver/bson/primitive"
+import (
+	"time"
+
+	"go.mongodb.org/mongo-driver/bson/primitive"
+)
 
 type Facility struct {
 	ID                primitive.ObjectID   `bson:"_id,omitempty"`
@@ -19,4 +23,28 @@ type Facility struct {
 type ContactInfo struct {
 	Phone string `bson:"phone"`
 	Email string `bson:"email"`
+}
+
+func NewFacility(
+	facilityNumber string,
+	name string,
+	facilityType string,
+	address Address,
+	contactInfo ContactInfo,
+	parkingCapacity int,
+	servicesAvailable []string) (*Facility, error) {
+	now := time.Now()
+
+	return &Facility{
+		FacilityNumber:    facilityNumber,
+		Name:              name,
+		Type:              facilityType,
+		Address:           address,
+		ContactInfo:       contactInfo,
+		ParkingCapacity:   parkingCapacity,
+		ServicesAvailable: servicesAvailable,
+		AssignedTrucks:    make([]primitive.ObjectID, 0),
+		CreatedAt:         primitive.NewDateTimeFromTime(now),
+		UpdatedAt:         primitive.NewDateTimeFromTime(now),
+	}, nil
 }
