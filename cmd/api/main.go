@@ -29,6 +29,9 @@ var (
 
 	facilitiesBase   = "/api/v1/facilities"
 	facilitiesWithId = "/api/v1/facilities/{id}"
+
+	tripsBase   = "/api/v1/trips"
+	tripsWithId = "/api/v1/trips/{id}"
 )
 
 func main() {
@@ -55,6 +58,10 @@ func main() {
 	facilityService := service.NewFacilityService(db, facilityRepo)
 	facilityHandler := handler.NewFacilityHandler(facilityService)
 
+	tripRepo := repository.NewTripRepository(db)
+	tripService := service.NewTripService(db, tripRepo)
+	tripHandler := handler.NewTripHandler(tripService)
+
 	// the gorilla mux router - I went with this dependency to simplify the routing and make handling URL params less of a pain
 	router := mux.NewRouter()
 
@@ -77,6 +84,12 @@ func main() {
 	router.HandleFunc(facilitiesWithId, facilityHandler.GetById).Methods(http.MethodGet)
 	router.HandleFunc(facilitiesWithId, facilityHandler.Update).Methods(http.MethodPut)
 	router.HandleFunc(facilitiesWithId, facilityHandler.Delete).Methods(http.MethodDelete)
+
+	router.HandleFunc(tripsBase, tripHandler.List).Methods(http.MethodGet)
+	router.HandleFunc(tripsBase, tripHandler.Create).Methods(http.MethodPost)
+	router.HandleFunc(tripsWithId, tripHandler.GetById).Methods(http.MethodGet)
+	router.HandleFunc(tripsWithId, tripHandler.Update).Methods(http.MethodPut)
+	router.HandleFunc(tripsWithId, tripHandler.Delete).Methods(http.MethodDelete)
 
 	// start a server with the mux router we just armed with routes and the env variables as loaded into the config.go file
 	server := &http.Server{
