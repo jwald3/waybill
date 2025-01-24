@@ -1,6 +1,10 @@
 package domain
 
-import "go.mongodb.org/mongo-driver/bson/primitive"
+import (
+	"time"
+
+	"go.mongodb.org/mongo-driver/bson/primitive"
+)
 
 type Trip struct {
 	ID            primitive.ObjectID `bson:"_id,omitempty"`
@@ -38,4 +42,38 @@ type Incident struct {
 	Description string `bson:"description"`
 	Location    string `bson:"location"`
 	Date        string `bson:"date"`
+}
+
+func NewTrip(
+	tripNumber,
+	status string,
+	driverId,
+	truckId,
+	startFacility,
+	endFacility primitive.ObjectID,
+	route Route,
+	startTime,
+	endTime primitive.DateTime,
+	cargo Cargo,
+	fuelUsage float64,
+	distanceMiles int) (*Trip, error) {
+	now := time.Now()
+
+	return &Trip{
+		TripNumber:    tripNumber,
+		DriverID:      driverId,
+		TruckID:       truckId,
+		StartFacility: startFacility,
+		EndFacility:   endFacility,
+		Route:         route,
+		StartTime:     startTime,
+		EndTime:       endTime,
+		Status:        status,
+		Cargo:         cargo,
+		FuelUsage:     fuelUsage,
+		DistanceMiles: distanceMiles,
+		Incidents:     make([]Incident, 0),
+		CreatedAt:     primitive.NewDateTimeFromTime(now),
+		UpdatedAt:     primitive.NewDateTimeFromTime(now),
+	}, nil
 }
