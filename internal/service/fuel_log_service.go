@@ -1,0 +1,87 @@
+package service
+
+import (
+	"context"
+	"fmt"
+
+	"github.com/jwald3/waybill/internal/database"
+	"github.com/jwald3/waybill/internal/domain"
+	"github.com/jwald3/waybill/internal/repository"
+	"go.mongodb.org/mongo-driver/bson/primitive"
+)
+
+var (
+	fuelLogNotFound = "unable to retrieve fuel log: %w"
+)
+
+type FuelLogService interface {
+	Create(ctx context.Context, fuelLog *domain.Facility) error
+	GetById(ctx context.Context, id primitive.ObjectID) (*domain.Facility, error)
+	Update(ctx context.Context, fuelLog *domain.Facility) error
+	Delete(ctx context.Context, id primitive.ObjectID) error
+	List(ctx context.Context, limit, offset int64) ([]*domain.Facility, error)
+}
+
+type fuelLogService struct {
+	db          *database.MongoDB
+	fuelLogRepo repository.FacilityRepository
+}
+
+func NewFuelLogService(db *database.MongoDB, fuelLogRepo repository.FacilityRepository) FuelLogService {
+	return &fuelLogService{
+		db:          db,
+		fuelLogRepo: fuelLogRepo,
+	}
+}
+
+func (s *fuelLogService) Create(ctx context.Context, fuelLog *domain.Facility) error {
+	if err := s.fuelLogRepo.Create(ctx, fuelLog); err != nil {
+		return fmt.Errorf("failed to create fuel log: %w", err)
+	}
+
+	return nil
+}
+
+func (s *fuelLogService) GetById(ctx context.Context, id primitive.ObjectID) (*domain.Facility, error) {
+	fuelLog, err := s.fuelLogRepo.GetById(ctx, id)
+	if err != nil {
+		return nil, fmt.Errorf(fuelLogNotFound, err)
+	}
+	if fuelLog == nil {
+		return nil, fmt.Errorf("fuel log with ID %v not found", id)
+	}
+
+	return fuelLog, nil
+}
+
+func (s *fuelLogService) Update(ctx context.Context, fuelLog *domain.Facility) error {
+	err := s.fuelLogRepo.Update(ctx, fuelLog)
+	if err != nil {
+		return fmt.Errorf(fuelLogNotFound, err)
+	}
+
+	return nil
+}
+
+func (s *fuelLogService) Delete(ctx context.Context, id primitive.ObjectID) error {
+	_, err := s.fuelLogRepo.GetById(ctx, id)
+	if err != nil {
+		return fmt.Errorf(fuelLogNotFound, err)
+	}
+
+	if err := s.fuelLogRepo.Delete(ctx, id); err != nil {
+		return fmt.Errorf("failed to delete fuel log: %w", err)
+	}
+
+	return nil
+}
+
+func (s *fuelLogService) List(ctx context.Context, limit, offset int64) ([]*domain.Facility, error) {
+	fuelLogs, err := s.fuelLogRepo.List(ctx, limit, offset)
+
+	if err != nil {
+		return nil, fmt.Errorf("failed to list fuel logs: %w", err)
+	}
+
+	return fuelLogs, nil
+}
