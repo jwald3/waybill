@@ -63,7 +63,7 @@ type DriverResponse struct {
 	Email             string               `json:"email"`
 	Address           domain.Address       `json:"address"`
 	EmploymentStatus  string               `json:"employment_status"`
-	AssignedTruckID   primitive.ObjectID   `json:"assigned_truck_id,omitempty"`
+	AssignedTruckID   *primitive.ObjectID  `json:"assigned_truck_id,omitempty"`
 	PastTrips         []domain.TripHistory `json:"past_trips"`
 	CreatedAt         primitive.DateTime   `json:"created_at"`
 	UpdatedAt         primitive.DateTime   `json:"updated_at"`
