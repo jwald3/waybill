@@ -15,26 +15,26 @@ var (
 )
 
 type IncidentReportService interface {
-	Create(ctx context.Context, incidentReport *domain.Facility) error
-	GetById(ctx context.Context, id primitive.ObjectID) (*domain.Facility, error)
-	Update(ctx context.Context, incidentReport *domain.Facility) error
+	Create(ctx context.Context, incidentReport *domain.IncidentReport) error
+	GetById(ctx context.Context, id primitive.ObjectID) (*domain.IncidentReport, error)
+	Update(ctx context.Context, incidentReport *domain.IncidentReport) error
 	Delete(ctx context.Context, id primitive.ObjectID) error
-	List(ctx context.Context, limit, offset int64) ([]*domain.Facility, error)
+	List(ctx context.Context, limit, offset int64) ([]*domain.IncidentReport, error)
 }
 
 type incidentReportService struct {
 	db                 *database.MongoDB
-	incidentReportRepo repository.FacilityRepository
+	incidentReportRepo repository.IncidentReportRepository
 }
 
-func NewIncidentReportService(db *database.MongoDB, incidentReportRepo repository.FacilityRepository) IncidentReportService {
+func NewIncidentReportService(db *database.MongoDB, incidentReportRepo repository.IncidentReportRepository) IncidentReportService {
 	return &incidentReportService{
 		db:                 db,
 		incidentReportRepo: incidentReportRepo,
 	}
 }
 
-func (s *incidentReportService) Create(ctx context.Context, incidentReport *domain.Facility) error {
+func (s *incidentReportService) Create(ctx context.Context, incidentReport *domain.IncidentReport) error {
 	if err := s.incidentReportRepo.Create(ctx, incidentReport); err != nil {
 		return fmt.Errorf("failed to create incident report: %w", err)
 	}
@@ -42,7 +42,7 @@ func (s *incidentReportService) Create(ctx context.Context, incidentReport *doma
 	return nil
 }
 
-func (s *incidentReportService) GetById(ctx context.Context, id primitive.ObjectID) (*domain.Facility, error) {
+func (s *incidentReportService) GetById(ctx context.Context, id primitive.ObjectID) (*domain.IncidentReport, error) {
 	incidentReport, err := s.incidentReportRepo.GetById(ctx, id)
 	if err != nil {
 		return nil, fmt.Errorf(incidentReportNotFound, err)
@@ -54,7 +54,7 @@ func (s *incidentReportService) GetById(ctx context.Context, id primitive.Object
 	return incidentReport, nil
 }
 
-func (s *incidentReportService) Update(ctx context.Context, incidentReport *domain.Facility) error {
+func (s *incidentReportService) Update(ctx context.Context, incidentReport *domain.IncidentReport) error {
 	err := s.incidentReportRepo.Update(ctx, incidentReport)
 	if err != nil {
 		return fmt.Errorf(incidentReportNotFound, err)
@@ -76,7 +76,7 @@ func (s *incidentReportService) Delete(ctx context.Context, id primitive.ObjectI
 	return nil
 }
 
-func (s *incidentReportService) List(ctx context.Context, limit, offset int64) ([]*domain.Facility, error) {
+func (s *incidentReportService) List(ctx context.Context, limit, offset int64) ([]*domain.IncidentReport, error) {
 	incidentReports, err := s.incidentReportRepo.List(ctx, limit, offset)
 
 	if err != nil {

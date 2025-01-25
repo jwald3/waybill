@@ -15,26 +15,26 @@ var (
 )
 
 type FuelLogService interface {
-	Create(ctx context.Context, fuelLog *domain.Facility) error
-	GetById(ctx context.Context, id primitive.ObjectID) (*domain.Facility, error)
-	Update(ctx context.Context, fuelLog *domain.Facility) error
+	Create(ctx context.Context, fuelLog *domain.FuelLog) error
+	GetById(ctx context.Context, id primitive.ObjectID) (*domain.FuelLog, error)
+	Update(ctx context.Context, fuelLog *domain.FuelLog) error
 	Delete(ctx context.Context, id primitive.ObjectID) error
-	List(ctx context.Context, limit, offset int64) ([]*domain.Facility, error)
+	List(ctx context.Context, limit, offset int64) ([]*domain.FuelLog, error)
 }
 
 type fuelLogService struct {
 	db          *database.MongoDB
-	fuelLogRepo repository.FacilityRepository
+	fuelLogRepo repository.FuelLogRepository
 }
 
-func NewFuelLogService(db *database.MongoDB, fuelLogRepo repository.FacilityRepository) FuelLogService {
+func NewFuelLogService(db *database.MongoDB, fuelLogRepo repository.FuelLogRepository) FuelLogService {
 	return &fuelLogService{
 		db:          db,
 		fuelLogRepo: fuelLogRepo,
 	}
 }
 
-func (s *fuelLogService) Create(ctx context.Context, fuelLog *domain.Facility) error {
+func (s *fuelLogService) Create(ctx context.Context, fuelLog *domain.FuelLog) error {
 	if err := s.fuelLogRepo.Create(ctx, fuelLog); err != nil {
 		return fmt.Errorf("failed to create fuel log: %w", err)
 	}
@@ -42,7 +42,7 @@ func (s *fuelLogService) Create(ctx context.Context, fuelLog *domain.Facility) e
 	return nil
 }
 
-func (s *fuelLogService) GetById(ctx context.Context, id primitive.ObjectID) (*domain.Facility, error) {
+func (s *fuelLogService) GetById(ctx context.Context, id primitive.ObjectID) (*domain.FuelLog, error) {
 	fuelLog, err := s.fuelLogRepo.GetById(ctx, id)
 	if err != nil {
 		return nil, fmt.Errorf(fuelLogNotFound, err)
@@ -54,7 +54,7 @@ func (s *fuelLogService) GetById(ctx context.Context, id primitive.ObjectID) (*d
 	return fuelLog, nil
 }
 
-func (s *fuelLogService) Update(ctx context.Context, fuelLog *domain.Facility) error {
+func (s *fuelLogService) Update(ctx context.Context, fuelLog *domain.FuelLog) error {
 	err := s.fuelLogRepo.Update(ctx, fuelLog)
 	if err != nil {
 		return fmt.Errorf(fuelLogNotFound, err)
@@ -76,7 +76,7 @@ func (s *fuelLogService) Delete(ctx context.Context, id primitive.ObjectID) erro
 	return nil
 }
 
-func (s *fuelLogService) List(ctx context.Context, limit, offset int64) ([]*domain.Facility, error) {
+func (s *fuelLogService) List(ctx context.Context, limit, offset int64) ([]*domain.FuelLog, error) {
 	fuelLogs, err := s.fuelLogRepo.List(ctx, limit, offset)
 
 	if err != nil {
