@@ -38,6 +38,9 @@ var (
 
 	incidentReportsBase   = "/api/v1/incident-reports"
 	incidentReportsWithId = "/api/vl/incident-reports/{id}"
+
+	maintenanceLogsBase   = "/api/v1/maintenance-logs"
+	maintenanceLogsWithId = "/api/vl/maintenance-logs/{id}"
 )
 
 func main() {
@@ -75,6 +78,10 @@ func main() {
 	incidentReportRepo := repository.NewIncidentReportRepository(db)
 	incidentReportService := service.NewIncidentReportService(db, incidentReportRepo)
 	incidentReportHandler := handler.NewIncidentReportHandler(incidentReportService)
+
+	maintenanceLogRepo := repository.NewMaintenanceLogRepository(db)
+	maintenanceLogService := service.NewMaintenanceLogService(db, maintenanceLogRepo)
+	maintenanceLogHandler := handler.NewMaintenanceLogHandler(maintenanceLogService)
 
 	// the gorilla mux router - I went with this dependency to simplify the routing and make handling URL params less of a pain
 	router := mux.NewRouter()
@@ -116,6 +123,12 @@ func main() {
 	router.HandleFunc(incidentReportsWithId, incidentReportHandler.GetById).Methods(http.MethodGet)
 	router.HandleFunc(incidentReportsWithId, incidentReportHandler.Update).Methods(http.MethodPut)
 	router.HandleFunc(incidentReportsWithId, incidentReportHandler.Delete).Methods(http.MethodDelete)
+
+	router.HandleFunc(maintenanceLogsBase, maintenanceLogHandler.List).Methods(http.MethodGet)
+	router.HandleFunc(maintenanceLogsBase, maintenanceLogHandler.Create).Methods(http.MethodPost)
+	router.HandleFunc(maintenanceLogsWithId, maintenanceLogHandler.GetById).Methods(http.MethodGet)
+	router.HandleFunc(maintenanceLogsWithId, maintenanceLogHandler.Update).Methods(http.MethodPut)
+	router.HandleFunc(maintenanceLogsWithId, maintenanceLogHandler.Delete).Methods(http.MethodDelete)
 
 	// start a server with the mux router we just armed with routes and the env variables as loaded into the config.go file
 	server := &http.Server{
