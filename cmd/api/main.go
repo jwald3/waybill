@@ -35,6 +35,9 @@ var (
 
 	fuelLogsBase   = "/api/v1/fuel-logs"
 	fuelLogsWithId = "/api/vl/fuel-logs/{id}"
+
+	incidentReportsBase   = "/api/v1/incident-reports"
+	incidentReportsWithId = "/api/vl/incident-reports/{id}"
 )
 
 func main() {
@@ -68,6 +71,10 @@ func main() {
 	fuelLogRepo := repository.NewFuelLogRepository(db)
 	fuelLogService := service.NewFuelLogService(db, fuelLogRepo)
 	fuelLogHandler := handler.NewFuelLogHandler(fuelLogService)
+
+	incidentReportRepo := repository.NewIncidentReportRepository(db)
+	incidentReportService := service.NewIncidentReportService(db, incidentReportRepo)
+	incidentReportHandler := handler.NewIncidentReportHandler(incidentReportService)
 
 	// the gorilla mux router - I went with this dependency to simplify the routing and make handling URL params less of a pain
 	router := mux.NewRouter()
@@ -103,6 +110,12 @@ func main() {
 	router.HandleFunc(fuelLogsWithId, fuelLogHandler.GetById).Methods(http.MethodGet)
 	router.HandleFunc(fuelLogsWithId, fuelLogHandler.Update).Methods(http.MethodPut)
 	router.HandleFunc(fuelLogsWithId, fuelLogHandler.Delete).Methods(http.MethodDelete)
+
+	router.HandleFunc(incidentReportsBase, incidentReportHandler.List).Methods(http.MethodGet)
+	router.HandleFunc(incidentReportsBase, incidentReportHandler.Create).Methods(http.MethodPost)
+	router.HandleFunc(incidentReportsWithId, incidentReportHandler.GetById).Methods(http.MethodGet)
+	router.HandleFunc(incidentReportsWithId, incidentReportHandler.Update).Methods(http.MethodPut)
+	router.HandleFunc(incidentReportsWithId, incidentReportHandler.Delete).Methods(http.MethodDelete)
 
 	// start a server with the mux router we just armed with routes and the env variables as loaded into the config.go file
 	server := &http.Server{
