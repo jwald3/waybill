@@ -83,6 +83,7 @@ func incidentReportRequestToDomainUpdate(req IncidentReportUpdateRequest) (*doma
 	now := time.Now()
 
 	return &domain.IncidentReport{
+		ID:             req.ID,
 		Trip:           req.Trip,
 		TruckID:        req.TruckID,
 		DriverID:       req.DriverID,
@@ -98,6 +99,7 @@ func incidentReportRequestToDomainUpdate(req IncidentReportUpdateRequest) (*doma
 
 func incidentReportDomainToResponse(i *domain.IncidentReport) IncidentReportResponse {
 	return IncidentReportResponse{
+		ID:             i.ID,
 		Trip:           i.Trip,
 		TruckID:        i.TruckID,
 		DriverID:       i.DriverID,
