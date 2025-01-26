@@ -20,7 +20,6 @@ type Trip struct {
 	Cargo         Cargo               `bson:"cargo"`
 	FuelUsage     float64             `bson:"fuel_usage_gallons"`
 	DistanceMiles int                 `bson:"distance_miles"`
-	Incidents     []Incident          `bson:"incidents"`
 	CreatedAt     primitive.DateTime  `bson:"created_at"`
 	UpdatedAt     primitive.DateTime  `bson:"updated_at"`
 }
@@ -72,7 +71,6 @@ func NewTrip(
 		Cargo:         cargo,
 		FuelUsage:     fuelUsage,
 		DistanceMiles: distanceMiles,
-		Incidents:     []Incident{},
 		CreatedAt:     primitive.NewDateTimeFromTime(now),
 		UpdatedAt:     primitive.NewDateTimeFromTime(now),
 	}, nil

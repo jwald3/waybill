@@ -38,7 +38,6 @@ type TripCreateRequest struct {
 	Cargo         domain.Cargo        `json:"cargo"`
 	FuelUsage     float64             `json:"fuel_usage_gallons"`
 	DistanceMiles int                 `json:"distance_miles"`
-	Incidents     []domain.Incident   `json:"incidents"`
 }
 
 type TripUpdateRequest struct {
@@ -55,7 +54,6 @@ type TripUpdateRequest struct {
 	Cargo         domain.Cargo        `json:"cargo"`
 	FuelUsage     float64             `json:"fuel_usage_gallons"`
 	DistanceMiles int                 `json:"distance_miles"`
-	Incidents     []domain.Incident   `json:"incidents"`
 }
 
 type TripResponse struct {
@@ -72,7 +70,6 @@ type TripResponse struct {
 	Cargo         domain.Cargo        `json:"cargo"`
 	FuelUsage     float64             `json:"fuel_usage_gallons"`
 	DistanceMiles int                 `json:"distance_miles"`
-	Incidents     []domain.Incident   `json:"incidents"`
 	CreatedAt     primitive.DateTime  `json:"created_at"`
 	UpdatedAt     primitive.DateTime  `json:"updated_at"`
 }
@@ -115,7 +112,6 @@ func tripRequestToDomainUpdate(req TripUpdateRequest) (*domain.Trip, error) {
 		Cargo:         req.Cargo,
 		FuelUsage:     req.FuelUsage,
 		DistanceMiles: req.DistanceMiles,
-		Incidents:     make([]domain.Incident, 0),
 		UpdatedAt:     primitive.NewDateTimeFromTime(now),
 	}, nil
 }
@@ -135,7 +131,6 @@ func tripDomainToResponse(t *domain.Trip) TripResponse {
 		Cargo:         t.Cargo,
 		FuelUsage:     t.FuelUsage,
 		DistanceMiles: t.DistanceMiles,
-		Incidents:     t.Incidents,
 		CreatedAt:     t.CreatedAt,
 		UpdatedAt:     t.UpdatedAt,
 	}
