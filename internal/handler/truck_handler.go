@@ -42,41 +42,39 @@ type TruckCreateRequest struct {
 }
 
 type TruckUpdateRequest struct {
-	ID                 primitive.ObjectID         `json:"id"`
-	TruckNumber        string                     `json:"truck_number"`
-	VIN                string                     `json:"vin"`
-	Make               string                     `json:"make"`
-	Model              string                     `json:"model"`
-	Year               int                        `json:"year"`
-	LicensePlate       domain.LicensePlate        `json:"license_plate"`
-	Mileage            int                        `json:"mileage"`
-	Status             string                     `json:"status"`
-	AssignedDriverID   *primitive.ObjectID        `json:"assigned_driver_id,omitempty"`
-	TrailerType        string                     `json:"trailer_type"`
-	CapacityTons       float64                    `json:"capacity_tons"`
-	FuelType           string                     `json:"fuel_type"`
-	LastMaintenance    string                     `json:"last_maintenance"`
-	MaintenanceRecords []domain.MaintenanceRecord `json:"maintenance_records"`
+	ID               primitive.ObjectID  `json:"id"`
+	TruckNumber      string              `json:"truck_number"`
+	VIN              string              `json:"vin"`
+	Make             string              `json:"make"`
+	Model            string              `json:"model"`
+	Year             int                 `json:"year"`
+	LicensePlate     domain.LicensePlate `json:"license_plate"`
+	Mileage          int                 `json:"mileage"`
+	Status           string              `json:"status"`
+	AssignedDriverID *primitive.ObjectID `json:"assigned_driver_id,omitempty"`
+	TrailerType      string              `json:"trailer_type"`
+	CapacityTons     float64             `json:"capacity_tons"`
+	FuelType         string              `json:"fuel_type"`
+	LastMaintenance  string              `json:"last_maintenance"`
 }
 
 type TruckResponse struct {
-	ID                 primitive.ObjectID         `bson:"_id,omitempty"`
-	TruckNumber        string                     `bson:"truck_number"`
-	VIN                string                     `bson:"vin"`
-	Make               string                     `bson:"make"`
-	Model              string                     `bson:"model"`
-	Year               int                        `bson:"year"`
-	LicensePlate       domain.LicensePlate        `bson:"license_plate"`
-	Mileage            int                        `bson:"mileage"`
-	Status             string                     `bson:"status"`
-	AssignedDriverID   *primitive.ObjectID        `bson:"assigned_driver_id,omitempty"`
-	TrailerType        string                     `bson:"trailer_type"`
-	CapacityTons       float64                    `bson:"capacity_tons"`
-	FuelType           string                     `bson:"fuel_type"`
-	LastMaintenance    string                     `bson:"last_maintenance"`
-	MaintenanceRecords []domain.MaintenanceRecord `bson:"maintenance_records"`
-	CreatedAt          primitive.DateTime         `bson:"created_at"`
-	UpdatedAt          primitive.DateTime         `bson:"updated_at"`
+	ID               primitive.ObjectID  `bson:"_id,omitempty"`
+	TruckNumber      string              `bson:"truck_number"`
+	VIN              string              `bson:"vin"`
+	Make             string              `bson:"make"`
+	Model            string              `bson:"model"`
+	Year             int                 `bson:"year"`
+	LicensePlate     domain.LicensePlate `bson:"license_plate"`
+	Mileage          int                 `bson:"mileage"`
+	Status           string              `bson:"status"`
+	AssignedDriverID *primitive.ObjectID `bson:"assigned_driver_id,omitempty"`
+	TrailerType      string              `bson:"trailer_type"`
+	CapacityTons     float64             `bson:"capacity_tons"`
+	FuelType         string              `bson:"fuel_type"`
+	LastMaintenance  string              `bson:"last_maintenance"`
+	CreatedAt        primitive.DateTime  `bson:"created_at"`
+	UpdatedAt        primitive.DateTime  `bson:"updated_at"`
 }
 
 type ListTrucksResponse struct {

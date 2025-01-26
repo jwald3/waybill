@@ -7,23 +7,22 @@ import (
 )
 
 type Truck struct {
-	ID                 primitive.ObjectID  `bson:"_id,omitempty"`
-	TruckNumber        string              `bson:"truck_number"`
-	VIN                string              `bson:"vin"`
-	Make               string              `bson:"make"`
-	Model              string              `bson:"model"`
-	Year               int                 `bson:"year"`
-	LicensePlate       LicensePlate        `bson:"license_plate"`
-	Mileage            int                 `bson:"mileage"`
-	Status             string              `bson:"status"`
-	AssignedDriverID   *primitive.ObjectID `bson:"assigned_driver_id,omitempty"`
-	TrailerType        string              `bson:"trailer_type"`
-	CapacityTons       float64             `bson:"capacity_tons"`
-	FuelType           string              `bson:"fuel_type"`
-	LastMaintenance    string              `bson:"last_maintenance"`
-	MaintenanceRecords []MaintenanceRecord `bson:"maintenance_records"`
-	CreatedAt          primitive.DateTime  `bson:"created_at"`
-	UpdatedAt          primitive.DateTime  `bson:"updated_at"`
+	ID               primitive.ObjectID  `bson:"_id,omitempty"`
+	TruckNumber      string              `bson:"truck_number"`
+	VIN              string              `bson:"vin"`
+	Make             string              `bson:"make"`
+	Model            string              `bson:"model"`
+	Year             int                 `bson:"year"`
+	LicensePlate     LicensePlate        `bson:"license_plate"`
+	Mileage          int                 `bson:"mileage"`
+	Status           string              `bson:"status"`
+	AssignedDriverID *primitive.ObjectID `bson:"assigned_driver_id,omitempty"`
+	TrailerType      string              `bson:"trailer_type"`
+	CapacityTons     float64             `bson:"capacity_tons"`
+	FuelType         string              `bson:"fuel_type"`
+	LastMaintenance  string              `bson:"last_maintenance"`
+	CreatedAt        primitive.DateTime  `bson:"created_at"`
+	UpdatedAt        primitive.DateTime  `bson:"updated_at"`
 }
 
 type LicensePlate struct {
@@ -54,21 +53,20 @@ func NewTruck(
 	now := time.Now()
 
 	return &Truck{
-		TruckNumber:        truckNumber,
-		VIN:                vin,
-		Make:               vehicleMake,
-		Model:              model,
-		Year:               year,
-		LicensePlate:       licensePlate,
-		Mileage:            mileage,
-		Status:             status,
-		AssignedDriverID:   nil,
-		TrailerType:        trailerType,
-		CapacityTons:       capacityTons,
-		FuelType:           fuelType,
-		LastMaintenance:    LastMaintenance,
-		MaintenanceRecords: []MaintenanceRecord{},
-		CreatedAt:          primitive.NewDateTimeFromTime(now),
-		UpdatedAt:          primitive.NewDateTimeFromTime(now),
+		TruckNumber:      truckNumber,
+		VIN:              vin,
+		Make:             vehicleMake,
+		Model:            model,
+		Year:             year,
+		LicensePlate:     licensePlate,
+		Mileage:          mileage,
+		Status:           status,
+		AssignedDriverID: nil,
+		TrailerType:      trailerType,
+		CapacityTons:     capacityTons,
+		FuelType:         fuelType,
+		LastMaintenance:  LastMaintenance,
+		CreatedAt:        primitive.NewDateTimeFromTime(now),
+		UpdatedAt:        primitive.NewDateTimeFromTime(now),
 	}, nil
 }
