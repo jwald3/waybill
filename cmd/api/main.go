@@ -34,13 +34,13 @@ var (
 	tripsWithId = "/api/v1/trips/{id}"
 
 	fuelLogsBase   = "/api/v1/fuel-logs"
-	fuelLogsWithId = "/api/vl/fuel-logs/{id}"
+	fuelLogsWithId = "/api/v1/fuel-logs/{id}"
 
 	incidentReportsBase   = "/api/v1/incident-reports"
-	incidentReportsWithId = "/api/vl/incident-reports/{id}"
+	incidentReportsWithId = "/api/v1/incident-reports/{id}"
 
 	maintenanceLogsBase   = "/api/v1/maintenance-logs"
-	maintenanceLogsWithId = "/api/vl/maintenance-logs/{id}"
+	maintenanceLogsWithId = "/api/v1/maintenance-logs/{id}"
 )
 
 func main() {

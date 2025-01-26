@@ -53,7 +53,7 @@ func (r *fuelLogRepository) GetById(ctx context.Context, id primitive.ObjectID) 
 		return nil, nil
 	}
 	if err != nil {
-		return nil, fmt.Errorf("failed to get fuelLog: %w", err)
+		return nil, fmt.Errorf("failed to get fuel log: %w", err)
 	}
 	return &fuelLog, nil
 }

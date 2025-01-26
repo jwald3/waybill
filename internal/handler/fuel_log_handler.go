@@ -37,7 +37,7 @@ type FuelLogCreateRequest struct {
 }
 
 type FuelLogUpdateRequest struct {
-	ID               primitive.ObjectID  `json:"_id,omitempty"`
+	ID               primitive.ObjectID  `json:"id"`
 	TruckID          *primitive.ObjectID `json:"truck_id"`
 	DriverID         *primitive.ObjectID `json:"driver_id"`
 	Date             string              `json:"date"`
@@ -98,6 +98,7 @@ func fuelLogRequestToDomainUpdate(req FuelLogUpdateRequest) (*domain.FuelLog, er
 
 func fuelLogDomainToResponse(f *domain.FuelLog) FuelLogResponse {
 	return FuelLogResponse{
+		ID:               f.ID,
 		TruckID:          f.TruckID,
 		DriverID:         f.DriverID,
 		Date:             f.Date,
