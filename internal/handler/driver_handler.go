@@ -52,21 +52,20 @@ type DriverUpdateRequest struct {
 }
 
 type DriverResponse struct {
-	ID                primitive.ObjectID   `json:"_id,omitempty"`
-	FirstName         string               `json:"first_name"`
-	LastName          string               `json:"last_name"`
-	DOB               string               `json:"dob"`
-	LicenseNumber     string               `json:"license_number"`
-	LicenseState      string               `json:"license_state"`
-	LicenseExpiration string               `json:"license_expiration"`
-	Phone             string               `json:"phone"`
-	Email             string               `json:"email"`
-	Address           domain.Address       `json:"address"`
-	EmploymentStatus  string               `json:"employment_status"`
-	AssignedTruckID   *primitive.ObjectID  `json:"assigned_truck_id,omitempty"`
-	PastTrips         []domain.TripHistory `json:"past_trips"`
-	CreatedAt         primitive.DateTime   `json:"created_at"`
-	UpdatedAt         primitive.DateTime   `json:"updated_at"`
+	ID                primitive.ObjectID  `json:"_id,omitempty"`
+	FirstName         string              `json:"first_name"`
+	LastName          string              `json:"last_name"`
+	DOB               string              `json:"dob"`
+	LicenseNumber     string              `json:"license_number"`
+	LicenseState      string              `json:"license_state"`
+	LicenseExpiration string              `json:"license_expiration"`
+	Phone             string              `json:"phone"`
+	Email             string              `json:"email"`
+	Address           domain.Address      `json:"address"`
+	EmploymentStatus  string              `json:"employment_status"`
+	AssignedTruckID   *primitive.ObjectID `json:"assigned_truck_id,omitempty"`
+	CreatedAt         primitive.DateTime  `json:"created_at"`
+	UpdatedAt         primitive.DateTime  `json:"updated_at"`
 }
 
 type ListDriversResponse struct {
@@ -120,7 +119,6 @@ func driverDomainToResponse(d *domain.Driver) DriverResponse {
 		Address:           d.Address,
 		EmploymentStatus:  d.EmploymentStatus,
 		AssignedTruckID:   d.AssignedTruckID,
-		PastTrips:         d.PastTrips,
 		CreatedAt:         d.CreatedAt,
 		UpdatedAt:         d.UpdatedAt,
 	}

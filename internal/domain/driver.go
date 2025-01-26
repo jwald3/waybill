@@ -19,7 +19,6 @@ type Driver struct {
 	Address           Address             `bson:"address"`
 	EmploymentStatus  string              `bson:"employment_status"`
 	AssignedTruckID   *primitive.ObjectID `bson:"assigned_truck_id,omitempty"`
-	PastTrips         []TripHistory       `bson:"past_trips"`
 	CreatedAt         primitive.DateTime  `bson:"created_at"`
 	UpdatedAt         primitive.DateTime  `bson:"updated_at"`
 }
@@ -61,7 +60,6 @@ func NewDriver(
 		Email:             email,
 		Address:           address,
 		EmploymentStatus:  "active",
-		PastTrips:         []TripHistory{},
 		AssignedTruckID:   nil,
 		CreatedAt:         primitive.NewDateTimeFromTime(now),
 		UpdatedAt:         primitive.NewDateTimeFromTime(now),
