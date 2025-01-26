@@ -26,40 +26,40 @@ var (
 // DTOS =======================================================
 
 type FuelLogCreateRequest struct {
-	TruckID          primitive.ObjectID `json:"truck_id"`
-	DriverID         primitive.ObjectID `json:"driver_id"`
-	Date             string             `json:"date"`
-	GallonsPurchased float64            `json:"gallons_purchased"`
-	PricePerGallon   float64            `json:"price_per_gallon"`
-	TotalCost        float64            `json:"total_cost"`
-	Location         string             `json:"location"`
-	OdometerReading  int                `json:"odometer_reading"`
+	TruckID          *primitive.ObjectID `json:"truck_id"`
+	DriverID         *primitive.ObjectID `json:"driver_id"`
+	Date             string              `json:"date"`
+	GallonsPurchased float64             `json:"gallons_purchased"`
+	PricePerGallon   float64             `json:"price_per_gallon"`
+	TotalCost        float64             `json:"total_cost"`
+	Location         string              `json:"location"`
+	OdometerReading  int                 `json:"odometer_reading"`
 }
 
 type FuelLogUpdateRequest struct {
-	ID               primitive.ObjectID `json:"_id,omitempty"`
-	TruckID          primitive.ObjectID `json:"truck_id"`
-	DriverID         primitive.ObjectID `json:"driver_id"`
-	Date             string             `json:"date"`
-	GallonsPurchased float64            `json:"gallons_purchased"`
-	PricePerGallon   float64            `json:"price_per_gallon"`
-	TotalCost        float64            `json:"total_cost"`
-	Location         string             `json:"location"`
-	OdometerReading  int                `json:"odometer_reading"`
+	ID               primitive.ObjectID  `json:"_id,omitempty"`
+	TruckID          *primitive.ObjectID `json:"truck_id"`
+	DriverID         *primitive.ObjectID `json:"driver_id"`
+	Date             string              `json:"date"`
+	GallonsPurchased float64             `json:"gallons_purchased"`
+	PricePerGallon   float64             `json:"price_per_gallon"`
+	TotalCost        float64             `json:"total_cost"`
+	Location         string              `json:"location"`
+	OdometerReading  int                 `json:"odometer_reading"`
 }
 
 type FuelLogResponse struct {
-	ID               primitive.ObjectID `json:"_id,omitempty"`
-	TruckID          primitive.ObjectID `json:"truck_id"`
-	DriverID         primitive.ObjectID `json:"driver_id"`
-	Date             string             `json:"date"`
-	GallonsPurchased float64            `json:"gallons_purchased"`
-	PricePerGallon   float64            `json:"price_per_gallon"`
-	TotalCost        float64            `json:"total_cost"`
-	Location         string             `json:"location"`
-	OdometerReading  int                `json:"odometer_reading"`
-	CreatedAt        primitive.DateTime `json:"created_at"`
-	UpdatedAt        primitive.DateTime `json:"updated_at"`
+	ID               primitive.ObjectID  `json:"_id,omitempty"`
+	TruckID          *primitive.ObjectID `json:"truck_id"`
+	DriverID         *primitive.ObjectID `json:"driver_id"`
+	Date             string              `json:"date"`
+	GallonsPurchased float64             `json:"gallons_purchased"`
+	PricePerGallon   float64             `json:"price_per_gallon"`
+	TotalCost        float64             `json:"total_cost"`
+	Location         string              `json:"location"`
+	OdometerReading  int                 `json:"odometer_reading"`
+	CreatedAt        primitive.DateTime  `json:"created_at"`
+	UpdatedAt        primitive.DateTime  `json:"updated_at"`
 }
 
 type ListFuelLogsResponse struct {

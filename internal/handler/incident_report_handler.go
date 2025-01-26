@@ -26,40 +26,40 @@ var (
 // DTOS =======================================================
 
 type IncidentReportCreateRequest struct {
-	Trip           primitive.ObjectID `json:"trip_id"`
-	TruckID        primitive.ObjectID `json:"truck_id"`
-	DriverID       primitive.ObjectID `json:"driver_id"`
-	Type           string             `json:"type"`
-	Description    string             `json:"description"`
-	Date           string             `json:"date"`
-	Location       string             `json:"location"`
-	DamageEstimate float64            `json:"damage_estimate"`
+	Trip           *primitive.ObjectID `json:"trip_id"`
+	TruckID        *primitive.ObjectID `json:"truck_id"`
+	DriverID       *primitive.ObjectID `json:"driver_id"`
+	Type           string              `json:"type"`
+	Description    string              `json:"description"`
+	Date           string              `json:"date"`
+	Location       string              `json:"location"`
+	DamageEstimate float64             `json:"damage_estimate"`
 }
 
 type IncidentReportUpdateRequest struct {
-	ID             primitive.ObjectID `json:"_id,omitempty"`
-	Trip           primitive.ObjectID `json:"trip_id"`
-	TruckID        primitive.ObjectID `json:"truck_id"`
-	DriverID       primitive.ObjectID `json:"driver_id"`
-	Type           string             `json:"type"`
-	Description    string             `json:"description"`
-	Date           string             `json:"date"`
-	Location       string             `json:"location"`
-	DamageEstimate float64            `json:"damage_estimate"`
+	ID             primitive.ObjectID  `json:"_id,omitempty"`
+	Trip           *primitive.ObjectID `json:"trip_id"`
+	TruckID        *primitive.ObjectID `json:"truck_id"`
+	DriverID       *primitive.ObjectID `json:"driver_id"`
+	Type           string              `json:"type"`
+	Description    string              `json:"description"`
+	Date           string              `json:"date"`
+	Location       string              `json:"location"`
+	DamageEstimate float64             `json:"damage_estimate"`
 }
 
 type IncidentReportResponse struct {
-	ID             primitive.ObjectID `json:"_id,omitempty"`
-	Trip           primitive.ObjectID `json:"trip_id"`
-	TruckID        primitive.ObjectID `json:"truck_id"`
-	DriverID       primitive.ObjectID `json:"driver_id"`
-	Type           string             `json:"type"`
-	Description    string             `json:"description"`
-	Date           string             `json:"date"`
-	Location       string             `json:"location"`
-	DamageEstimate float64            `json:"damage_estimate"`
-	CreatedAt      primitive.DateTime `json:"created_at"`
-	UpdatedAt      primitive.DateTime `json:"updated_at"`
+	ID             primitive.ObjectID  `json:"_id,omitempty"`
+	Trip           *primitive.ObjectID `json:"trip_id"`
+	TruckID        *primitive.ObjectID `json:"truck_id"`
+	DriverID       *primitive.ObjectID `json:"driver_id"`
+	Type           string              `json:"type"`
+	Description    string              `json:"description"`
+	Date           string              `json:"date"`
+	Location       string              `json:"location"`
+	DamageEstimate float64             `json:"damage_estimate"`
+	CreatedAt      primitive.DateTime  `json:"created_at"`
+	UpdatedAt      primitive.DateTime  `json:"updated_at"`
 }
 
 type ListIncidentReportsResponse struct {

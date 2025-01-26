@@ -34,7 +34,7 @@ type TruckCreateRequest struct {
 	LicensePlate     domain.LicensePlate `json:"license_plate"`
 	Mileage          int                 `json:"mileage"`
 	Status           string              `json:"status"`
-	AssignedDriverID primitive.ObjectID  `json:"assigned_driver_id,omitempty"`
+	AssignedDriverID *primitive.ObjectID `json:"assigned_driver_id,omitempty"`
 	TrailerType      string              `json:"trailer_type"`
 	CapacityTons     float64             `json:"capacity_tons"`
 	FuelType         string              `json:"fuel_type"`
@@ -51,7 +51,7 @@ type TruckUpdateRequest struct {
 	LicensePlate       domain.LicensePlate        `json:"license_plate"`
 	Mileage            int                        `json:"mileage"`
 	Status             string                     `json:"status"`
-	AssignedDriverID   primitive.ObjectID         `json:"assigned_driver_id,omitempty"`
+	AssignedDriverID   *primitive.ObjectID        `json:"assigned_driver_id,omitempty"`
 	TrailerType        string                     `json:"trailer_type"`
 	CapacityTons       float64                    `json:"capacity_tons"`
 	FuelType           string                     `json:"fuel_type"`
@@ -69,7 +69,7 @@ type TruckResponse struct {
 	LicensePlate       domain.LicensePlate        `bson:"license_plate"`
 	Mileage            int                        `bson:"mileage"`
 	Status             string                     `bson:"status"`
-	AssignedDriverID   primitive.ObjectID         `bson:"assigned_driver_id,omitempty"`
+	AssignedDriverID   *primitive.ObjectID        `bson:"assigned_driver_id,omitempty"`
 	TrailerType        string                     `bson:"trailer_type"`
 	CapacityTons       float64                    `bson:"capacity_tons"`
 	FuelType           string                     `bson:"fuel_type"`
@@ -96,7 +96,6 @@ func truckRequestToDomainCreate(req TruckCreateRequest) (*domain.Truck, error) {
 		req.Year,
 		req.Mileage,
 		req.CapacityTons,
-		req.AssignedDriverID,
 		req.LicensePlate,
 	)
 }

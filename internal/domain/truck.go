@@ -16,7 +16,7 @@ type Truck struct {
 	LicensePlate       LicensePlate        `bson:"license_plate"`
 	Mileage            int                 `bson:"mileage"`
 	Status             string              `bson:"status"`
-	AssignedDriverID   primitive.ObjectID  `bson:"assigned_driver_id,omitempty"`
+	AssignedDriverID   *primitive.ObjectID `bson:"assigned_driver_id,omitempty"`
 	TrailerType        string              `bson:"trailer_type"`
 	CapacityTons       float64             `bson:"capacity_tons"`
 	FuelType           string              `bson:"fuel_type"`
@@ -50,7 +50,6 @@ func NewTruck(
 	year,
 	mileage int,
 	capacityTons float64,
-	assignedDriverID primitive.ObjectID,
 	licensePlate LicensePlate) (*Truck, error) {
 	now := time.Now()
 
@@ -63,12 +62,12 @@ func NewTruck(
 		LicensePlate:       licensePlate,
 		Mileage:            mileage,
 		Status:             status,
-		AssignedDriverID:   assignedDriverID,
+		AssignedDriverID:   nil,
 		TrailerType:        trailerType,
 		CapacityTons:       capacityTons,
 		FuelType:           fuelType,
 		LastMaintenance:    LastMaintenance,
-		MaintenanceRecords: make([]MaintenanceRecord, 0),
+		MaintenanceRecords: []MaintenanceRecord{},
 		CreatedAt:          primitive.NewDateTimeFromTime(now),
 		UpdatedAt:          primitive.NewDateTimeFromTime(now),
 	}, nil

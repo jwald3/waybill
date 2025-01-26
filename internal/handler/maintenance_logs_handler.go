@@ -26,37 +26,37 @@ var (
 // DTOS =======================================================
 
 type MaintenanceLogCreateRequest struct {
-	TruckID     primitive.ObjectID `json:"truck_id"`
-	Date        string             `json:"date"`
-	ServiceType string             `json:"service_type"`
-	Cost        float64            `json:"cost"`
-	Notes       string             `json:"notes"`
-	Mechanic    string             `json:"mechanic"`
-	Location    string             `json:"location"`
+	TruckID     *primitive.ObjectID `json:"truck_id"`
+	Date        string              `json:"date"`
+	ServiceType string              `json:"service_type"`
+	Cost        float64             `json:"cost"`
+	Notes       string              `json:"notes"`
+	Mechanic    string              `json:"mechanic"`
+	Location    string              `json:"location"`
 }
 
 type MaintenanceLogUpdateRequest struct {
-	ID          primitive.ObjectID `json:"_id,omitempty"`
-	TruckID     primitive.ObjectID `json:"truck_id"`
-	Date        string             `json:"date"`
-	ServiceType string             `json:"service_type"`
-	Cost        float64            `json:"cost"`
-	Notes       string             `json:"notes"`
-	Mechanic    string             `json:"mechanic"`
-	Location    string             `json:"location"`
+	ID          primitive.ObjectID  `json:"_id,omitempty"`
+	TruckID     *primitive.ObjectID `json:"truck_id"`
+	Date        string              `json:"date"`
+	ServiceType string              `json:"service_type"`
+	Cost        float64             `json:"cost"`
+	Notes       string              `json:"notes"`
+	Mechanic    string              `json:"mechanic"`
+	Location    string              `json:"location"`
 }
 
 type MaintenanceLogResponse struct {
-	ID          primitive.ObjectID `json:"_id,omitempty"`
-	TruckID     primitive.ObjectID `json:"truck_id"`
-	Date        string             `json:"date"`
-	ServiceType string             `json:"service_type"`
-	Cost        float64            `json:"cost"`
-	Notes       string             `json:"notes"`
-	Mechanic    string             `json:"mechanic"`
-	Location    string             `json:"location"`
-	CreatedAt   primitive.DateTime `json:"created_at"`
-	UpdatedAt   primitive.DateTime `json:"updated_at"`
+	ID          primitive.ObjectID  `json:"_id,omitempty"`
+	TruckID     *primitive.ObjectID `json:"truck_id"`
+	Date        string              `json:"date"`
+	ServiceType string              `json:"service_type"`
+	Cost        float64             `json:"cost"`
+	Notes       string              `json:"notes"`
+	Mechanic    string              `json:"mechanic"`
+	Location    string              `json:"location"`
+	CreatedAt   primitive.DateTime  `json:"created_at"`
+	UpdatedAt   primitive.DateTime  `json:"updated_at"`
 }
 
 type ListMaintenanceLogsResponse struct {

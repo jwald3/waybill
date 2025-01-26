@@ -43,7 +43,7 @@ func NewFacility(
 		ContactInfo:       contactInfo,
 		ParkingCapacity:   parkingCapacity,
 		ServicesAvailable: servicesAvailable,
-		AssignedTrucks:    make([]primitive.ObjectID, 0),
+		AssignedTrucks:    []primitive.ObjectID{},
 		CreatedAt:         primitive.NewDateTimeFromTime(now),
 		UpdatedAt:         primitive.NewDateTimeFromTime(now),
 	}, nil
