@@ -103,6 +103,7 @@ func facilityDomainToResponse(f *domain.Facility) FacilityResponse {
 		ContactInfo:       f.ContactInfo,
 		ParkingCapacity:   f.ParkingCapacity,
 		ServicesAvailable: f.ServicesAvailable,
+		AssignedTrucks:    f.AssignedTrucks,
 		CreatedAt:         f.CreatedAt,
 		UpdatedAt:         f.UpdatedAt,
 	}
