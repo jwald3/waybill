@@ -33,11 +33,11 @@ type TruckCreateRequest struct {
 	Year             int                 `json:"year"`
 	LicensePlate     domain.LicensePlate `json:"license_plate"`
 	Mileage          int                 `json:"mileage"`
-	Status           string              `json:"status"`
+	Status           domain.TruckStatus  `json:"status"`
 	AssignedDriverID *primitive.ObjectID `json:"assigned_driver_id,omitempty"`
-	TrailerType      string              `json:"trailer_type"`
+	TrailerType      domain.TrailerType  `json:"trailer_type"`
 	CapacityTons     float64             `json:"capacity_tons"`
-	FuelType         string              `json:"fuel_type"`
+	FuelType         domain.FuelType     `json:"fuel_type"`
 	LastMaintenance  string              `json:"last_maintenance"`
 }
 
@@ -50,11 +50,11 @@ type TruckUpdateRequest struct {
 	Year             int                 `json:"year"`
 	LicensePlate     domain.LicensePlate `json:"license_plate"`
 	Mileage          int                 `json:"mileage"`
-	Status           string              `json:"status"`
+	Status           domain.TruckStatus  `json:"status"`
 	AssignedDriverID *primitive.ObjectID `json:"assigned_driver_id,omitempty"`
-	TrailerType      string              `json:"trailer_type"`
+	TrailerType      domain.TrailerType  `json:"trailer_type"`
 	CapacityTons     float64             `json:"capacity_tons"`
-	FuelType         string              `json:"fuel_type"`
+	FuelType         domain.FuelType     `json:"fuel_type"`
 	LastMaintenance  string              `json:"last_maintenance"`
 }
 
@@ -67,11 +67,11 @@ type TruckResponse struct {
 	Year             int                 `bson:"year"`
 	LicensePlate     domain.LicensePlate `bson:"license_plate"`
 	Mileage          int                 `bson:"mileage"`
-	Status           string              `bson:"status"`
+	Status           domain.TruckStatus  `bson:"status"`
 	AssignedDriverID *primitive.ObjectID `bson:"assigned_driver_id,omitempty"`
-	TrailerType      string              `bson:"trailer_type"`
+	TrailerType      domain.TrailerType  `bson:"trailer_type"`
 	CapacityTons     float64             `bson:"capacity_tons"`
-	FuelType         string              `bson:"fuel_type"`
+	FuelType         domain.FuelType     `bson:"fuel_type"`
 	LastMaintenance  string              `bson:"last_maintenance"`
 	CreatedAt        primitive.DateTime  `bson:"created_at"`
 	UpdatedAt        primitive.DateTime  `bson:"updated_at"`
