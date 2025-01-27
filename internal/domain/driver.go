@@ -6,6 +6,24 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
+type EmploymentStatus string
+
+const (
+	EmploymentStatusActive     EmploymentStatus = "ACTIVE"
+	EmploymentStatusSuspended  EmploymentStatus = "SUSPENDED"
+	EmploymentStatusTerminated EmploymentStatus = "TERMINATED"
+)
+
+func (e EmploymentStatus) IsValid() bool {
+	switch e {
+	case EmploymentStatusActive,
+		EmploymentStatusSuspended,
+		EmploymentStatusTerminated:
+		return true
+	}
+	return false
+}
+
 type Driver struct {
 	ID                primitive.ObjectID  `bson:"_id,omitempty"`
 	FirstName         string              `bson:"first_name"`
@@ -17,7 +35,7 @@ type Driver struct {
 	Phone             string              `bson:"phone"`
 	Email             string              `bson:"email"`
 	Address           Address             `bson:"address"`
-	EmploymentStatus  string              `bson:"employment_status"`
+	EmploymentStatus  EmploymentStatus    `bson:"employment_status"`
 	AssignedTruckID   *primitive.ObjectID `bson:"assigned_truck_id,omitempty"`
 	CreatedAt         primitive.DateTime  `bson:"created_at"`
 	UpdatedAt         primitive.DateTime  `bson:"updated_at"`
@@ -59,7 +77,7 @@ func NewDriver(
 		Phone:             phoneNumber,
 		Email:             email,
 		Address:           address,
-		EmploymentStatus:  "active",
+		EmploymentStatus:  EmploymentStatusActive,
 		AssignedTruckID:   nil,
 		CreatedAt:         primitive.NewDateTimeFromTime(now),
 		UpdatedAt:         primitive.NewDateTimeFromTime(now),
