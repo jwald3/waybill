@@ -26,39 +26,39 @@ var (
 // DTOS =======================================================
 
 type FacilityCreateRequest struct {
-	FacilityNumber    string             `json:"facility_number"`
-	Name              string             `json:"name"`
-	Type              string             `json:"type"`
-	Address           domain.Address     `json:"address"`
-	ContactInfo       domain.ContactInfo `json:"contact_info"`
-	ParkingCapacity   int                `json:"parking_capacity"`
-	ServicesAvailable []string           `json:"services_available"`
+	FacilityNumber    string                   `json:"facility_number"`
+	Name              string                   `json:"name"`
+	Type              string                   `json:"type"`
+	Address           domain.Address           `json:"address"`
+	ContactInfo       domain.ContactInfo       `json:"contact_info"`
+	ParkingCapacity   int                      `json:"parking_capacity"`
+	ServicesAvailable []domain.FacilityService `json:"services_available"`
 }
 
 type FacilityUpdateRequest struct {
-	ID                primitive.ObjectID   `json:"_id,omitempty"`
-	FacilityNumber    string               `json:"facility_number"`
-	Name              string               `json:"name"`
-	Type              string               `json:"type"`
-	Address           domain.Address       `json:"address"`
-	ContactInfo       domain.ContactInfo   `json:"contact_info"`
-	ParkingCapacity   int                  `json:"parking_capacity"`
-	ServicesAvailable []string             `json:"services_available"`
-	AssignedTrucks    []primitive.ObjectID `json:"assigned_trucks"`
+	ID                primitive.ObjectID       `json:"_id,omitempty"`
+	FacilityNumber    string                   `json:"facility_number"`
+	Name              string                   `json:"name"`
+	Type              string                   `json:"type"`
+	Address           domain.Address           `json:"address"`
+	ContactInfo       domain.ContactInfo       `json:"contact_info"`
+	ParkingCapacity   int                      `json:"parking_capacity"`
+	ServicesAvailable []domain.FacilityService `json:"services_available"`
+	AssignedTrucks    []primitive.ObjectID     `json:"assigned_trucks"`
 }
 
 type FacilityResponse struct {
-	ID                primitive.ObjectID   `json:"_id,omitempty"`
-	FacilityNumber    string               `json:"facility_number"`
-	Name              string               `json:"name"`
-	Type              string               `json:"type"`
-	Address           domain.Address       `json:"address"`
-	ContactInfo       domain.ContactInfo   `json:"contact_info"`
-	ParkingCapacity   int                  `json:"parking_capacity"`
-	ServicesAvailable []string             `json:"services_available"`
-	AssignedTrucks    []primitive.ObjectID `json:"assigned_trucks"`
-	CreatedAt         primitive.DateTime   `json:"created_at"`
-	UpdatedAt         primitive.DateTime   `json:"updated_at"`
+	ID                primitive.ObjectID       `json:"_id,omitempty"`
+	FacilityNumber    string                   `json:"facility_number"`
+	Name              string                   `json:"name"`
+	Type              string                   `json:"type"`
+	Address           domain.Address           `json:"address"`
+	ContactInfo       domain.ContactInfo       `json:"contact_info"`
+	ParkingCapacity   int                      `json:"parking_capacity"`
+	ServicesAvailable []domain.FacilityService `json:"services_available"`
+	AssignedTrucks    []primitive.ObjectID     `json:"assigned_trucks"`
+	CreatedAt         primitive.DateTime       `json:"created_at"`
+	UpdatedAt         primitive.DateTime       `json:"updated_at"`
 }
 
 type ListFacilitiesResponse struct {

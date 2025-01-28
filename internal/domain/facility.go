@@ -6,6 +6,26 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
+type FacilityService string
+
+const (
+	FacilityServiceRepairs          FacilityService = "REPAIRS"
+	FacilityServiceLoadingUnloading FacilityService = "LOADING_UNLOADING"
+	FacilityServiceLodging          FacilityService = "LODGING"
+	FacilityServiceFueling          FacilityService = "FUELING"
+)
+
+func (f FacilityService) IsValid() bool {
+	switch f {
+	case FacilityServiceFueling,
+		FacilityServiceLoadingUnloading,
+		FacilityServiceLodging,
+		FacilityServiceRepairs:
+		return true
+	}
+	return false
+}
+
 type Facility struct {
 	ID                primitive.ObjectID   `bson:"_id,omitempty"`
 	FacilityNumber    string               `bson:"facility_number"`
@@ -14,7 +34,7 @@ type Facility struct {
 	Address           Address              `bson:"address"`
 	ContactInfo       ContactInfo          `bson:"contact_info"`
 	ParkingCapacity   int                  `bson:"parking_capacity"`
-	ServicesAvailable []string             `bson:"services_available"`
+	ServicesAvailable []FacilityService    `bson:"services_available"`
 	AssignedTrucks    []primitive.ObjectID `bson:"assigned_trucks"`
 	CreatedAt         primitive.DateTime   `bson:"created_at"`
 	UpdatedAt         primitive.DateTime   `bson:"updated_at"`
@@ -32,7 +52,7 @@ func NewFacility(
 	address Address,
 	contactInfo ContactInfo,
 	parkingCapacity int,
-	servicesAvailable []string) (*Facility, error) {
+	servicesAvailable []FacilityService) (*Facility, error) {
 	now := time.Now()
 
 	return &Facility{
