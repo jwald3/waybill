@@ -6,6 +6,28 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
+type TripStatus string
+
+const (
+	TripStatusScheduled      TripStatus = "SCHEDULED"
+	TripStatusInTransit      TripStatus = "IN_TRANSIT"
+	TripStatusCompleted      TripStatus = "COMPLETED"
+	TripStatusFailedDelivery TripStatus = "FAILED_DELIVERY"
+	TripStatusCanceled       TripStatus = "CANCELED"
+)
+
+func (s TripStatus) IsValid() bool {
+	switch s {
+	case TripStatusScheduled,
+		TripStatusInTransit,
+		TripStatusCompleted,
+		TripStatusFailedDelivery,
+		TripStatusCanceled:
+		return true
+	}
+	return false
+}
+
 type Trip struct {
 	ID            primitive.ObjectID  `bson:"_id,omitempty"`
 	TripNumber    string              `bson:"trip_number"`
@@ -16,7 +38,7 @@ type Trip struct {
 	Route         Route               `bson:"route"`
 	StartTime     primitive.DateTime  `bson:"start_time"`
 	EndTime       primitive.DateTime  `bson:"end_time"`
-	Status        string              `bson:"status"`
+	Status        TripStatus          `bson:"status"`
 	Cargo         Cargo               `bson:"cargo"`
 	FuelUsage     float64             `bson:"fuel_usage_gallons"`
 	DistanceMiles int                 `bson:"distance_miles"`
@@ -36,16 +58,9 @@ type Cargo struct {
 	Hazmat      bool    `bson:"hazmat"`
 }
 
-type Incident struct {
-	Type        string `bson:"type"`
-	Description string `bson:"description"`
-	Location    string `bson:"location"`
-	Date        string `bson:"date"`
-}
-
 func NewTrip(
-	tripNumber,
-	status string,
+	tripNumber string,
+	status TripStatus,
 	driverId,
 	truckId,
 	startFacility,

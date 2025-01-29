@@ -34,7 +34,7 @@ type TripCreateRequest struct {
 	Route         domain.Route        `json:"route"`
 	StartTime     primitive.DateTime  `json:"start_time"`
 	EndTime       primitive.DateTime  `json:"end_time"`
-	Status        string              `json:"status"`
+	Status        domain.TripStatus   `json:"status"`
 	Cargo         domain.Cargo        `json:"cargo"`
 	FuelUsage     float64             `json:"fuel_usage_gallons"`
 	DistanceMiles int                 `json:"distance_miles"`
@@ -50,7 +50,7 @@ type TripUpdateRequest struct {
 	Route         domain.Route        `json:"route"`
 	StartTime     primitive.DateTime  `json:"start_time"`
 	EndTime       primitive.DateTime  `json:"end_time"`
-	Status        string              `json:"status"`
+	Status        domain.TripStatus   `json:"status"`
 	Cargo         domain.Cargo        `json:"cargo"`
 	FuelUsage     float64             `json:"fuel_usage_gallons"`
 	DistanceMiles int                 `json:"distance_miles"`
@@ -66,7 +66,7 @@ type TripResponse struct {
 	Route         domain.Route        `json:"route"`
 	StartTime     primitive.DateTime  `json:"start_time"`
 	EndTime       primitive.DateTime  `json:"end_time"`
-	Status        string              `json:"status"`
+	Status        domain.TripStatus   `json:"status"`
 	Cargo         domain.Cargo        `json:"cargo"`
 	FuelUsage     float64             `json:"fuel_usage_gallons"`
 	DistanceMiles int                 `json:"distance_miles"`
