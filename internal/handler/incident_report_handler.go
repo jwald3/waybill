@@ -29,7 +29,7 @@ type IncidentReportCreateRequest struct {
 	Trip           *primitive.ObjectID `json:"trip_id"`
 	TruckID        *primitive.ObjectID `json:"truck_id"`
 	DriverID       *primitive.ObjectID `json:"driver_id"`
-	Type           string              `json:"type"`
+	Type           domain.IncidentType `json:"type"`
 	Description    string              `json:"description"`
 	Date           string              `json:"date"`
 	Location       string              `json:"location"`
@@ -41,7 +41,7 @@ type IncidentReportUpdateRequest struct {
 	Trip           *primitive.ObjectID `json:"trip_id"`
 	TruckID        *primitive.ObjectID `json:"truck_id"`
 	DriverID       *primitive.ObjectID `json:"driver_id"`
-	Type           string              `json:"type"`
+	Type           domain.IncidentType `json:"type"`
 	Description    string              `json:"description"`
 	Date           string              `json:"date"`
 	Location       string              `json:"location"`
@@ -53,7 +53,7 @@ type IncidentReportResponse struct {
 	Trip           *primitive.ObjectID `json:"trip_id"`
 	TruckID        *primitive.ObjectID `json:"truck_id"`
 	DriverID       *primitive.ObjectID `json:"driver_id"`
-	Type           string              `json:"type"`
+	Type           domain.IncidentType `json:"type"`
 	Description    string              `json:"description"`
 	Date           string              `json:"date"`
 	Location       string              `json:"location"`

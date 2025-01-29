@@ -6,12 +6,40 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
+type IncidentType string
+
+const (
+	IncidentTypeMechanicalFailure IncidentType = "MECHANICAL_FAILURE"
+	IncidentTypeTrafficAccident   IncidentType = "TRAFFIC_ACCIDENT"
+	IncidentTypeCargoDamage       IncidentType = "CARGO_DAMAGE"
+	IncidentTypeTheft             IncidentType = "THEFT"
+	IncidentTypeWeatherDelay      IncidentType = "WEATHER_DELAY"
+	IncidentTypeRouteDeviation    IncidentType = "ROUTE_DEVIATION"
+	IncidentTypeFuelShortage      IncidentType = "FUEL_SHORTAGE"
+	IncidentTypeDriverIllness     IncidentType = "DRIVER_ILLNESS"
+)
+
+func (i IncidentType) IsValid() bool {
+	switch i {
+	case IncidentTypeMechanicalFailure,
+		IncidentTypeTrafficAccident,
+		IncidentTypeCargoDamage,
+		IncidentTypeTheft,
+		IncidentTypeWeatherDelay,
+		IncidentTypeRouteDeviation,
+		IncidentTypeFuelShortage,
+		IncidentTypeDriverIllness:
+		return true
+	}
+	return false
+}
+
 type IncidentReport struct {
 	ID             primitive.ObjectID  `bson:"_id,omitempty"`
 	Trip           *primitive.ObjectID `bson:"trip_id"`
 	TruckID        *primitive.ObjectID `bson:"truck_id"`
 	DriverID       *primitive.ObjectID `bson:"driver_id"`
-	Type           string              `bson:"type"`
+	Type           IncidentType        `bson:"type"`
 	Description    string              `bson:"description"`
 	Date           string              `bson:"date"`
 	Location       string              `bson:"location"`
@@ -20,7 +48,15 @@ type IncidentReport struct {
 	UpdatedAt      primitive.DateTime  `bson:"updated_at"`
 }
 
-func NewIncidentReport(trip, truckId, driverId *primitive.ObjectID, incidentType, description, date, location string, damageEstimate float64) (*IncidentReport, error) {
+func NewIncidentReport(
+	trip,
+	truckId,
+	driverId *primitive.ObjectID,
+	incidentType IncidentType,
+	description,
+	date,
+	location string,
+	damageEstimate float64) (*IncidentReport, error) {
 	now := time.Now()
 
 	return &IncidentReport{
