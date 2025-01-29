@@ -89,22 +89,6 @@ func (s TruckStatus) IsValid() bool {
 	return false
 }
 
-type MaintenanceServiceType string
-
-const (
-	ServiceTypeRoutine         MaintenanceServiceType = "ROUTINE_MAINTENANCE"
-	ServiceTypeEmergencyRepair MaintenanceServiceType = "EMERGENCY_REPAIR"
-)
-
-func (m MaintenanceServiceType) IsValid() bool {
-	switch m {
-	case ServiceTypeRoutine,
-		ServiceTypeEmergencyRepair:
-		return true
-	}
-	return false
-}
-
 type Truck struct {
 	ID               primitive.ObjectID  `bson:"_id,omitempty"`
 	TruckNumber      string              `bson:"truck_number"`
@@ -127,13 +111,6 @@ type Truck struct {
 type LicensePlate struct {
 	Number string `bson:"number"`
 	State  string `bson:"state"`
-}
-
-type MaintenanceRecord struct {
-	Date        string                 `bson:"date"`
-	ServiceType MaintenanceServiceType `bson:"service_type"`
-	Notes       string                 `bson:"notes"`
-	Cost        float64                `bson:"cost"`
 }
 
 func NewTruck(
