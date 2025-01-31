@@ -64,6 +64,7 @@ type DriverResponse struct {
 	Address           domain.Address          `json:"address"`
 	EmploymentStatus  domain.EmploymentStatus `json:"employment_status"`
 	AssignedTruckID   *primitive.ObjectID     `json:"assigned_truck_id,omitempty"`
+	AssignedTruck     *domain.Truck           `json:"assigned_truck,omitempty"`
 	CreatedAt         primitive.DateTime      `json:"created_at"`
 	UpdatedAt         primitive.DateTime      `json:"updated_at"`
 }
@@ -118,6 +119,7 @@ func driverDomainToResponse(d *domain.Driver) DriverResponse {
 		Email:             d.Email,
 		Address:           d.Address,
 		EmploymentStatus:  d.EmploymentStatus,
+		AssignedTruck:     d.AssignedTruck,
 		AssignedTruckID:   d.AssignedTruckID,
 		CreatedAt:         d.CreatedAt,
 		UpdatedAt:         d.UpdatedAt,
@@ -145,7 +147,7 @@ func (h *DriverHandler) Create(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	WriteJSON(w, http.StatusCreated, driverDomainToResponse(driver))
+	WriteJSON(w, http.StatusCreated, driver)
 }
 
 func (h *DriverHandler) GetById(w http.ResponseWriter, r *http.Request) {
@@ -192,7 +194,7 @@ func (h *DriverHandler) Update(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	WriteJSON(w, http.StatusOK, Response{Data: driverDomainToResponse(driver)})
+	WriteJSON(w, http.StatusOK, Response{Data: driver})
 }
 
 func (h *DriverHandler) Delete(w http.ResponseWriter, r *http.Request) {
@@ -221,10 +223,10 @@ func (h *DriverHandler) List(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	driverResponses := make([]DriverResponse, len(drivers))
+	driverResponses := make([]domain.Driver, len(drivers))
 	for i, d := range drivers {
-		driverResponses[i] = driverDomainToResponse(d)
+		driverResponses[i] = *d
 	}
 
-	WriteJSON(w, http.StatusOK, Response{Data: ListDriversResponse{Drivers: driverResponses}})
+	WriteJSON(w, http.StatusOK, Response{Data: driverResponses})
 }

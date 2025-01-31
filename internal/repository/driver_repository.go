@@ -10,7 +10,6 @@ import (
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
-	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
 type driverRepository struct {
@@ -45,17 +44,47 @@ func (r *driverRepository) Create(ctx context.Context, driver *domain.Driver) er
 }
 
 func (r *driverRepository) GetById(ctx context.Context, id primitive.ObjectID) (*domain.Driver, error) {
-	filter := bson.M{"_id": id}
+	pipeline := mongo.Pipeline{
+		{{Key: "$match",
+			Value: bson.M{
+				"_id": id,
+			},
+		}},
+		{{
+			Key: "$lookup", Value: bson.M{
+				"from":         "trucks",
+				"localField":   "assigned_truck_id",
+				"foreignField": "_id",
+				"as":           "assigned_truck",
+			},
+		}},
+		{{
+			Key: "$unwind", Value: bson.M{
+				"path":                       "$assigned_truck",
+				"preserveNullAndEmptyArrays": true,
+			},
+		}},
+	}
 
-	var driver domain.Driver
-	err := r.drivers.FindOne(ctx, filter).Decode(&driver)
-	if err == mongo.ErrNoDocuments {
+	var result domain.Driver
+	cursor, err := r.drivers.Aggregate(ctx, pipeline)
+	if err != nil {
+		return nil, fmt.Errorf("failed to execute aggregate: %w", err)
+	}
+	defer cursor.Close(ctx)
+
+	if !cursor.Next(ctx) {
+		if cursor.Err() != nil {
+			return nil, fmt.Errorf("cursor error: %w", cursor.Err())
+		}
 		return nil, nil
 	}
-	if err != nil {
-		return nil, fmt.Errorf("failed to get driver: %w", err)
+
+	if err := cursor.Decode(&result); err != nil {
+		return nil, fmt.Errorf("failed to decode driver: %w", err)
 	}
-	return &driver, nil
+
+	return &result, err
 }
 
 func (r *driverRepository) Update(ctx context.Context, driver *domain.Driver) error {
@@ -90,12 +119,23 @@ func (r *driverRepository) Delete(ctx context.Context, id primitive.ObjectID) er
 }
 
 func (r *driverRepository) List(ctx context.Context, limit, offset int64) ([]*domain.Driver, error) {
-	findOptions := options.Find()
-	findOptions.SetLimit(limit)
-	findOptions.SetSkip(offset)
-	findOptions.SetSort(bson.D{{Key: "_id", Value: -1}})
+	pipeline := mongo.Pipeline{
+		{{Key: "$sort", Value: bson.M{"_id": -1}}},
+		{{Key: "$skip", Value: offset}},
+		{{Key: "$limit", Value: limit}},
+		{{Key: "$lookup", Value: bson.M{
+			"from":         "trucks",
+			"localField":   "assigned_truck_id",
+			"foreignField": "_id",
+			"as":           "assigned_truck",
+		}}},
+		{{Key: "$unwind", Value: bson.M{
+			"path":                       "$assigned_truck",
+			"preserveNullAndEmptyArrays": true,
+		}}},
+	}
 
-	cursor, err := r.drivers.Find(ctx, bson.M{}, findOptions)
+	cursor, err := r.drivers.Aggregate(ctx, pipeline)
 	if err != nil {
 		return nil, fmt.Errorf("failed retrieve list of users: %w", err)
 	}

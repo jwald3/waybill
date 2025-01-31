@@ -37,6 +37,7 @@ type Driver struct {
 	Address           Address             `bson:"address"`
 	EmploymentStatus  EmploymentStatus    `bson:"employment_status"`
 	AssignedTruckID   *primitive.ObjectID `bson:"assigned_truck_id,omitempty"`
+	AssignedTruck     *Truck              `bson:"assigned_truck,omitempty"`
 	CreatedAt         primitive.DateTime  `bson:"created_at"`
 	UpdatedAt         primitive.DateTime  `bson:"updated_at"`
 }
