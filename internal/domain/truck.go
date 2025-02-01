@@ -90,27 +90,28 @@ func (s TruckStatus) IsValid() bool {
 }
 
 type Truck struct {
-	ID               primitive.ObjectID  `bson:"_id,omitempty"`
-	TruckNumber      string              `bson:"truck_number"`
-	VIN              string              `bson:"vin"`
-	Make             string              `bson:"make"`
-	Model            string              `bson:"model"`
-	Year             int                 `bson:"year"`
-	LicensePlate     LicensePlate        `bson:"license_plate"`
-	Mileage          int                 `bson:"mileage"`
-	Status           TruckStatus         `bson:"status"`
-	AssignedDriverID *primitive.ObjectID `bson:"assigned_driver_id,omitempty"`
-	TrailerType      TrailerType         `bson:"trailer_type"`
-	CapacityTons     float64             `bson:"capacity_tons"`
-	FuelType         FuelType            `bson:"fuel_type"`
-	LastMaintenance  string              `bson:"last_maintenance"`
-	CreatedAt        primitive.DateTime  `bson:"created_at"`
-	UpdatedAt        primitive.DateTime  `bson:"updated_at"`
+	ID               primitive.ObjectID  `bson:"_id,omitempty" json:"id"`
+	TruckNumber      string              `bson:"truck_number" json:"truck_number"`
+	VIN              string              `bson:"vin" json:"vin"`
+	Make             string              `bson:"make" json:"make"`
+	Model            string              `bson:"model" json:"model"`
+	Year             int                 `bson:"year" json:"year"`
+	LicensePlate     LicensePlate        `bson:"license_plate" json:"license_plate"`
+	Mileage          int                 `bson:"mileage" json:"mileage"`
+	Status           TruckStatus         `bson:"status" json:"status"`
+	AssignedDriverID *primitive.ObjectID `bson:"assigned_driver_id,omitempty" json:"assigned_driver_id,omitempty"`
+	AssignedDriver   *Driver             `bson:"assigned_driver,omitempty" json:"assigned_driver,omitempty"`
+	TrailerType      TrailerType         `bson:"trailer_type" json:"trailer_type"`
+	CapacityTons     float64             `bson:"capacity_tons" json:"capacity_tons"`
+	FuelType         FuelType            `bson:"fuel_type" json:"fuel_type"`
+	LastMaintenance  string              `bson:"last_maintenance" json:"last_maintenance"`
+	CreatedAt        primitive.DateTime  `bson:"created_at" json:"created_at"`
+	UpdatedAt        primitive.DateTime  `bson:"updated_at" json:"updated_at"`
 }
 
 type LicensePlate struct {
-	Number string `bson:"number"`
-	State  string `bson:"state"`
+	Number string `bson:"number" json:"number"`
+	State  string `bson:"state" json:"state"`
 }
 
 func NewTruck(

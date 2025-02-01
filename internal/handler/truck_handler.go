@@ -59,22 +59,23 @@ type TruckUpdateRequest struct {
 }
 
 type TruckResponse struct {
-	ID               primitive.ObjectID  `bson:"_id,omitempty"`
-	TruckNumber      string              `bson:"truck_number"`
-	VIN              string              `bson:"vin"`
-	Make             string              `bson:"make"`
-	Model            string              `bson:"model"`
-	Year             int                 `bson:"year"`
-	LicensePlate     domain.LicensePlate `bson:"license_plate"`
-	Mileage          int                 `bson:"mileage"`
-	Status           domain.TruckStatus  `bson:"status"`
-	AssignedDriverID *primitive.ObjectID `bson:"assigned_driver_id,omitempty"`
-	TrailerType      domain.TrailerType  `bson:"trailer_type"`
-	CapacityTons     float64             `bson:"capacity_tons"`
-	FuelType         domain.FuelType     `bson:"fuel_type"`
-	LastMaintenance  string              `bson:"last_maintenance"`
-	CreatedAt        primitive.DateTime  `bson:"created_at"`
-	UpdatedAt        primitive.DateTime  `bson:"updated_at"`
+	ID               primitive.ObjectID  `json:"_id,omitempty"`
+	TruckNumber      string              `json:"truck_number"`
+	VIN              string              `json:"vin"`
+	Make             string              `json:"make"`
+	Model            string              `json:"model"`
+	Year             int                 `json:"year"`
+	LicensePlate     domain.LicensePlate `json:"license_plate"`
+	Mileage          int                 `json:"mileage"`
+	Status           domain.TruckStatus  `json:"status"`
+	AssignedDriverID *primitive.ObjectID `json:"assigned_driver_id,omitempty"`
+	AssignedDriver   *domain.Driver      `json:"assigned_driver,omitempty"`
+	TrailerType      domain.TrailerType  `json:"trailer_type"`
+	CapacityTons     float64             `json:"capacity_tons"`
+	FuelType         domain.FuelType     `json:"fuel_type"`
+	LastMaintenance  string              `json:"last_maintenance"`
+	CreatedAt        primitive.DateTime  `json:"created_at"`
+	UpdatedAt        primitive.DateTime  `json:"updated_at"`
 }
 
 type ListTrucksResponse struct {
@@ -132,6 +133,7 @@ func truckDomainToResponse(t *domain.Truck) TruckResponse {
 		Mileage:          t.Mileage,
 		Status:           t.Status,
 		AssignedDriverID: t.AssignedDriverID,
+		AssignedDriver:   t.AssignedDriver,
 		TrailerType:      t.TrailerType,
 		CapacityTons:     t.CapacityTons,
 		FuelType:         t.FuelType,
