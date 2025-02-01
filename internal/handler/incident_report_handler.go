@@ -49,7 +49,7 @@ type IncidentReportUpdateRequest struct {
 }
 
 type IncidentReportResponse struct {
-	ID             primitive.ObjectID  `json:"_id,omitempty"`
+	ID             primitive.ObjectID  `json:"id,omitempty"`
 	Trip           *primitive.ObjectID `json:"trip_id"`
 	TruckID        *primitive.ObjectID `json:"truck_id"`
 	DriverID       *primitive.ObjectID `json:"driver_id"`

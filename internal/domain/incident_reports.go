@@ -35,17 +35,17 @@ func (i IncidentType) IsValid() bool {
 }
 
 type IncidentReport struct {
-	ID             primitive.ObjectID  `bson:"_id,omitempty"`
-	Trip           *primitive.ObjectID `bson:"trip_id"`
-	TruckID        *primitive.ObjectID `bson:"truck_id"`
-	DriverID       *primitive.ObjectID `bson:"driver_id"`
-	Type           IncidentType        `bson:"type"`
-	Description    string              `bson:"description"`
-	Date           string              `bson:"date"`
-	Location       string              `bson:"location"`
-	DamageEstimate float64             `bson:"damage_estimate"`
-	CreatedAt      primitive.DateTime  `bson:"created_at"`
-	UpdatedAt      primitive.DateTime  `bson:"updated_at"`
+	ID             primitive.ObjectID  `bson:"_id,omitempty" json:"_id,omitempty"`
+	Trip           *primitive.ObjectID `bson:"trip_id" json:"trip_id"`
+	TruckID        *primitive.ObjectID `bson:"truck_id" json:"truck_id"`
+	DriverID       *primitive.ObjectID `bson:"driver_id" json:"driver_id"`
+	Type           IncidentType        `bson:"type" json:"type"`
+	Description    string              `bson:"description" json:"description"`
+	Date           string              `bson:"date" json:"date"`
+	Location       string              `bson:"location" json:"location"`
+	DamageEstimate float64             `bson:"damage_estimate" json:"damage_estimate"`
+	CreatedAt      primitive.DateTime  `bson:"created_at" json:"created_at"`
+	UpdatedAt      primitive.DateTime  `bson:"updated_at" json:"updated_at"`
 }
 
 func NewIncidentReport(
