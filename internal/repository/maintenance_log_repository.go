@@ -10,7 +10,6 @@ import (
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
-	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
 type maintenanceLogRepository struct {
@@ -45,17 +44,41 @@ func (r *maintenanceLogRepository) Create(ctx context.Context, maintenanceLog *d
 }
 
 func (r *maintenanceLogRepository) GetById(ctx context.Context, id primitive.ObjectID) (*domain.MaintenanceLog, error) {
-	filter := bson.M{"_id": id}
+	pipeline := mongo.Pipeline{
+		{{Key: "$match", Value: bson.M{"_id": id}}},
+		{{Key: "$lookup", Value: bson.M{
+			"from":         "trucks",
+			"localField":   "truck_id",
+			"foreignField": "_id",
+			"as":           "truck",
+		}}},
+		{{Key: "$unwind", Value: bson.M{
+			"path":                       "$truck",
+			"preserveNullAndEmptyArrays": true,
+		}}},
+		{{Key: "$project", Value: bson.M{
+			"truck_id": 0,
+		}}},
+	}
 
-	var maintenanceLog domain.MaintenanceLog
-	err := r.maintenanceLogs.FindOne(ctx, filter).Decode(&maintenanceLog)
-	if err == mongo.ErrNoDocuments {
+	var result domain.MaintenanceLog
+	cursor, err := r.maintenanceLogs.Aggregate(ctx, pipeline)
+	if err != nil {
+		return nil, fmt.Errorf("failed to execute aggregate: %w", err)
+	}
+	defer cursor.Close(ctx)
+
+	if !cursor.Next(ctx) {
+		if cursor.Err() != nil {
+			return nil, fmt.Errorf("cursor error: %w", cursor.Err())
+		}
 		return nil, nil
 	}
-	if err != nil {
-		return nil, fmt.Errorf("failed to get maintenanceLog: %w", err)
+	if err := cursor.Decode(&result); err != nil {
+		return nil, fmt.Errorf("failed to decode maintenance log: %w", err)
 	}
-	return &maintenanceLog, nil
+
+	return &result, nil
 }
 
 func (r *maintenanceLogRepository) Update(ctx context.Context, maintenanceLog *domain.MaintenanceLog) error {
@@ -91,12 +114,26 @@ func (r *maintenanceLogRepository) Delete(ctx context.Context, id primitive.Obje
 }
 
 func (r *maintenanceLogRepository) List(ctx context.Context, limit, offset int64) ([]*domain.MaintenanceLog, error) {
-	findOptions := options.Find()
-	findOptions.SetLimit(limit)
-	findOptions.SetSkip(offset)
-	findOptions.SetSort(bson.D{{Key: "_id", Value: -1}})
+	pipeline := mongo.Pipeline{
+		{{Key: "$sort", Value: bson.M{"_id": -1}}},
+		{{Key: "$skip", Value: offset}},
+		{{Key: "$limit", Value: limit}},
+		{{Key: "$lookup", Value: bson.M{
+			"from":         "trucks",
+			"localField":   "truck_id",
+			"foreignField": "_id",
+			"as":           "truck",
+		}}},
+		{{Key: "$unwind", Value: bson.M{
+			"path":                       "$truck",
+			"preserveNullAndEmptyArrays": true,
+		}}},
+		{{Key: "$project", Value: bson.M{
+			"truck_id": 0,
+		}}},
+	}
 
-	cursor, err := r.maintenanceLogs.Find(ctx, bson.M{}, findOptions)
+	cursor, err := r.maintenanceLogs.Aggregate(ctx, pipeline)
 	if err != nil {
 		return nil, fmt.Errorf("failed retrieve list of users: %w", err)
 	}

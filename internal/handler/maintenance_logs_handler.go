@@ -48,7 +48,8 @@ type MaintenanceLogUpdateRequest struct {
 
 type MaintenanceLogResponse struct {
 	ID          primitive.ObjectID            `json:"id,omitempty"`
-	TruckID     *primitive.ObjectID           `json:"truck_id"`
+	TruckID     *primitive.ObjectID           `json:"truck_id,omitempty"`
+	Truck       *domain.Truck                 `json:"truck,omitempty"`
 	Date        string                        `json:"date"`
 	ServiceType domain.MaintenanceServiceType `json:"service_type"`
 	Cost        float64                       `json:"cost"`
@@ -96,6 +97,7 @@ func maintenanceLogDomainToResponse(m *domain.MaintenanceLog) MaintenanceLogResp
 	return MaintenanceLogResponse{
 		ID:          m.ID,
 		TruckID:     m.TruckID,
+		Truck:       m.Truck,
 		Date:        m.Date,
 		ServiceType: m.ServiceType,
 		Notes:       m.Notes,

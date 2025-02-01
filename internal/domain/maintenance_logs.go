@@ -24,7 +24,8 @@ func (m MaintenanceServiceType) IsValid() bool {
 
 type MaintenanceLog struct {
 	ID          primitive.ObjectID     `bson:"_id,omitempty" json:"id,omitempty"`
-	TruckID     *primitive.ObjectID    `bson:"truck_id" json:"truck_id"`
+	TruckID     *primitive.ObjectID    `bson:"truck_id,omitempty" json:"truck_id,omitempty"`
+	Truck       *Truck                 `bson:"truck,omitempty" json:"truck,omitempty"`
 	Date        string                 `bson:"date" json:"date"`
 	ServiceType MaintenanceServiceType `bson:"service_type" json:"service_type"`
 	Cost        float64                `bson:"cost" json:"cost"`
