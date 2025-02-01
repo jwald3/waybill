@@ -64,6 +64,11 @@ func (r *driverRepository) GetById(ctx context.Context, id primitive.ObjectID) (
 				"preserveNullAndEmptyArrays": true,
 			},
 		}},
+		{{
+			Key: "$project", Value: bson.M{
+				"assigned_truck_id": 0,
+			},
+		}},
 	}
 
 	var result domain.Driver
@@ -133,6 +138,11 @@ func (r *driverRepository) List(ctx context.Context, limit, offset int64) ([]*do
 			"path":                       "$assigned_truck",
 			"preserveNullAndEmptyArrays": true,
 		}}},
+		{{
+			Key: "$project", Value: bson.M{
+				"assigned_truck_id": 0,
+			},
+		}},
 	}
 
 	cursor, err := r.drivers.Aggregate(ctx, pipeline)

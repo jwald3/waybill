@@ -62,6 +62,11 @@ func (r *truckRepository) GetById(ctx context.Context, id primitive.ObjectID) (*
 				"preserveNullAndEmptyArrays": true,
 			},
 		}},
+		{{
+			Key: "$project", Value: bson.M{
+				"assigned_driver_id": 0,
+			},
+		}},
 	}
 
 	var result domain.Truck
@@ -127,6 +132,9 @@ func (r *truckRepository) List(ctx context.Context, limit, offset int64) ([]*dom
 		{{Key: "$unwind", Value: bson.M{
 			"path":                       "$assigned_driver",
 			"preserveNullAndEmptyArrays": true,
+		}}},
+		{{Key: "$project", Value: bson.M{
+			"assigned_driver_id": 0,
 		}}},
 	}
 
