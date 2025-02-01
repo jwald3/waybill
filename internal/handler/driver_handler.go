@@ -52,7 +52,7 @@ type DriverUpdateRequest struct {
 }
 
 type DriverResponse struct {
-	ID                primitive.ObjectID      `json:"_id,omitempty"`
+	ID                primitive.ObjectID      `json:"id,omitempty"`
 	FirstName         string                  `json:"first_name"`
 	LastName          string                  `json:"last_name"`
 	DOB               string                  `json:"dob"`

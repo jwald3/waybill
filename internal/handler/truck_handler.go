@@ -59,7 +59,7 @@ type TruckUpdateRequest struct {
 }
 
 type TruckResponse struct {
-	ID               primitive.ObjectID  `json:"_id,omitempty"`
+	ID               primitive.ObjectID  `json:"id,omitempty"`
 	TruckNumber      string              `json:"truck_number"`
 	VIN              string              `json:"vin"`
 	Make             string              `json:"make"`

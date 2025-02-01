@@ -25,35 +25,28 @@ func (e EmploymentStatus) IsValid() bool {
 }
 
 type Driver struct {
-	ID                primitive.ObjectID  `bson:"_id,omitempty"`
-	FirstName         string              `bson:"first_name"`
-	LastName          string              `bson:"last_name"`
-	DOB               string              `bson:"dob"`
-	LicenseNumber     string              `bson:"license_number"`
-	LicenseState      string              `bson:"license_state"`
-	LicenseExpiration string              `bson:"license_expiration"`
-	Phone             string              `bson:"phone"`
-	Email             string              `bson:"email"`
-	Address           Address             `bson:"address"`
-	EmploymentStatus  EmploymentStatus    `bson:"employment_status"`
-	AssignedTruckID   *primitive.ObjectID `bson:"assigned_truck_id,omitempty"`
-	AssignedTruck     *Truck              `bson:"assigned_truck,omitempty"`
-	CreatedAt         primitive.DateTime  `bson:"created_at"`
-	UpdatedAt         primitive.DateTime  `bson:"updated_at"`
+	ID                primitive.ObjectID  `bson:"_id,omitempty" json:"_id,omitempty"`
+	FirstName         string              `bson:"first_name" json:"first_name"`
+	LastName          string              `bson:"last_name" json:"last_name"`
+	DOB               string              `bson:"dob" json:"dob"`
+	LicenseNumber     string              `bson:"license_number" json:"license_number"`
+	LicenseState      string              `bson:"license_state" json:"license_state"`
+	LicenseExpiration string              `bson:"license_expiration" json:"license_expiration"`
+	Phone             string              `bson:"phone" json:"phone"`
+	Email             string              `bson:"email" json:"email"`
+	Address           Address             `bson:"address" json:"address"`
+	EmploymentStatus  EmploymentStatus    `bson:"employment_status" json:"employment_status"`
+	AssignedTruckID   *primitive.ObjectID `bson:"assigned_truck_id,omitempty" json:"assigned_truck_id,omitempty"`
+	AssignedTruck     *Truck              `bson:"assigned_truck,omitempty" json:"assigned_truck,omitempty"`
+	CreatedAt         primitive.DateTime  `bson:"created_at" json:"created_at"`
+	UpdatedAt         primitive.DateTime  `bson:"updated_at" json:"updated_at"`
 }
 
 type Address struct {
-	Street string `bson:"street"`
-	City   string `bson:"city"`
-	State  string `bson:"state"`
-	Zip    string `bson:"zip"`
-}
-
-type TripHistory struct {
-	TripID      primitive.ObjectID `bson:"trip_id"`
-	StartDate   string             `bson:"start_date"`
-	EndDate     string             `bson:"end_date"`
-	MilesDriven int                `bson:"miles_driven"`
+	Street string `bson:"street" json:"street"`
+	City   string `bson:"city" json:"city"`
+	State  string `bson:"state" json:"state"`
+	Zip    string `bson:"zip" json:"zip"`
 }
 
 func NewDriver(
