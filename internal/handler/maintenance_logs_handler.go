@@ -36,7 +36,7 @@ type MaintenanceLogCreateRequest struct {
 }
 
 type MaintenanceLogUpdateRequest struct {
-	ID          primitive.ObjectID            `json:"_id,omitempty"`
+	ID          primitive.ObjectID            `json:"id,omitempty"`
 	TruckID     *primitive.ObjectID           `json:"truck_id"`
 	Date        string                        `json:"date"`
 	ServiceType domain.MaintenanceServiceType `json:"service_type"`
@@ -47,7 +47,7 @@ type MaintenanceLogUpdateRequest struct {
 }
 
 type MaintenanceLogResponse struct {
-	ID          primitive.ObjectID            `json:"_id,omitempty"`
+	ID          primitive.ObjectID            `json:"id,omitempty"`
 	TruckID     *primitive.ObjectID           `json:"truck_id"`
 	Date        string                        `json:"date"`
 	ServiceType domain.MaintenanceServiceType `json:"service_type"`

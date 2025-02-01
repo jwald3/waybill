@@ -23,16 +23,16 @@ func (m MaintenanceServiceType) IsValid() bool {
 }
 
 type MaintenanceLog struct {
-	ID          primitive.ObjectID     `bson:"_id,omitempty"`
-	TruckID     *primitive.ObjectID    `bson:"truck_id"`
-	Date        string                 `bson:"date"`
-	ServiceType MaintenanceServiceType `bson:"service_type"`
-	Cost        float64                `bson:"cost"`
-	Notes       string                 `bson:"notes"`
-	Mechanic    string                 `bson:"mechanic"`
-	Location    string                 `bson:"location"`
-	CreatedAt   primitive.DateTime     `bson:"created_at"`
-	UpdatedAt   primitive.DateTime     `bson:"updated_at"`
+	ID          primitive.ObjectID     `bson:"_id,omitempty" json:"id,omitempty"`
+	TruckID     *primitive.ObjectID    `bson:"truck_id" json:"truck_id"`
+	Date        string                 `bson:"date" json:"date"`
+	ServiceType MaintenanceServiceType `bson:"service_type" json:"service_type"`
+	Cost        float64                `bson:"cost" json:"cost"`
+	Notes       string                 `bson:"notes" json:"notes"`
+	Mechanic    string                 `bson:"mechanic" json:"mechanic"`
+	Location    string                 `bson:"location" json:"location"`
+	CreatedAt   primitive.DateTime     `bson:"created_at" json:"created_at"`
+	UpdatedAt   primitive.DateTime     `bson:"updated_at" json:"updated_at"`
 }
 
 func NewMaintenanceLog(
