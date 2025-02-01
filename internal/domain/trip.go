@@ -29,33 +29,33 @@ func (s TripStatus) IsValid() bool {
 }
 
 type Trip struct {
-	ID            primitive.ObjectID  `bson:"_id,omitempty"`
-	TripNumber    string              `bson:"trip_number"`
-	DriverID      *primitive.ObjectID `bson:"driver_id"`
-	TruckID       *primitive.ObjectID `bson:"truck_id"`
-	StartFacility *primitive.ObjectID `bson:"start_facility_id"`
-	EndFacility   *primitive.ObjectID `bson:"end_facility_id"`
-	Route         Route               `bson:"route"`
-	StartTime     primitive.DateTime  `bson:"start_time"`
-	EndTime       primitive.DateTime  `bson:"end_time"`
-	Status        TripStatus          `bson:"status"`
-	Cargo         Cargo               `bson:"cargo"`
-	FuelUsage     float64             `bson:"fuel_usage_gallons"`
-	DistanceMiles int                 `bson:"distance_miles"`
-	CreatedAt     primitive.DateTime  `bson:"created_at"`
-	UpdatedAt     primitive.DateTime  `bson:"updated_at"`
+	ID            primitive.ObjectID  `bson:"_id,omitempty" json:"_id,omitempty"`
+	TripNumber    string              `bson:"trip_number" json:"trip_number"`
+	DriverID      *primitive.ObjectID `bson:"driver_id" json:"driver_id"`
+	TruckID       *primitive.ObjectID `bson:"truck_id" json:"truck_id"`
+	StartFacility *primitive.ObjectID `bson:"start_facility_id" json:"start_facility_id"`
+	EndFacility   *primitive.ObjectID `bson:"end_facility_id" json:"end_facility_id"`
+	Route         Route               `bson:"route" json:"route"`
+	StartTime     primitive.DateTime  `bson:"start_time" json:"start_time"`
+	EndTime       primitive.DateTime  `bson:"end_time" json:"end_time"`
+	Status        TripStatus          `bson:"status" json:"status"`
+	Cargo         Cargo               `bson:"cargo" json:"cargo"`
+	FuelUsage     float64             `bson:"fuel_usage_gallons" json:"fuel_usage_gallons"`
+	DistanceMiles int                 `bson:"distance_miles" json:"distance_miles"`
+	CreatedAt     primitive.DateTime  `bson:"created_at" json:"created_at"`
+	UpdatedAt     primitive.DateTime  `bson:"updated_at" json:"updated_at"`
 }
 
 type Route struct {
-	Origin      string   `bson:"origin"`
-	Destination string   `bson:"destination"`
-	Waypoints   []string `bson:"waypoints"`
+	Origin      string   `bson:"origin" json:"origin"`
+	Destination string   `bson:"destination" json:"destination"`
+	Waypoints   []string `bson:"waypoints" json:"waypoints"`
 }
 
 type Cargo struct {
-	Description string  `bson:"description"`
-	Weight      float64 `bson:"weight"`
-	Hazmat      bool    `bson:"hazmat"`
+	Description string  `bson:"description" json:"description"`
+	Weight      float64 `bson:"weight" json:"weight"`
+	Hazmat      bool    `bson:"hazmat" json:"hazmat"`
 }
 
 func NewTrip(

@@ -41,7 +41,7 @@ type TripCreateRequest struct {
 }
 
 type TripUpdateRequest struct {
-	ID            primitive.ObjectID  `json:"_id,omitempty"`
+	ID            primitive.ObjectID  `json:"id,omitempty"`
 	TripNumber    string              `json:"trip_number"`
 	DriverID      *primitive.ObjectID `json:"driver_id"`
 	TruckID       *primitive.ObjectID `json:"truck_id"`
@@ -57,7 +57,7 @@ type TripUpdateRequest struct {
 }
 
 type TripResponse struct {
-	ID            primitive.ObjectID  `json:"_id,omitempty"`
+	ID            primitive.ObjectID  `json:"id,omitempty"`
 	TripNumber    string              `json:"trip_number"`
 	DriverID      *primitive.ObjectID `json:"driver_id"`
 	TruckID       *primitive.ObjectID `json:"truck_id"`
