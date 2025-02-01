@@ -36,7 +36,7 @@ type FacilityCreateRequest struct {
 }
 
 type FacilityUpdateRequest struct {
-	ID                primitive.ObjectID       `json:"_id,omitempty"`
+	ID                primitive.ObjectID       `json:"id,omitempty"`
 	FacilityNumber    string                   `json:"facility_number"`
 	Name              string                   `json:"name"`
 	Type              string                   `json:"type"`
@@ -48,7 +48,7 @@ type FacilityUpdateRequest struct {
 }
 
 type FacilityResponse struct {
-	ID                primitive.ObjectID       `json:"_id,omitempty"`
+	ID                primitive.ObjectID       `json:"id,omitempty"`
 	FacilityNumber    string                   `json:"facility_number"`
 	Name              string                   `json:"name"`
 	Type              string                   `json:"type"`

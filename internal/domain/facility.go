@@ -27,22 +27,22 @@ func (f FacilityService) IsValid() bool {
 }
 
 type Facility struct {
-	ID                primitive.ObjectID   `bson:"_id,omitempty"`
-	FacilityNumber    string               `bson:"facility_number"`
-	Name              string               `bson:"name"`
-	Type              string               `bson:"type"`
-	Address           Address              `bson:"address"`
-	ContactInfo       ContactInfo          `bson:"contact_info"`
-	ParkingCapacity   int                  `bson:"parking_capacity"`
-	ServicesAvailable []FacilityService    `bson:"services_available"`
-	AssignedTrucks    []primitive.ObjectID `bson:"assigned_trucks"`
-	CreatedAt         primitive.DateTime   `bson:"created_at"`
-	UpdatedAt         primitive.DateTime   `bson:"updated_at"`
+	ID                primitive.ObjectID   `bson:"_id,omitempty" json:"id,omitempty"`
+	FacilityNumber    string               `bson:"facility_number" json:"facility_number"`
+	Name              string               `bson:"name" json:"name"`
+	Type              string               `bson:"type" json:"type"`
+	Address           Address              `bson:"address" json:"address"`
+	ContactInfo       ContactInfo          `bson:"contact_info" json:"contact_info"`
+	ParkingCapacity   int                  `bson:"parking_capacity" json:"parking_capacity"`
+	ServicesAvailable []FacilityService    `bson:"services_available" json:"services_available"`
+	AssignedTrucks    []primitive.ObjectID `bson:"assigned_trucks" json:"assigned_trucks"`
+	CreatedAt         primitive.DateTime   `bson:"created_at" json:"created_at"`
+	UpdatedAt         primitive.DateTime   `bson:"updated_at" json:"updated_at"`
 }
 
 type ContactInfo struct {
-	Phone string `bson:"phone"`
-	Email string `bson:"email"`
+	Phone string `bson:"phone" json:"phone"`
+	Email string `bson:"email" json:"email"`
 }
 
 func NewFacility(
