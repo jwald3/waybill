@@ -26,52 +26,55 @@ var (
 // DTOS =======================================================
 
 type TripCreateRequest struct {
-	TripNumber    string              `json:"trip_number"`
-	DriverID      *primitive.ObjectID `json:"driver_id"`
-	TruckID       *primitive.ObjectID `json:"truck_id"`
-	StartFacility *primitive.ObjectID `json:"start_facility_id"`
-	EndFacility   *primitive.ObjectID `json:"end_facility_id"`
-	Route         domain.Route        `json:"route"`
-	StartTime     primitive.DateTime  `json:"start_time"`
-	EndTime       primitive.DateTime  `json:"end_time"`
-	Status        domain.TripStatus   `json:"status"`
-	Cargo         domain.Cargo        `json:"cargo"`
-	FuelUsage     float64             `json:"fuel_usage_gallons"`
-	DistanceMiles int                 `json:"distance_miles"`
+	TripNumber      string              `json:"trip_number"`
+	DriverID        *primitive.ObjectID `json:"driver_id"`
+	TruckID         *primitive.ObjectID `json:"truck_id"`
+	StartFacilityID *primitive.ObjectID `json:"start_facility_id"`
+	EndFacilityID   *primitive.ObjectID `json:"end_facility_id"`
+	Route           domain.Route        `json:"route"`
+	StartTime       primitive.DateTime  `json:"start_time"`
+	EndTime         primitive.DateTime  `json:"end_time"`
+	Status          domain.TripStatus   `json:"status"`
+	Cargo           domain.Cargo        `json:"cargo"`
+	FuelUsage       float64             `json:"fuel_usage_gallons"`
+	DistanceMiles   int                 `json:"distance_miles"`
 }
 
 type TripUpdateRequest struct {
-	ID            primitive.ObjectID  `json:"id,omitempty"`
-	TripNumber    string              `json:"trip_number"`
-	DriverID      *primitive.ObjectID `json:"driver_id"`
-	TruckID       *primitive.ObjectID `json:"truck_id"`
-	StartFacility *primitive.ObjectID `json:"start_facility_id"`
-	EndFacility   *primitive.ObjectID `json:"end_facility_id"`
-	Route         domain.Route        `json:"route"`
-	StartTime     primitive.DateTime  `json:"start_time"`
-	EndTime       primitive.DateTime  `json:"end_time"`
-	Status        domain.TripStatus   `json:"status"`
-	Cargo         domain.Cargo        `json:"cargo"`
-	FuelUsage     float64             `json:"fuel_usage_gallons"`
-	DistanceMiles int                 `json:"distance_miles"`
+	ID              primitive.ObjectID  `json:"id,omitempty"`
+	TripNumber      string              `json:"trip_number"`
+	DriverID        *primitive.ObjectID `json:"driver_id"`
+	TruckID         *primitive.ObjectID `json:"truck_id"`
+	StartFacilityID *primitive.ObjectID `json:"start_facility_id"`
+	EndFacilityID   *primitive.ObjectID `json:"end_facility_id"`
+	Route           domain.Route        `json:"route"`
+	StartTime       primitive.DateTime  `json:"start_time"`
+	EndTime         primitive.DateTime  `json:"end_time"`
+	Status          domain.TripStatus   `json:"status"`
+	Cargo           domain.Cargo        `json:"cargo"`
+	FuelUsage       float64             `json:"fuel_usage_gallons"`
+	DistanceMiles   int                 `json:"distance_miles"`
 }
 
 type TripResponse struct {
-	ID            primitive.ObjectID  `json:"id,omitempty"`
-	TripNumber    string              `json:"trip_number"`
-	DriverID      *primitive.ObjectID `json:"driver_id"`
-	TruckID       *primitive.ObjectID `json:"truck_id"`
-	StartFacility *primitive.ObjectID `json:"start_facility_id"`
-	EndFacility   *primitive.ObjectID `json:"end_facility_id"`
-	Route         domain.Route        `json:"route"`
-	StartTime     primitive.DateTime  `json:"start_time"`
-	EndTime       primitive.DateTime  `json:"end_time"`
-	Status        domain.TripStatus   `json:"status"`
-	Cargo         domain.Cargo        `json:"cargo"`
-	FuelUsage     float64             `json:"fuel_usage_gallons"`
-	DistanceMiles int                 `json:"distance_miles"`
-	CreatedAt     primitive.DateTime  `json:"created_at"`
-	UpdatedAt     primitive.DateTime  `json:"updated_at"`
+	ID              primitive.ObjectID  `json:"id,omitempty"`
+	TripNumber      string              `json:"trip_number"`
+	DriverID        *primitive.ObjectID `json:"driver_id"`
+	TruckID         *primitive.ObjectID `json:"truck_id"`
+	Truck           *domain.Truck       `json:"truck"`
+	StartFacilityID *primitive.ObjectID `json:"start_facility_id"`
+	StartFacility   *domain.Facility    `json:"start_facility"`
+	EndFacilityID   *primitive.ObjectID `json:"end_facility_id"`
+	EndFacility     *domain.Facility    `json:"end_facility"`
+	Route           domain.Route        `json:"route"`
+	StartTime       primitive.DateTime  `json:"start_time"`
+	EndTime         primitive.DateTime  `json:"end_time"`
+	Status          domain.TripStatus   `json:"status"`
+	Cargo           domain.Cargo        `json:"cargo"`
+	FuelUsage       float64             `json:"fuel_usage_gallons"`
+	DistanceMiles   int                 `json:"distance_miles"`
+	CreatedAt       primitive.DateTime  `json:"created_at"`
+	UpdatedAt       primitive.DateTime  `json:"updated_at"`
 }
 
 type ListTripsResponse struct {
@@ -84,8 +87,8 @@ func tripRequestToDomainCreate(req TripCreateRequest) (*domain.Trip, error) {
 		req.Status,
 		req.DriverID,
 		req.TruckID,
-		req.StartFacility,
-		req.EndFacility,
+		req.StartFacilityID,
+		req.EndFacilityID,
 		req.Route,
 		req.StartTime,
 		req.EndTime,
@@ -99,40 +102,43 @@ func tripRequestToDomainUpdate(req TripUpdateRequest) (*domain.Trip, error) {
 	now := time.Now()
 
 	return &domain.Trip{
-		ID:            req.ID,
-		TripNumber:    req.TripNumber,
-		DriverID:      req.DriverID,
-		TruckID:       req.TruckID,
-		StartFacility: req.StartFacility,
-		EndFacility:   req.EndFacility,
-		Route:         req.Route,
-		StartTime:     req.StartTime,
-		EndTime:       req.EndTime,
-		Status:        req.Status,
-		Cargo:         req.Cargo,
-		FuelUsage:     req.FuelUsage,
-		DistanceMiles: req.DistanceMiles,
-		UpdatedAt:     primitive.NewDateTimeFromTime(now),
+		ID:              req.ID,
+		TripNumber:      req.TripNumber,
+		DriverID:        req.DriverID,
+		TruckID:         req.TruckID,
+		StartFacilityID: req.StartFacilityID,
+		EndFacilityID:   req.EndFacilityID,
+		Route:           req.Route,
+		StartTime:       req.StartTime,
+		EndTime:         req.EndTime,
+		Status:          req.Status,
+		Cargo:           req.Cargo,
+		FuelUsage:       req.FuelUsage,
+		DistanceMiles:   req.DistanceMiles,
+		UpdatedAt:       primitive.NewDateTimeFromTime(now),
 	}, nil
 }
 
 func tripDomainToResponse(t *domain.Trip) TripResponse {
 	return TripResponse{
-		ID:            t.ID,
-		TripNumber:    t.TripNumber,
-		DriverID:      t.DriverID,
-		TruckID:       t.TruckID,
-		StartFacility: t.StartFacility,
-		EndFacility:   t.EndFacility,
-		Route:         t.Route,
-		StartTime:     t.StartTime,
-		EndTime:       t.EndTime,
-		Status:        t.Status,
-		Cargo:         t.Cargo,
-		FuelUsage:     t.FuelUsage,
-		DistanceMiles: t.DistanceMiles,
-		CreatedAt:     t.CreatedAt,
-		UpdatedAt:     t.UpdatedAt,
+		ID:              t.ID,
+		TripNumber:      t.TripNumber,
+		DriverID:        t.DriverID,
+		TruckID:         t.TruckID,
+		Truck:           t.Truck,
+		StartFacilityID: t.StartFacilityID,
+		StartFacility:   t.StartFacility,
+		EndFacilityID:   t.EndFacilityID,
+		EndFacility:     t.EndFacility,
+		Route:           t.Route,
+		StartTime:       t.StartTime,
+		EndTime:         t.EndTime,
+		Status:          t.Status,
+		Cargo:           t.Cargo,
+		FuelUsage:       t.FuelUsage,
+		DistanceMiles:   t.DistanceMiles,
+		CreatedAt:       t.CreatedAt,
+		UpdatedAt:       t.UpdatedAt,
 	}
 }
 

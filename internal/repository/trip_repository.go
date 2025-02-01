@@ -62,19 +62,19 @@ func (r *tripRepository) Update(ctx context.Context, trip *domain.Trip) error {
 	filter := bson.M{"_id": trip.ID}
 	update := bson.M{
 		"$set": bson.M{
-			"trip_number":    trip.TripNumber,
-			"driver_id":      trip.DriverID,
-			"truck_id":       trip.TruckID,
-			"start_facility": trip.StartFacility,
-			"end_facility":   trip.EndFacility,
-			"route":          trip.Route,
-			"start_time":     trip.StartTime,
-			"end_time":       trip.EndTime,
-			"status":         trip.Status,
-			"Cargo":          trip.Cargo,
-			"FuelUsage":      trip.FuelUsage,
-			"distance_miles": trip.DistanceMiles,
-			"updated_at":     primitive.NewDateTimeFromTime(time.Now()),
+			"trip_number":       trip.TripNumber,
+			"driver_id":         trip.DriverID,
+			"truck_id":          trip.TruckID,
+			"start_facility_id": trip.StartFacilityID,
+			"end_facility_id":   trip.EndFacilityID,
+			"route":             trip.Route,
+			"start_time":        trip.StartTime,
+			"end_time":          trip.EndTime,
+			"status":            trip.Status,
+			"Cargo":             trip.Cargo,
+			"FuelUsage":         trip.FuelUsage,
+			"distance_miles":    trip.DistanceMiles,
+			"updated_at":        primitive.NewDateTimeFromTime(time.Now()),
 		},
 	}
 
