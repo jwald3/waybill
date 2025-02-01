@@ -7,17 +7,17 @@ import (
 )
 
 type FuelLog struct {
-	ID               primitive.ObjectID  `bson:"_id,omitempty"`
-	TruckID          *primitive.ObjectID `bson:"truck_id"`
-	DriverID         *primitive.ObjectID `bson:"driver_id"`
-	Date             string              `bson:"date"`
-	GallonsPurchased float64             `bson:"gallons_purchased"`
-	PricePerGallon   float64             `bson:"price_per_gallon"`
-	TotalCost        float64             `bson:"total_cost"`
-	Location         string              `bson:"location"`
-	OdometerReading  int                 `bson:"odometer_reading"`
-	CreatedAt        primitive.DateTime  `bson:"created_at"`
-	UpdatedAt        primitive.DateTime  `bson:"updated_at"`
+	ID               primitive.ObjectID  `bson:"_id,omitempty" json:"id,omitempty"`
+	TruckID          *primitive.ObjectID `bson:"truck_id" json:"truck_id"`
+	DriverID         *primitive.ObjectID `bson:"driver_id" json:"driver_id"`
+	Date             string              `bson:"date" json:"date"`
+	GallonsPurchased float64             `bson:"gallons_purchased" json:"gallons_purchased"`
+	PricePerGallon   float64             `bson:"price_per_gallon" json:"price_per_gallon"`
+	TotalCost        float64             `bson:"total_cost" json:"total_cost"`
+	Location         string              `bson:"location" json:"location"`
+	OdometerReading  int                 `bson:"odometer_reading" json:"odometer_reading"`
+	CreatedAt        primitive.DateTime  `bson:"created_at" json:"created_at"`
+	UpdatedAt        primitive.DateTime  `bson:"updated_at" json:"updated_at"`
 }
 
 func NewFuelLog(

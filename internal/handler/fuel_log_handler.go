@@ -49,7 +49,7 @@ type FuelLogUpdateRequest struct {
 }
 
 type FuelLogResponse struct {
-	ID               primitive.ObjectID  `json:"_id,omitempty"`
+	ID               primitive.ObjectID  `json:"id,omitempty"`
 	TruckID          *primitive.ObjectID `json:"truck_id"`
 	DriverID         *primitive.ObjectID `json:"driver_id"`
 	Date             string              `json:"date"`
