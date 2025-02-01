@@ -59,13 +59,14 @@ type TripUpdateRequest struct {
 type TripResponse struct {
 	ID              primitive.ObjectID  `json:"id,omitempty"`
 	TripNumber      string              `json:"trip_number"`
-	DriverID        *primitive.ObjectID `json:"driver_id"`
-	TruckID         *primitive.ObjectID `json:"truck_id"`
-	Truck           *domain.Truck       `json:"truck"`
-	StartFacilityID *primitive.ObjectID `json:"start_facility_id"`
-	StartFacility   *domain.Facility    `json:"start_facility"`
-	EndFacilityID   *primitive.ObjectID `json:"end_facility_id"`
-	EndFacility     *domain.Facility    `json:"end_facility"`
+	DriverID        *primitive.ObjectID `json:"driver_id,omitempty"`
+	Driver          *domain.Driver      `json:"driver,omitempty"`
+	TruckID         *primitive.ObjectID `json:"truck_id,omitempty"`
+	Truck           *domain.Truck       `json:"truck,omitempty"`
+	StartFacilityID *primitive.ObjectID `json:"start_facility_id,omitempty"`
+	StartFacility   *domain.Facility    `json:"start_facility,omitempty"`
+	EndFacilityID   *primitive.ObjectID `json:"end_facility_id,omitempty"`
+	EndFacility     *domain.Facility    `json:"end_facility,omitempty"`
 	Route           domain.Route        `json:"route"`
 	StartTime       primitive.DateTime  `json:"start_time"`
 	EndTime         primitive.DateTime  `json:"end_time"`
@@ -124,6 +125,7 @@ func tripDomainToResponse(t *domain.Trip) TripResponse {
 		ID:              t.ID,
 		TripNumber:      t.TripNumber,
 		DriverID:        t.DriverID,
+		Driver:          t.Driver,
 		TruckID:         t.TruckID,
 		Truck:           t.Truck,
 		StartFacilityID: t.StartFacilityID,

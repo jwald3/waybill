@@ -10,7 +10,6 @@ import (
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
-	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
 type tripRepository struct {
@@ -45,17 +44,75 @@ func (r *tripRepository) Create(ctx context.Context, trip *domain.Trip) error {
 }
 
 func (r *tripRepository) GetById(ctx context.Context, id primitive.ObjectID) (*domain.Trip, error) {
-	filter := bson.M{"_id": id}
+	pipeline := mongo.Pipeline{
+		{{Key: "$match", Value: bson.M{"_id": id}}},
+		{{Key: "$lookup", Value: bson.M{
+			"from":         "drivers",
+			"localField":   "driver_id",
+			"foreignField": "_id",
+			"as":           "driver",
+		}}},
+		{{Key: "$unwind", Value: bson.M{
+			"path":                       "$driver",
+			"preserveNullAndEmptyArrays": true,
+		}}},
+		{{Key: "$lookup", Value: bson.M{
+			"from":         "trucks",
+			"localField":   "truck_id",
+			"foreignField": "_id",
+			"as":           "truck",
+		}}},
+		{{Key: "$unwind", Value: bson.M{
+			"path":                       "$truck",
+			"preserveNullAndEmptyArrays": true,
+		}}},
+		{{Key: "$lookup", Value: bson.M{
+			"from":         "facilities",
+			"localField":   "start_facility_id",
+			"foreignField": "_id",
+			"as":           "start_facility",
+		}}},
+		{{Key: "$unwind", Value: bson.M{
+			"path":                       "$start_facility",
+			"preserveNullAndEmptyArrays": true,
+		}}},
+		{{Key: "$lookup", Value: bson.M{
+			"from":         "facilities",
+			"localField":   "end_facility_id",
+			"foreignField": "_id",
+			"as":           "end_facility",
+		}}},
+		{{Key: "$unwind", Value: bson.M{
+			"path":                       "$end_facility",
+			"preserveNullAndEmptyArrays": true,
+		}}},
+		{{Key: "$project", Value: bson.M{
+			"driver_id":         0,
+			"truck_id":          0,
+			"start_facility_id": 0,
+			"end_facility_id":   0,
+		}}},
+	}
 
-	var trip domain.Trip
-	err := r.trips.FindOne(ctx, filter).Decode(&trip)
-	if err == mongo.ErrNoDocuments {
+	var result domain.Trip
+	cursor, err := r.trips.Aggregate(ctx, pipeline)
+	if err != nil {
+		return nil, fmt.Errorf("failed to execute aggregate: %w", err)
+	}
+	defer cursor.Close(ctx)
+
+	if !cursor.Next(ctx) {
+		if cursor.Err() != nil {
+			return nil, fmt.Errorf("cursor error: %w", cursor.Err())
+		}
 		return nil, nil
 	}
-	if err != nil {
-		return nil, fmt.Errorf("failed to get trip: %w", err)
+
+	if err := cursor.Decode(&result); err != nil {
+		return nil, fmt.Errorf("failed to decode trip: %w", err)
 	}
-	return &trip, nil
+
+	return &result, nil
 }
 
 func (r *tripRepository) Update(ctx context.Context, trip *domain.Trip) error {
@@ -96,12 +153,59 @@ func (r *tripRepository) Delete(ctx context.Context, id primitive.ObjectID) erro
 }
 
 func (r *tripRepository) List(ctx context.Context, limit, offset int64) ([]*domain.Trip, error) {
-	findOptions := options.Find()
-	findOptions.SetLimit(limit)
-	findOptions.SetSkip(offset)
-	findOptions.SetSort(bson.D{{Key: "_id", Value: -1}})
+	pipeline := mongo.Pipeline{
+		{{Key: "$sort", Value: bson.M{"_id": -1}}},
+		{{Key: "$skip", Value: offset}},
+		{{Key: "$limit", Value: limit}},
+		{{Key: "$lookup", Value: bson.M{
+			"from":         "drivers",
+			"localField":   "driver_id",
+			"foreignField": "_id",
+			"as":           "driver",
+		}}},
+		{{Key: "$unwind", Value: bson.M{
+			"path":                       "$driver",
+			"preserveNullAndEmptyArrays": true,
+		}}},
+		{{Key: "$lookup", Value: bson.M{
+			"from":         "trucks",
+			"localField":   "truck_id",
+			"foreignField": "_id",
+			"as":           "truck",
+		}}},
+		{{Key: "$unwind", Value: bson.M{
+			"path":                       "$truck",
+			"preserveNullAndEmptyArrays": true,
+		}}},
+		{{Key: "$lookup", Value: bson.M{
+			"from":         "facilities",
+			"localField":   "start_facility_id",
+			"foreignField": "_id",
+			"as":           "start_facility",
+		}}},
+		{{Key: "$unwind", Value: bson.M{
+			"path":                       "$start_facility",
+			"preserveNullAndEmptyArrays": true,
+		}}},
+		{{Key: "$lookup", Value: bson.M{
+			"from":         "facilities",
+			"localField":   "end_facility_id",
+			"foreignField": "_id",
+			"as":           "end_facility",
+		}}},
+		{{Key: "$unwind", Value: bson.M{
+			"path":                       "$end_facility",
+			"preserveNullAndEmptyArrays": true,
+		}}},
+		{{Key: "$project", Value: bson.M{
+			"driver_id":         0,
+			"truck_id":          0,
+			"start_facility_id": 0,
+			"end_facility_id":   0,
+		}}},
+	}
 
-	cursor, err := r.trips.Find(ctx, bson.M{}, findOptions)
+	cursor, err := r.trips.Aggregate(ctx, pipeline)
 	if err != nil {
 		return nil, fmt.Errorf("failed retrieve list of users: %w", err)
 	}

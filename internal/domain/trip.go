@@ -31,14 +31,14 @@ func (s TripStatus) IsValid() bool {
 type Trip struct {
 	ID              primitive.ObjectID  `bson:"_id,omitempty" json:"_id,omitempty"`
 	TripNumber      string              `bson:"trip_number" json:"trip_number"`
-	DriverID        *primitive.ObjectID `bson:"driver_id" json:"driver_id"`
-	Driver          *Driver             `bson:"driver" json:"driver"`
-	TruckID         *primitive.ObjectID `bson:"truck_id" json:"truck_id"`
-	Truck           *Truck              `bson:"truck" json:"truck"`
-	StartFacilityID *primitive.ObjectID `bson:"start_facility_id" json:"start_facility_id"`
-	StartFacility   *Facility           `bson:"start_facility" json:"start_facility"`
-	EndFacilityID   *primitive.ObjectID `bson:"end_facility_id" json:"end_facility_id"`
-	EndFacility     *Facility           `bson:"end_facility" json:"end_facility"`
+	DriverID        *primitive.ObjectID `bson:"driver_id,omitempty" json:"driver_id,omitempty"`
+	Driver          *Driver             `bson:"driver,omitempty" json:"driver,omitempty"`
+	TruckID         *primitive.ObjectID `bson:"truck_id,omitempty" json:"truck_id,omitempty"`
+	Truck           *Truck              `bson:"truck,omitempty" json:"truck,omitempty"`
+	StartFacilityID *primitive.ObjectID `bson:"start_facility_id,omitempty" json:"start_facility_id,omitempty"`
+	StartFacility   *Facility           `bson:"start_facility,omitempty" json:"start_facility,omitempty"`
+	EndFacilityID   *primitive.ObjectID `bson:"end_facility_id,omitempty" json:"end_facility_id,omitempty"`
+	EndFacility     *Facility           `bson:"end_facility,omitempty" json:"end_facility,omitempty"`
 	Route           Route               `bson:"route" json:"route"`
 	StartTime       primitive.DateTime  `bson:"start_time" json:"start_time"`
 	EndTime         primitive.DateTime  `bson:"end_time" json:"end_time"`
