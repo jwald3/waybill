@@ -10,7 +10,6 @@ import (
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
-	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
 type fuelLogRepository struct {
@@ -45,17 +44,57 @@ func (r *fuelLogRepository) Create(ctx context.Context, fuelLog *domain.FuelLog)
 }
 
 func (r *fuelLogRepository) GetById(ctx context.Context, id primitive.ObjectID) (*domain.FuelLog, error) {
-	filter := bson.M{"_id": id}
+	pipeline := mongo.Pipeline{
+		{{Key: "$match", Value: bson.M{
+			"_id": id,
+		}}},
+		{{Key: "$lookup", Value: bson.M{
+			"from":         "trucks",
+			"localField":   "truck_id",
+			"foreignField": "_id",
+			"as":           "truck",
+		}}},
+		{{Key: "$unwind", Value: bson.M{
+			"path":                       "$truck",
+			"preserveNullAndEmptyArrays": true,
+		}}},
+		{{Key: "$lookup", Value: bson.M{
+			"from":         "drivers",
+			"localField":   "driver_id",
+			"foreignField": "_id",
+			"as":           "driver",
+		}}},
+		{{Key: "$unwind", Value: bson.M{
+			"path":                       "$driver",
+			"preserveNullAndEmptyArrays": true,
+		}}},
+		{{
+			Key: "$project", Value: bson.M{
+				"truck_id":  0,
+				"driver_id": 0,
+			},
+		}},
+	}
 
-	var fuelLog domain.FuelLog
-	err := r.fuelLogs.FindOne(ctx, filter).Decode(&fuelLog)
-	if err == mongo.ErrNoDocuments {
+	var result domain.FuelLog
+	cursor, err := r.fuelLogs.Aggregate(ctx, pipeline)
+	if err != nil {
+		return nil, fmt.Errorf("failed to execute aggregate: %w", err)
+	}
+	defer cursor.Close(ctx)
+
+	if !cursor.Next(ctx) {
+		if cursor.Err() != nil {
+			return nil, fmt.Errorf("cursor error: %w", cursor.Err())
+		}
 		return nil, nil
 	}
-	if err != nil {
-		return nil, fmt.Errorf("failed to get fuel log: %w", err)
+
+	if err := cursor.Decode(&result); err != nil {
+		return nil, fmt.Errorf("failed to decode fuel log: %w", err)
 	}
-	return &fuelLog, nil
+
+	return &result, nil
 }
 
 func (r *fuelLogRepository) Update(ctx context.Context, fuelLog *domain.FuelLog) error {
@@ -92,12 +131,39 @@ func (r *fuelLogRepository) Delete(ctx context.Context, id primitive.ObjectID) e
 }
 
 func (r *fuelLogRepository) List(ctx context.Context, limit, offset int64) ([]*domain.FuelLog, error) {
-	findOptions := options.Find()
-	findOptions.SetLimit(limit)
-	findOptions.SetSkip(offset)
-	findOptions.SetSort(bson.D{{Key: "_id", Value: -1}})
+	pipeline := mongo.Pipeline{
+		{{Key: "$sort", Value: bson.M{"_id": -1}}},
+		{{Key: "$skip", Value: offset}},
+		{{Key: "$limit", Value: limit}},
+		{{Key: "$lookup", Value: bson.M{
+			"from":         "trucks",
+			"localField":   "truck_id",
+			"foreignField": "_id",
+			"as":           "truck",
+		}}},
+		{{Key: "$unwind", Value: bson.M{
+			"path":                       "$truck",
+			"preserveNullAndEmptyArrays": true,
+		}}},
+		{{Key: "$lookup", Value: bson.M{
+			"from":         "drivers",
+			"localField":   "driver_id",
+			"foreignField": "_id",
+			"as":           "driver",
+		}}},
+		{{Key: "$unwind", Value: bson.M{
+			"path":                       "$driver",
+			"preserveNullAndEmptyArrays": true,
+		}}},
+		{{
+			Key: "$project", Value: bson.M{
+				"truck_id":  0,
+				"driver_id": 0,
+			},
+		}},
+	}
 
-	cursor, err := r.fuelLogs.Find(ctx, bson.M{}, findOptions)
+	cursor, err := r.fuelLogs.Aggregate(ctx, pipeline)
 	if err != nil {
 		return nil, fmt.Errorf("failed retrieve list of users: %w", err)
 	}
