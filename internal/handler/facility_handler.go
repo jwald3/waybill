@@ -44,7 +44,6 @@ type FacilityUpdateRequest struct {
 	ContactInfo       domain.ContactInfo       `json:"contact_info"`
 	ParkingCapacity   int                      `json:"parking_capacity"`
 	ServicesAvailable []domain.FacilityService `json:"services_available"`
-	AssignedTrucks    []primitive.ObjectID     `json:"assigned_trucks"`
 }
 
 type FacilityResponse struct {
@@ -56,7 +55,6 @@ type FacilityResponse struct {
 	ContactInfo       domain.ContactInfo       `json:"contact_info"`
 	ParkingCapacity   int                      `json:"parking_capacity"`
 	ServicesAvailable []domain.FacilityService `json:"services_available"`
-	AssignedTrucks    []primitive.ObjectID     `json:"assigned_trucks"`
 	CreatedAt         primitive.DateTime       `json:"created_at"`
 	UpdatedAt         primitive.DateTime       `json:"updated_at"`
 }
@@ -103,7 +101,6 @@ func facilityDomainToResponse(f *domain.Facility) FacilityResponse {
 		ContactInfo:       f.ContactInfo,
 		ParkingCapacity:   f.ParkingCapacity,
 		ServicesAvailable: f.ServicesAvailable,
-		AssignedTrucks:    f.AssignedTrucks,
 		CreatedAt:         f.CreatedAt,
 		UpdatedAt:         f.UpdatedAt,
 	}

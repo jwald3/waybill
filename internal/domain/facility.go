@@ -27,17 +27,16 @@ func (f FacilityService) IsValid() bool {
 }
 
 type Facility struct {
-	ID                primitive.ObjectID   `bson:"_id,omitempty" json:"id,omitempty"`
-	FacilityNumber    string               `bson:"facility_number" json:"facility_number"`
-	Name              string               `bson:"name" json:"name"`
-	Type              string               `bson:"type" json:"type"`
-	Address           Address              `bson:"address" json:"address"`
-	ContactInfo       ContactInfo          `bson:"contact_info" json:"contact_info"`
-	ParkingCapacity   int                  `bson:"parking_capacity" json:"parking_capacity"`
-	ServicesAvailable []FacilityService    `bson:"services_available" json:"services_available"`
-	AssignedTrucks    []primitive.ObjectID `bson:"assigned_trucks" json:"assigned_trucks"`
-	CreatedAt         primitive.DateTime   `bson:"created_at" json:"created_at"`
-	UpdatedAt         primitive.DateTime   `bson:"updated_at" json:"updated_at"`
+	ID                primitive.ObjectID `bson:"_id,omitempty" json:"id,omitempty"`
+	FacilityNumber    string             `bson:"facility_number" json:"facility_number"`
+	Name              string             `bson:"name" json:"name"`
+	Type              string             `bson:"type" json:"type"`
+	Address           Address            `bson:"address" json:"address"`
+	ContactInfo       ContactInfo        `bson:"contact_info" json:"contact_info"`
+	ParkingCapacity   int                `bson:"parking_capacity" json:"parking_capacity"`
+	ServicesAvailable []FacilityService  `bson:"services_available" json:"services_available"`
+	CreatedAt         primitive.DateTime `bson:"created_at" json:"created_at"`
+	UpdatedAt         primitive.DateTime `bson:"updated_at" json:"updated_at"`
 }
 
 type ContactInfo struct {
@@ -63,7 +62,6 @@ func NewFacility(
 		ContactInfo:       contactInfo,
 		ParkingCapacity:   parkingCapacity,
 		ServicesAvailable: servicesAvailable,
-		AssignedTrucks:    []primitive.ObjectID{},
 		CreatedAt:         primitive.NewDateTimeFromTime(now),
 		UpdatedAt:         primitive.NewDateTimeFromTime(now),
 	}, nil
