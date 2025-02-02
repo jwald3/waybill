@@ -8,8 +8,10 @@ import (
 
 type FuelLog struct {
 	ID               primitive.ObjectID  `bson:"_id,omitempty" json:"id,omitempty"`
-	TruckID          *primitive.ObjectID `bson:"truck_id" json:"truck_id"`
-	DriverID         *primitive.ObjectID `bson:"driver_id" json:"driver_id"`
+	TruckID          *primitive.ObjectID `bson:"truck_id,omitempty" json:"truck_id,omitempty"`
+	Truck            *Truck              `bson:"truck,omitempty" json:"truck,omitempty"`
+	DriverID         *primitive.ObjectID `bson:"driver_id,omitempty" json:"driver_id,omitempty"`
+	Driver           *Driver             `bson:"driver,omitempty" json:"driver,omitempty"`
 	Date             string              `bson:"date" json:"date"`
 	GallonsPurchased float64             `bson:"gallons_purchased" json:"gallons_purchased"`
 	PricePerGallon   float64             `bson:"price_per_gallon" json:"price_per_gallon"`

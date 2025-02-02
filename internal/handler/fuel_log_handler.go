@@ -50,8 +50,10 @@ type FuelLogUpdateRequest struct {
 
 type FuelLogResponse struct {
 	ID               primitive.ObjectID  `json:"id,omitempty"`
-	TruckID          *primitive.ObjectID `json:"truck_id"`
-	DriverID         *primitive.ObjectID `json:"driver_id"`
+	TruckID          *primitive.ObjectID `json:"truck_id,omitempty"`
+	Truck            *domain.Truck       `json:"truck,omitempty"`
+	DriverID         *primitive.ObjectID `json:"driver_id,omitempty"`
+	Driver           *domain.Driver      `json:"driver,omitempty"`
 	Date             string              `json:"date"`
 	GallonsPurchased float64             `json:"gallons_purchased"`
 	PricePerGallon   float64             `json:"price_per_gallon"`
@@ -100,7 +102,9 @@ func fuelLogDomainToResponse(f *domain.FuelLog) FuelLogResponse {
 	return FuelLogResponse{
 		ID:               f.ID,
 		TruckID:          f.TruckID,
+		Truck:            f.Truck,
 		DriverID:         f.DriverID,
+		Driver:           f.Driver,
 		Date:             f.Date,
 		GallonsPurchased: f.GallonsPurchased,
 		PricePerGallon:   f.PricePerGallon,
