@@ -36,9 +36,12 @@ func (i IncidentType) IsValid() bool {
 
 type IncidentReport struct {
 	ID             primitive.ObjectID  `bson:"_id,omitempty" json:"_id,omitempty"`
-	Trip           *primitive.ObjectID `bson:"trip_id" json:"trip_id"`
-	TruckID        *primitive.ObjectID `bson:"truck_id" json:"truck_id"`
-	DriverID       *primitive.ObjectID `bson:"driver_id" json:"driver_id"`
+	TripID         *primitive.ObjectID `bson:"trip_id,omitempty" json:"trip_id,omitempty"`
+	Trip           *Trip               `bson:"trip,omitempty" json:"trip,omitempty"`
+	TruckID        *primitive.ObjectID `bson:"truck_id,omitempty" json:"truck_id,omitempty"`
+	Truck          *Truck              `bson:"truck,omitempty" json:"truck,omitempty"`
+	DriverID       *primitive.ObjectID `bson:"driver_id,omitempty" json:"driver_id,omitempty"`
+	Driver         *Driver             `bson:"driver,omitempty" json:"driver,omitempty"`
 	Type           IncidentType        `bson:"type" json:"type"`
 	Description    string              `bson:"description" json:"description"`
 	Date           string              `bson:"date" json:"date"`
@@ -49,7 +52,7 @@ type IncidentReport struct {
 }
 
 func NewIncidentReport(
-	trip,
+	tripId,
 	truckId,
 	driverId *primitive.ObjectID,
 	incidentType IncidentType,
@@ -60,7 +63,7 @@ func NewIncidentReport(
 	now := time.Now()
 
 	return &IncidentReport{
-		Trip:           trip,
+		TripID:         tripId,
 		TruckID:        truckId,
 		DriverID:       driverId,
 		Type:           incidentType,

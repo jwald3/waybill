@@ -26,7 +26,7 @@ var (
 // DTOS =======================================================
 
 type IncidentReportCreateRequest struct {
-	Trip           *primitive.ObjectID `json:"trip_id"`
+	TripID         *primitive.ObjectID `json:"trip_id"`
 	TruckID        *primitive.ObjectID `json:"truck_id"`
 	DriverID       *primitive.ObjectID `json:"driver_id"`
 	Type           domain.IncidentType `json:"type"`
@@ -38,7 +38,7 @@ type IncidentReportCreateRequest struct {
 
 type IncidentReportUpdateRequest struct {
 	ID             primitive.ObjectID  `json:"_id,omitempty"`
-	Trip           *primitive.ObjectID `json:"trip_id"`
+	TripID         *primitive.ObjectID `json:"trip_id"`
 	TruckID        *primitive.ObjectID `json:"truck_id"`
 	DriverID       *primitive.ObjectID `json:"driver_id"`
 	Type           domain.IncidentType `json:"type"`
@@ -50,9 +50,12 @@ type IncidentReportUpdateRequest struct {
 
 type IncidentReportResponse struct {
 	ID             primitive.ObjectID  `json:"id,omitempty"`
-	Trip           *primitive.ObjectID `json:"trip_id"`
-	TruckID        *primitive.ObjectID `json:"truck_id"`
-	DriverID       *primitive.ObjectID `json:"driver_id"`
+	TripID         *primitive.ObjectID `json:"trip_id,omitempty"`
+	Trip           *domain.Trip        `json:"trip,omitempty"`
+	TruckID        *primitive.ObjectID `json:"truck_id,omitempty"`
+	Truck          *domain.Truck       `json:"truck,omitempty"`
+	DriverID       *primitive.ObjectID `json:"driver_id,omitempty"`
+	Driver         *domain.Driver      `json:"driver,omitempty"`
 	Type           domain.IncidentType `json:"type"`
 	Description    string              `json:"description"`
 	Date           string              `json:"date"`
@@ -68,7 +71,7 @@ type ListIncidentReportsResponse struct {
 
 func incidentReportRequestToDomainCreate(req IncidentReportCreateRequest) (*domain.IncidentReport, error) {
 	return domain.NewIncidentReport(
-		req.Trip,
+		req.TripID,
 		req.TruckID,
 		req.DriverID,
 		req.Type,
@@ -84,7 +87,7 @@ func incidentReportRequestToDomainUpdate(req IncidentReportUpdateRequest) (*doma
 
 	return &domain.IncidentReport{
 		ID:             req.ID,
-		Trip:           req.Trip,
+		TripID:         req.TripID,
 		TruckID:        req.TruckID,
 		DriverID:       req.DriverID,
 		Type:           req.Type,
@@ -100,9 +103,12 @@ func incidentReportRequestToDomainUpdate(req IncidentReportUpdateRequest) (*doma
 func incidentReportDomainToResponse(i *domain.IncidentReport) IncidentReportResponse {
 	return IncidentReportResponse{
 		ID:             i.ID,
+		TripID:         i.TripID,
 		Trip:           i.Trip,
 		TruckID:        i.TruckID,
+		Truck:          i.Truck,
 		DriverID:       i.DriverID,
+		Driver:         i.Driver,
 		Type:           i.Type,
 		Description:    i.Description,
 		Date:           i.Date,

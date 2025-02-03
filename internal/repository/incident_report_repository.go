@@ -10,7 +10,6 @@ import (
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
-	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
 type incidentReportRepository struct {
@@ -45,17 +44,64 @@ func (r *incidentReportRepository) Create(ctx context.Context, incidentReport *d
 }
 
 func (r *incidentReportRepository) GetById(ctx context.Context, id primitive.ObjectID) (*domain.IncidentReport, error) {
-	filter := bson.M{"_id": id}
+	pipeline := mongo.Pipeline{
+		{{Key: "$match", Value: bson.M{"_id": id}}},
+		{{Key: "$lookup", Value: bson.M{
+			"from":         "trips",
+			"localField":   "trip_id",
+			"foreignField": "_id",
+			"as":           "trip",
+		}}},
+		{{Key: "$unwind", Value: bson.M{
+			"path":                       "$trip",
+			"preserveNullAndEmptyArrays": true,
+		}}},
+		{{Key: "$lookup", Value: bson.M{
+			"from":         "trucks",
+			"localField":   "truck_id",
+			"foreignField": "_id",
+			"as":           "truck",
+		}}},
+		{{Key: "$unwind", Value: bson.M{
+			"path":                       "$truck",
+			"preserveNullAndEmptyArrays": true,
+		}}},
+		{{Key: "$lookup", Value: bson.M{
+			"from":         "drivers",
+			"localField":   "driver_id",
+			"foreignField": "_id",
+			"as":           "driver",
+		}}},
+		{{Key: "$unwind", Value: bson.M{
+			"path":                       "$driver",
+			"preserveNullAndEmptyArrays": true,
+		}}},
+		{{Key: "$project", Value: bson.M{
+			"trip_id":   0,
+			"truck_id":  0,
+			"driver_id": 0,
+		}}},
+	}
 
-	var incidentReport domain.IncidentReport
-	err := r.incidentReports.FindOne(ctx, filter).Decode(&incidentReport)
-	if err == mongo.ErrNoDocuments {
+	var result domain.IncidentReport
+	cursor, err := r.incidentReports.Aggregate(ctx, pipeline)
+	if err != nil {
+		return nil, fmt.Errorf("failed to execute aggregate: %w", err)
+	}
+	defer cursor.Close(ctx)
+
+	if !cursor.Next(ctx) {
+		if cursor.Err() != nil {
+			return nil, fmt.Errorf("cursor error: %w", cursor.Err())
+		}
 		return nil, nil
 	}
-	if err != nil {
-		return nil, fmt.Errorf("failed to get incidentReport: %w", err)
+
+	if err := cursor.Decode(&result); err != nil {
+		return nil, fmt.Errorf("failed to decode driver: %w", err)
 	}
-	return &incidentReport, nil
+
+	return &result, nil
 }
 
 func (r *incidentReportRepository) Update(ctx context.Context, incidentReport *domain.IncidentReport) error {
@@ -91,12 +137,48 @@ func (r *incidentReportRepository) Delete(ctx context.Context, id primitive.Obje
 }
 
 func (r *incidentReportRepository) List(ctx context.Context, limit, offset int64) ([]*domain.IncidentReport, error) {
-	findOptions := options.Find()
-	findOptions.SetLimit(limit)
-	findOptions.SetSkip(offset)
-	findOptions.SetSort(bson.D{{Key: "_id", Value: -1}})
+	pipeline := mongo.Pipeline{
+		{{Key: "$sort", Value: bson.M{"_id": -1}}},
+		{{Key: "$skip", Value: offset}},
+		{{Key: "$limit", Value: limit}},
+		{{Key: "$lookup", Value: bson.M{
+			"from":         "trips",
+			"localField":   "trip_id",
+			"foreignField": "_id",
+			"as":           "trip",
+		}}},
+		{{Key: "$unwind", Value: bson.M{
+			"path":                       "$trip",
+			"preserveNullAndEmptyArrays": true,
+		}}},
+		{{Key: "$lookup", Value: bson.M{
+			"from":         "trucks",
+			"localField":   "truck_id",
+			"foreignField": "_id",
+			"as":           "truck",
+		}}},
+		{{Key: "$unwind", Value: bson.M{
+			"path":                       "$truck",
+			"preserveNullAndEmptyArrays": true,
+		}}},
+		{{Key: "$lookup", Value: bson.M{
+			"from":         "drivers",
+			"localField":   "driver_id",
+			"foreignField": "_id",
+			"as":           "driver",
+		}}},
+		{{Key: "$unwind", Value: bson.M{
+			"path":                       "$driver",
+			"preserveNullAndEmptyArrays": true,
+		}}},
+		{{Key: "$project", Value: bson.M{
+			"trip_id":   0,
+			"truck_id":  0,
+			"driver_id": 0,
+		}}},
+	}
 
-	cursor, err := r.incidentReports.Find(ctx, bson.M{}, findOptions)
+	cursor, err := r.incidentReports.Aggregate(ctx, pipeline)
 	if err != nil {
 		return nil, fmt.Errorf("failed retrieve list of users: %w", err)
 	}
