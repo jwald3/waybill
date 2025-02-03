@@ -1,6 +1,7 @@
 package domain
 
 import (
+	"fmt"
 	"time"
 
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -44,6 +45,10 @@ func NewMaintenanceLog(
 	mechanic,
 	location string,
 	cost float64) (*MaintenanceLog, error) {
+
+	if !serviceType.IsValid() {
+		return nil, fmt.Errorf("invalid service type provided: %s", serviceType)
+	}
 
 	now := time.Now()
 
