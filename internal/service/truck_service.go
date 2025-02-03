@@ -85,3 +85,16 @@ func (s *truckService) List(ctx context.Context, limit, offset int64) ([]*domain
 
 	return trucks, nil
 }
+
+// atomic methods
+
+func (s *truckService) UpdateEmploymentStatus(ctx context.Context, id primitive.ObjectID, newStatus domain.TruckStatus) error {
+	truck, err := s.truckRepo.GetById(ctx, id)
+	if err != nil {
+		return fmt.Errorf(truckNotFound, err)
+	}
+	if err := truck.ChangeTruckStatus(newStatus); err != nil {
+		return err
+	}
+	return s.truckRepo.Update(ctx, truck)
+}

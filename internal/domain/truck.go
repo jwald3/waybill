@@ -161,3 +161,17 @@ func NewTruck(
 		UpdatedAt:        primitive.NewDateTimeFromTime(now),
 	}, nil
 }
+
+func (t *Truck) ChangeTruckStatus(newStatus TruckStatus) error {
+	if t.Status == TruckStatusRetired {
+		return fmt.Errorf("cannot change status from RETIRED")
+	}
+
+	if !newStatus.IsValid() {
+		return fmt.Errorf("invalid truck status: %s", newStatus)
+	}
+
+	t.Status = newStatus
+	t.UpdatedAt = primitive.NewDateTimeFromTime(time.Now())
+	return nil
+}
