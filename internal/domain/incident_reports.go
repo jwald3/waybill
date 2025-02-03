@@ -1,6 +1,7 @@
 package domain
 
 import (
+	"fmt"
 	"time"
 
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -60,6 +61,11 @@ func NewIncidentReport(
 	date,
 	location string,
 	damageEstimate float64) (*IncidentReport, error) {
+
+	if !incidentType.IsValid() {
+		return nil, fmt.Errorf("invalid incident report type: %s", incidentType)
+	}
+
 	now := time.Now()
 
 	return &IncidentReport{
