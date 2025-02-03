@@ -1,6 +1,7 @@
 package domain
 
 import (
+	"fmt"
 	"time"
 
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -53,6 +54,12 @@ func NewFacility(
 	parkingCapacity int,
 	servicesAvailable []FacilityService) (*Facility, error) {
 	now := time.Now()
+
+	for _, service := range servicesAvailable {
+		if !service.IsValid() {
+			return nil, fmt.Errorf("invalid facility service: %s", service)
+		}
+	}
 
 	return &Facility{
 		FacilityNumber:    facilityNumber,
