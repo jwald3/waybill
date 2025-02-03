@@ -1,6 +1,7 @@
 package domain
 
 import (
+	"fmt"
 	"time"
 
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -75,6 +76,11 @@ func NewTrip(
 	cargo Cargo,
 	fuelUsage float64,
 	distanceMiles int) (*Trip, error) {
+
+	if !status.IsValid() {
+		return nil, fmt.Errorf("invalid status provided: %s", status)
+	}
+
 	now := time.Now()
 
 	return &Trip{
