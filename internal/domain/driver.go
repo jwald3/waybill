@@ -2,10 +2,32 @@ package domain
 
 import (
 	"fmt"
+	"net/mail"
+	"regexp"
 	"time"
 
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
+
+type Email string
+
+func NewEmail(email string) (Email, error) {
+	if _, err := mail.ParseAddress(email); err != nil {
+		return "", fmt.Errorf("invalid email format: %w", err)
+	}
+	return Email(email), nil
+}
+
+type PhoneNumber string
+
+var phoneRegex = regexp.MustCompile(`^\+?[1-9]\d{1,14}$`)
+
+func NewPhoneNumber(phone string) (PhoneNumber, error) {
+	if !phoneRegex.MatchString(phone) {
+		return "", fmt.Errorf("invalid phone number format")
+	}
+	return PhoneNumber(phone), nil
+}
 
 type EmploymentStatus string
 
@@ -33,8 +55,8 @@ type Driver struct {
 	LicenseNumber     string              `bson:"license_number" json:"license_number"`
 	LicenseState      string              `bson:"license_state" json:"license_state"`
 	LicenseExpiration string              `bson:"license_expiration" json:"license_expiration"`
-	Phone             string              `bson:"phone" json:"phone"`
-	Email             string              `bson:"email" json:"email"`
+	Phone             PhoneNumber         `bson:"phone" json:"phone"`
+	Email             Email               `bson:"email" json:"email"`
 	Address           Address             `bson:"address" json:"address"`
 	EmploymentStatus  EmploymentStatus    `bson:"employment_status" json:"employment_status"`
 	AssignedTruckID   *primitive.ObjectID `bson:"assigned_truck_id,omitempty" json:"assigned_truck_id,omitempty"`
@@ -61,6 +83,16 @@ func NewDriver(
 	email string,
 	address Address) (*Driver, error) {
 
+	validEmail, err := NewEmail(email)
+	if err != nil {
+		return nil, err
+	}
+
+	validPhone, err := NewPhoneNumber(phoneNumber)
+	if err != nil {
+		return nil, err
+	}
+
 	now := time.Now()
 
 	return &Driver{
@@ -70,8 +102,8 @@ func NewDriver(
 		LicenseNumber:     licenseNumber,
 		LicenseState:      licenseState,
 		LicenseExpiration: licenseExpiration,
-		Phone:             phoneNumber,
-		Email:             email,
+		Phone:             validPhone,
+		Email:             validEmail,
 		Address:           address,
 		EmploymentStatus:  EmploymentStatusActive,
 		AssignedTruckID:   nil,

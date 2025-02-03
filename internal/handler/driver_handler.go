@@ -59,8 +59,8 @@ type DriverResponse struct {
 	LicenseNumber     string                  `json:"license_number"`
 	LicenseState      string                  `json:"license_state"`
 	LicenseExpiration string                  `json:"license_expiration"`
-	Phone             string                  `json:"phone"`
-	Email             string                  `json:"email"`
+	Phone             domain.PhoneNumber      `json:"phone"`
+	Email             domain.Email            `json:"email"`
 	Address           domain.Address          `json:"address"`
 	EmploymentStatus  domain.EmploymentStatus `json:"employment_status"`
 	AssignedTruckID   *primitive.ObjectID     `json:"assigned_truck_id,omitempty"`
@@ -88,6 +88,16 @@ func driverRequestToDomainCreate(req DriverCreateRequest) (*domain.Driver, error
 }
 
 func driverRequestToDomainUpdate(req DriverUpdateRequest) (*domain.Driver, error) {
+	validEmail, err := domain.NewEmail(req.Email)
+	if err != nil {
+		return nil, err
+	}
+
+	validPhone, err := domain.NewPhoneNumber(req.Phone)
+	if err != nil {
+		return nil, err
+	}
+
 	now := time.Now()
 
 	return &domain.Driver{
@@ -98,8 +108,8 @@ func driverRequestToDomainUpdate(req DriverUpdateRequest) (*domain.Driver, error
 		LicenseNumber:     req.LicenseNumber,
 		LicenseState:      req.LicenseState,
 		LicenseExpiration: req.LicenseExpiration,
-		Phone:             req.Phone,
-		Email:             req.Email,
+		Phone:             validPhone,
+		Email:             validEmail,
 		Address:           req.Address,
 		EmploymentStatus:  req.EmploymentStatus,
 		UpdatedAt:         primitive.NewDateTimeFromTime(now),
