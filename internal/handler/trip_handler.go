@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"fmt"
 	"net/http"
 	"time"
 
@@ -100,6 +101,10 @@ func tripRequestToDomainCreate(req TripCreateRequest) (*domain.Trip, error) {
 }
 
 func tripRequestToDomainUpdate(req TripUpdateRequest) (*domain.Trip, error) {
+	if !req.Status.IsValid() {
+		return nil, fmt.Errorf("invalid status provided: %s", req.Status)
+	}
+
 	now := time.Now()
 
 	return &domain.Trip{

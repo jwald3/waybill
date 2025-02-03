@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"fmt"
 	"net/http"
 	"time"
 
@@ -77,6 +78,10 @@ func maintenanceLogRequestToDomainCreate(req MaintenanceLogCreateRequest) (*doma
 }
 
 func maintenanceLogRequestToDomainUpdate(req MaintenanceLogUpdateRequest) (*domain.MaintenanceLog, error) {
+	if !req.ServiceType.IsValid() {
+		return nil, fmt.Errorf("invalid service type provided: %s", req.ServiceType)
+	}
+
 	now := time.Now()
 
 	return &domain.MaintenanceLog{

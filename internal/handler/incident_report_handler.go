@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"fmt"
 	"net/http"
 	"time"
 
@@ -83,6 +84,10 @@ func incidentReportRequestToDomainCreate(req IncidentReportCreateRequest) (*doma
 }
 
 func incidentReportRequestToDomainUpdate(req IncidentReportUpdateRequest) (*domain.IncidentReport, error) {
+	if !req.Type.IsValid() {
+		return nil, fmt.Errorf("invalid incident report type: %s", req.Type)
+	}
+
 	now := time.Now()
 
 	return &domain.IncidentReport{

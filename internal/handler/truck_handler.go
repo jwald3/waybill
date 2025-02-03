@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"fmt"
 	"net/http"
 	"time"
 
@@ -100,6 +101,18 @@ func truckRequestToDomainCreate(req TruckCreateRequest) (*domain.Truck, error) {
 }
 
 func truckRequestToDomainUpdate(req TruckUpdateRequest) (*domain.Truck, error) {
+	if !req.FuelType.IsValid() {
+		return nil, fmt.Errorf("invalid fuel type provided: %s", req.FuelType)
+	}
+
+	if !req.TrailerType.IsValid() {
+		return nil, fmt.Errorf("invalid trailer type provided: %s", req.TrailerType)
+	}
+
+	if !req.Status.IsValid() {
+		return nil, fmt.Errorf("invalid truck status provided: %s", req.Status)
+	}
+
 	now := time.Now()
 
 	return &domain.Truck{

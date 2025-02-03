@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"fmt"
 	"net/http"
 	"time"
 
@@ -76,6 +77,12 @@ func facilityRequestToDomainCreate(req FacilityCreateRequest) (*domain.Facility,
 }
 
 func facilityRequestToDomainUpdate(req FacilityUpdateRequest) (*domain.Facility, error) {
+	for _, service := range req.ServicesAvailable {
+		if !service.IsValid() {
+			return nil, fmt.Errorf("invalid facility service: %s", service)
+		}
+	}
+
 	now := time.Now()
 
 	return &domain.Facility{
