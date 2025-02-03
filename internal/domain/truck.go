@@ -1,6 +1,7 @@
 package domain
 
 import (
+	"fmt"
 	"time"
 
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -127,6 +128,19 @@ func NewTruck(
 	mileage int,
 	capacityTons float64,
 	licensePlate LicensePlate) (*Truck, error) {
+
+	if !fuelType.IsValid() {
+		return nil, fmt.Errorf("invalid fuel type provided: %s", fuelType)
+	}
+
+	if !trailerType.IsValid() {
+		return nil, fmt.Errorf("invalid trailer type provided: %s", trailerType)
+	}
+
+	if !status.IsValid() {
+		return nil, fmt.Errorf("invalid truck status provided: %s", status)
+	}
+
 	now := time.Now()
 
 	return &Truck{
