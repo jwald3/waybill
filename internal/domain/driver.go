@@ -1,6 +1,7 @@
 package domain
 
 import (
+	"fmt"
 	"time"
 
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -59,6 +60,7 @@ func NewDriver(
 	phoneNumber,
 	email string,
 	address Address) (*Driver, error) {
+
 	now := time.Now()
 
 	return &Driver{
@@ -76,4 +78,18 @@ func NewDriver(
 		CreatedAt:         primitive.NewDateTimeFromTime(now),
 		UpdatedAt:         primitive.NewDateTimeFromTime(now),
 	}, nil
+}
+
+func (d *Driver) ChangeEmploymentStatus(newStatus EmploymentStatus) error {
+	if d.EmploymentStatus == EmploymentStatusTerminated {
+		return fmt.Errorf("cannot change status from TERMINATED")
+	}
+
+	if !newStatus.IsValid() {
+		return fmt.Errorf("invalid employment status: %s", newStatus)
+	}
+
+	d.EmploymentStatus = newStatus
+	d.UpdatedAt = primitive.NewDateTimeFromTime(time.Now())
+	return nil
 }

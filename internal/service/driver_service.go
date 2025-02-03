@@ -35,6 +35,10 @@ func NewDriverService(db *database.MongoDB, driverRepo repository.DriverReposito
 }
 
 func (s *driverService) Create(ctx context.Context, driver *domain.Driver) error {
+	if !driver.EmploymentStatus.IsValid() {
+		return fmt.Errorf("invalid employment status: %s", driver.EmploymentStatus)
+	}
+
 	if err := s.driverRepo.Create(ctx, driver); err != nil {
 		return fmt.Errorf("failed to create driver: %w", err)
 	}
@@ -84,4 +88,16 @@ func (s *driverService) List(ctx context.Context, limit, offset int64) ([]*domai
 	}
 
 	return drivers, nil
+}
+
+// Atomic methods
+func (s *driverService) UpdateEmploymentStatus(ctx context.Context, id primitive.ObjectID, newStatus domain.EmploymentStatus) error {
+	driver, err := s.driverRepo.GetById(ctx, id)
+	if err != nil {
+		return fmt.Errorf(driverNotFound, err)
+	}
+	if err := driver.ChangeEmploymentStatus(newStatus); err != nil {
+		return err
+	}
+	return s.driverRepo.Update(ctx, driver)
 }
