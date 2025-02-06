@@ -73,9 +73,13 @@ func (r *facilityRepository) Update(ctx context.Context, facility *domain.Facili
 		},
 	}
 
-	_, err := r.facilities.UpdateOne(ctx, filter, update)
+	result, err := r.facilities.UpdateOne(ctx, filter, update)
 	if err != nil {
 		return fmt.Errorf("failed to update facility: %w", err)
+	}
+
+	if result.MatchedCount == 0 {
+		return fmt.Errorf("facility not found")
 	}
 
 	return nil

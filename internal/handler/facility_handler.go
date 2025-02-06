@@ -3,7 +3,6 @@ package handler
 import (
 	"fmt"
 	"net/http"
-	"time"
 
 	"github.com/gorilla/mux"
 	"github.com/jwald3/waybill/internal/domain"
@@ -37,7 +36,6 @@ type FacilityCreateRequest struct {
 }
 
 type FacilityUpdateRequest struct {
-	ID                primitive.ObjectID       `json:"id,omitempty"`
 	FacilityNumber    string                   `json:"facility_number"`
 	Name              string                   `json:"name"`
 	Type              string                   `json:"type"`
@@ -83,10 +81,7 @@ func facilityRequestToDomainUpdate(req FacilityUpdateRequest) (*domain.Facility,
 		}
 	}
 
-	now := time.Now()
-
 	return &domain.Facility{
-		ID:                req.ID,
 		FacilityNumber:    req.FacilityNumber,
 		Name:              req.Name,
 		Type:              req.Type,
@@ -94,7 +89,6 @@ func facilityRequestToDomainUpdate(req FacilityUpdateRequest) (*domain.Facility,
 		ContactInfo:       req.ContactInfo,
 		ParkingCapacity:   req.ParkingCapacity,
 		ServicesAvailable: req.ServicesAvailable,
-		UpdatedAt:         primitive.NewDateTimeFromTime(now),
 	}, nil
 }
 
