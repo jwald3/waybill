@@ -106,9 +106,13 @@ func (r *driverRepository) Update(ctx context.Context, driver *domain.Driver) er
 		},
 	}
 
-	_, err := r.drivers.UpdateOne(ctx, filter, update)
+	result, err := r.drivers.UpdateOne(ctx, filter, update)
 	if err != nil {
 		return fmt.Errorf("failed to update driver: %w", err)
+	}
+
+	if result.MatchedCount == 0 {
+		return fmt.Errorf("driver not found")
 	}
 
 	return nil

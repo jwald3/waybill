@@ -2,7 +2,6 @@ package handler
 
 import (
 	"net/http"
-	"time"
 
 	"github.com/gorilla/mux"
 	"github.com/jwald3/waybill/internal/domain"
@@ -38,7 +37,6 @@ type DriverCreateRequest struct {
 }
 
 type DriverUpdateRequest struct {
-	ID                primitive.ObjectID      `json:"id"`
 	FirstName         string                  `json:"first_name"`
 	LastName          string                  `json:"last_name"`
 	DOB               string                  `json:"dob"`
@@ -98,10 +96,7 @@ func driverRequestToDomainUpdate(req DriverUpdateRequest) (*domain.Driver, error
 		return nil, err
 	}
 
-	now := time.Now()
-
 	return &domain.Driver{
-		ID:                req.ID,
 		FirstName:         req.FirstName,
 		LastName:          req.LastName,
 		DOB:               req.DOB,
@@ -112,7 +107,6 @@ func driverRequestToDomainUpdate(req DriverUpdateRequest) (*domain.Driver, error
 		Email:             validEmail,
 		Address:           req.Address,
 		EmploymentStatus:  req.EmploymentStatus,
-		UpdatedAt:         primitive.NewDateTimeFromTime(now),
 	}, nil
 }
 
