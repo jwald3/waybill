@@ -3,7 +3,6 @@ package handler
 import (
 	"fmt"
 	"net/http"
-	"time"
 
 	"github.com/gorilla/mux"
 	"github.com/jwald3/waybill/internal/domain"
@@ -43,7 +42,6 @@ type TruckCreateRequest struct {
 }
 
 type TruckUpdateRequest struct {
-	ID               primitive.ObjectID  `json:"id"`
 	TruckNumber      string              `json:"truck_number"`
 	VIN              string              `json:"vin"`
 	Make             string              `json:"make"`
@@ -113,10 +111,7 @@ func truckRequestToDomainUpdate(req TruckUpdateRequest) (*domain.Truck, error) {
 		return nil, fmt.Errorf("invalid truck status provided: %s", req.Status)
 	}
 
-	now := time.Now()
-
 	return &domain.Truck{
-		ID:               req.ID,
 		TruckNumber:      req.TruckNumber,
 		VIN:              req.VIN,
 		Make:             req.Make,
@@ -130,7 +125,6 @@ func truckRequestToDomainUpdate(req TruckUpdateRequest) (*domain.Truck, error) {
 		CapacityTons:     req.CapacityTons,
 		FuelType:         req.FuelType,
 		LastMaintenance:  req.LastMaintenance,
-		UpdatedAt:        primitive.NewDateTimeFromTime(now),
 	}, nil
 }
 

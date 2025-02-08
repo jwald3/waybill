@@ -3,7 +3,6 @@ package handler
 import (
 	"fmt"
 	"net/http"
-	"time"
 
 	"github.com/gorilla/mux"
 	"github.com/jwald3/waybill/internal/domain"
@@ -42,7 +41,6 @@ type TripCreateRequest struct {
 }
 
 type TripUpdateRequest struct {
-	ID              primitive.ObjectID  `json:"id,omitempty"`
 	TripNumber      string              `json:"trip_number"`
 	DriverID        *primitive.ObjectID `json:"driver_id"`
 	TruckID         *primitive.ObjectID `json:"truck_id"`
@@ -105,10 +103,7 @@ func tripRequestToDomainUpdate(req TripUpdateRequest) (*domain.Trip, error) {
 		return nil, fmt.Errorf("invalid status provided: %s", req.Status)
 	}
 
-	now := time.Now()
-
 	return &domain.Trip{
-		ID:              req.ID,
 		TripNumber:      req.TripNumber,
 		DriverID:        req.DriverID,
 		TruckID:         req.TruckID,
@@ -121,7 +116,6 @@ func tripRequestToDomainUpdate(req TripUpdateRequest) (*domain.Trip, error) {
 		Cargo:           req.Cargo,
 		FuelUsage:       req.FuelUsage,
 		DistanceMiles:   req.DistanceMiles,
-		UpdatedAt:       primitive.NewDateTimeFromTime(now),
 	}, nil
 }
 

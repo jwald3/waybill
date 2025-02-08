@@ -101,9 +101,13 @@ func (r *truckRepository) Update(ctx context.Context, truck *domain.Truck) error
 		},
 	}
 
-	_, err := r.trucks.UpdateOne(ctx, filter, update)
+	result, err := r.trucks.UpdateOne(ctx, filter, update)
 	if err != nil {
 		return fmt.Errorf("failed to update truck: %w", err)
+	}
+
+	if result.MatchedCount == 0 {
+		return fmt.Errorf("truck not found")
 	}
 
 	return nil

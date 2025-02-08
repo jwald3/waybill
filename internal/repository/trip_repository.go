@@ -135,9 +135,13 @@ func (r *tripRepository) Update(ctx context.Context, trip *domain.Trip) error {
 		},
 	}
 
-	_, err := r.trips.UpdateOne(ctx, filter, update)
+	result, err := r.trips.UpdateOne(ctx, filter, update)
 	if err != nil {
 		return fmt.Errorf("failed to update trip: %w", err)
+	}
+
+	if result.MatchedCount == 0 {
+		return fmt.Errorf("trip not found")
 	}
 
 	return nil
