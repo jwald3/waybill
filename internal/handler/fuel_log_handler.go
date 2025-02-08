@@ -202,16 +202,30 @@ func (h *FuelLogHandler) List(w http.ResponseWriter, r *http.Request) {
 	limit := getQueryIntParam(r, "limit", 10)
 	offset := getQueryIntParam(r, "offset", 0)
 
-	fuelLogs, err := h.fuelLogService.List(r.Context(), int64(limit), int64(offset))
+	result, err := h.fuelLogService.List(r.Context(), int64(limit), int64(offset))
 	if err != nil {
 		WriteJSON(w, http.StatusInternalServerError, Response{Error: "failed to fetch fuel logs"})
 		return
 	}
 
-	fuelLogResponses := make([]FuelLogResponse, len(fuelLogs))
-	for i, d := range fuelLogs {
+	fuelLogResponses := make([]FuelLogResponse, len(result.FuelLogs))
+	for i, d := range result.FuelLogs {
 		fuelLogResponses[i] = fuelLogDomainToResponse(d)
 	}
 
-	WriteJSON(w, http.StatusOK, Response{Data: ListFuelLogsResponse{FuelLogs: fuelLogResponses}})
+	var nextOffset *int64
+	if int64(offset)+int64(limit) < result.Total {
+		next := int64(offset + limit)
+		nextOffset = &next
+	}
+
+	response := PaginatedResponse{
+		Items:      fuelLogResponses,
+		Total:      result.Total,
+		Limit:      int64(limit),
+		Offset:     int64(offset),
+		NextOffset: nextOffset,
+	}
+
+	WriteJSON(w, http.StatusOK, response)
 }

@@ -19,7 +19,7 @@ type FuelLogService interface {
 	GetById(ctx context.Context, id primitive.ObjectID) (*domain.FuelLog, error)
 	Update(ctx context.Context, fuelLog *domain.FuelLog) error
 	Delete(ctx context.Context, id primitive.ObjectID) error
-	List(ctx context.Context, limit, offset int64) ([]*domain.FuelLog, error)
+	List(ctx context.Context, limit, offset int64) (*repository.ListFuelLogsResult, error)
 }
 
 type fuelLogService struct {
@@ -76,12 +76,19 @@ func (s *fuelLogService) Delete(ctx context.Context, id primitive.ObjectID) erro
 	return nil
 }
 
-func (s *fuelLogService) List(ctx context.Context, limit, offset int64) ([]*domain.FuelLog, error) {
-	fuelLogs, err := s.fuelLogRepo.List(ctx, limit, offset)
+func (s *fuelLogService) List(ctx context.Context, limit, offset int64) (*repository.ListFuelLogsResult, error) {
+	if ctx == nil {
+		return nil, fmt.Errorf("context is required")
+	}
 
+	result, err := s.fuelLogRepo.List(ctx, limit, offset)
 	if err != nil {
 		return nil, fmt.Errorf("failed to list fuel logs: %w", err)
 	}
 
-	return fuelLogs, nil
+	if result.FuelLogs == nil {
+		result.FuelLogs = []*domain.FuelLog{}
+	}
+
+	return result, nil
 }

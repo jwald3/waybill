@@ -21,7 +21,12 @@ type FuelLogRepository interface {
 	GetById(ctx context.Context, id primitive.ObjectID) (*domain.FuelLog, error)
 	Update(ctx context.Context, fuelLog *domain.FuelLog) error
 	Delete(ctx context.Context, id primitive.ObjectID) error
-	List(ctx context.Context, limit, offset int64) ([]*domain.FuelLog, error)
+	List(ctx context.Context, limit, offset int64) (*ListFuelLogsResult, error)
+}
+
+type ListFuelLogsResult struct {
+	FuelLogs []*domain.FuelLog
+	Total    int64
 }
 
 func NewFuelLogRepository(db *database.MongoDB) FuelLogRepository {
@@ -134,7 +139,22 @@ func (r *fuelLogRepository) Delete(ctx context.Context, id primitive.ObjectID) e
 	return nil
 }
 
-func (r *fuelLogRepository) List(ctx context.Context, limit, offset int64) ([]*domain.FuelLog, error) {
+func (r *fuelLogRepository) List(ctx context.Context, limit, offset int64) (*ListFuelLogsResult, error) {
+	if limit <= 0 {
+		limit = 10
+	}
+	if limit > 100 {
+		limit = 100
+	}
+	if offset < 0 {
+		offset = 0
+	}
+
+	total, err := r.fuelLogs.CountDocuments(ctx, bson.M{})
+	if err != nil {
+		return nil, fmt.Errorf("failed to get total count: %w", err)
+	}
+
 	pipeline := mongo.Pipeline{
 		{{Key: "$sort", Value: bson.M{"_id": -1}}},
 		{{Key: "$skip", Value: offset}},
@@ -173,18 +193,13 @@ func (r *fuelLogRepository) List(ctx context.Context, limit, offset int64) ([]*d
 	}
 	defer cursor.Close(ctx)
 
-	var fuelLogs []*domain.FuelLog
-	for cursor.Next(ctx) {
-		var d domain.FuelLog
-		if err := cursor.Decode(&d); err != nil {
-			return nil, fmt.Errorf("failed to decode fuelLog: %w", err)
-		}
-		fuelLogs = append(fuelLogs, &d)
+	fuelLogs := make([]*domain.FuelLog, 0, limit)
+	if err := cursor.All(ctx, &fuelLogs); err != nil {
+		return nil, fmt.Errorf("failed to decode fuel logs: %w", err)
 	}
 
-	if err := cursor.Err(); err != nil {
-		return nil, fmt.Errorf("cursor error: %w", err)
-	}
-
-	return fuelLogs, nil
+	return &ListFuelLogsResult{
+		FuelLogs: fuelLogs,
+		Total:    total,
+	}, nil
 }
