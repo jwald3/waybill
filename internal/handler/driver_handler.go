@@ -205,16 +205,21 @@ func (h *DriverHandler) Delete(w http.ResponseWriter, r *http.Request) {
 	idStr := mux.Vars(r)["id"]
 	objectID, err := primitive.ObjectIDFromHex(idStr)
 	if err != nil {
-		WriteJSON(w, http.StatusBadRequest, Response{Error: err.Error()})
+		WriteJSON(w, http.StatusBadRequest, Response{Error: invalidDriverId})
 		return
 	}
 
-	if err := h.driverService.Delete(r.Context(), objectID); err != nil {
+	err = h.driverService.Delete(r.Context(), objectID)
+	if err != nil {
+		if err == domain.ErrDriverNotFound {
+			WriteJSON(w, http.StatusNotFound, Response{Error: "driver not found"})
+			return
+		}
 		WriteJSON(w, http.StatusInternalServerError, Response{Error: "failed to delete driver"})
 		return
 	}
 
-	WriteJSON(w, http.StatusOK, Response{Message: "driver deleted successfully"})
+	WriteJSON(w, http.StatusNoContent, nil)
 }
 
 func (h *DriverHandler) List(w http.ResponseWriter, r *http.Request) {

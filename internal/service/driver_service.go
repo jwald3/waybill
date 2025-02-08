@@ -68,12 +68,10 @@ func (s *driverService) Update(ctx context.Context, driver *domain.Driver) error
 }
 
 func (s *driverService) Delete(ctx context.Context, id primitive.ObjectID) error {
-	_, err := s.driverRepo.GetById(ctx, id)
-	if err != nil {
-		return fmt.Errorf(driverNotFound, err)
-	}
-
 	if err := s.driverRepo.Delete(ctx, id); err != nil {
+		if err == domain.ErrDriverNotFound {
+			return err
+		}
 		return fmt.Errorf("failed to delete driver: %w", err)
 	}
 

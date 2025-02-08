@@ -124,11 +124,15 @@ func (r *driverRepository) Update(ctx context.Context, driver *domain.Driver) er
 }
 
 func (r *driverRepository) Delete(ctx context.Context, id primitive.ObjectID) error {
-	filter := bson.M{"_id": id}
-	_, err := r.drivers.DeleteOne(ctx, filter)
+	result, err := r.drivers.DeleteOne(ctx, bson.M{"_id": id})
 	if err != nil {
 		return fmt.Errorf("failed to delete driver: %w", err)
 	}
+
+	if result.DeletedCount == 0 {
+		return domain.ErrDriverNotFound
+	}
+
 	return nil
 }
 
