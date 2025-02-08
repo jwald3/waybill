@@ -19,7 +19,7 @@ type FacilityService interface {
 	GetById(ctx context.Context, id primitive.ObjectID) (*domain.Facility, error)
 	Update(ctx context.Context, facility *domain.Facility) error
 	Delete(ctx context.Context, id primitive.ObjectID) error
-	List(ctx context.Context, limit, offset int64) ([]*domain.Facility, error)
+	List(ctx context.Context, limit, offset int64) (*repository.ListFacilitiesResult, error)
 }
 
 type facilityService struct {
@@ -76,12 +76,20 @@ func (s *facilityService) Delete(ctx context.Context, id primitive.ObjectID) err
 	return nil
 }
 
-func (s *facilityService) List(ctx context.Context, limit, offset int64) ([]*domain.Facility, error) {
-	facilitys, err := s.facilityRepo.List(ctx, limit, offset)
-
-	if err != nil {
-		return nil, fmt.Errorf("failed to list facilitys: %w", err)
+func (s *facilityService) List(ctx context.Context, limit, offset int64) (*repository.ListFacilitiesResult, error) {
+	if ctx == nil {
+		return nil, fmt.Errorf("context is required")
 	}
 
-	return facilitys, nil
+	result, err := s.facilityRepo.List(ctx, limit, offset)
+
+	if err != nil {
+		return nil, fmt.Errorf("failed to list facilities: %w", err)
+	}
+
+	if result.Facilities == nil {
+		result.Facilities = []*domain.Facility{}
+	}
+
+	return result, nil
 }

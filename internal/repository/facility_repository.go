@@ -22,7 +22,12 @@ type FacilityRepository interface {
 	GetById(ctx context.Context, id primitive.ObjectID) (*domain.Facility, error)
 	Update(ctx context.Context, facility *domain.Facility) error
 	Delete(ctx context.Context, id primitive.ObjectID) error
-	List(ctx context.Context, limit, offset int64) ([]*domain.Facility, error)
+	List(ctx context.Context, limit, offset int64) (*ListFacilitiesResult, error)
+}
+
+type ListFacilitiesResult struct {
+	Facilities []*domain.Facility
+	Total      int64
 }
 
 func NewFacilityRepository(db *database.MongoDB) FacilityRepository {
@@ -94,7 +99,24 @@ func (r *facilityRepository) Delete(ctx context.Context, id primitive.ObjectID) 
 	return nil
 }
 
-func (r *facilityRepository) List(ctx context.Context, limit, offset int64) ([]*domain.Facility, error) {
+func (r *facilityRepository) List(ctx context.Context, limit, offset int64) (*ListFacilitiesResult, error) {
+	if limit <= 0 {
+		limit = 10
+	}
+
+	if limit > 100 {
+		limit = 100
+	}
+
+	if offset < 0 {
+		offset = 0
+	}
+
+	total, err := r.facilities.CountDocuments(ctx, bson.M{})
+	if err != nil {
+		return nil, fmt.Errorf("unable to get total count: %w", err)
+	}
+
 	findOptions := options.Find()
 	findOptions.SetLimit(limit)
 	findOptions.SetSkip(offset)
@@ -106,18 +128,13 @@ func (r *facilityRepository) List(ctx context.Context, limit, offset int64) ([]*
 	}
 	defer cursor.Close(ctx)
 
-	var facilities []*domain.Facility
-	for cursor.Next(ctx) {
-		var d domain.Facility
-		if err := cursor.Decode(&d); err != nil {
-			return nil, fmt.Errorf("failed to decode facility: %w", err)
-		}
-		facilities = append(facilities, &d)
+	facilities := make([]*domain.Facility, 0, limit)
+	if err := cursor.All(ctx, &facilities); err != nil {
+		return nil, fmt.Errorf("failed to decode facilities: %w", err)
 	}
 
-	if err := cursor.Err(); err != nil {
-		return nil, fmt.Errorf("cursor error: %w", err)
-	}
-
-	return facilities, nil
+	return &ListFacilitiesResult{
+		Facilities: facilities,
+		Total:      total,
+	}, nil
 }
