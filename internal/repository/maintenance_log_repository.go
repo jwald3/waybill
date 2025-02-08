@@ -37,7 +37,7 @@ func (r *maintenanceLogRepository) Create(ctx context.Context, maintenanceLog *d
 
 	_, err := r.maintenanceLogs.InsertOne(ctx, maintenanceLog)
 	if err != nil {
-		return fmt.Errorf("failed to create maintenanceLog: %w", err)
+		return fmt.Errorf("failed to create maintenance log %w", err)
 	}
 
 	return nil
@@ -96,9 +96,13 @@ func (r *maintenanceLogRepository) Update(ctx context.Context, maintenanceLog *d
 		},
 	}
 
-	_, err := r.maintenanceLogs.UpdateOne(ctx, filter, update)
+	result, err := r.maintenanceLogs.UpdateOne(ctx, filter, update)
 	if err != nil {
-		return fmt.Errorf("failed to update maintenanceLog: %w", err)
+		return fmt.Errorf("failed to update maintenance log %w", err)
+	}
+
+	if result.MatchedCount == 0 {
+		return fmt.Errorf("maintenance log not found.")
 	}
 
 	return nil
@@ -108,7 +112,7 @@ func (r *maintenanceLogRepository) Delete(ctx context.Context, id primitive.Obje
 	filter := bson.M{"_id": id}
 	_, err := r.maintenanceLogs.DeleteOne(ctx, filter)
 	if err != nil {
-		return fmt.Errorf("failed to delete maintenanceLog: %w", err)
+		return fmt.Errorf("failed to delete maintenance log %w", err)
 	}
 	return nil
 }
@@ -143,7 +147,7 @@ func (r *maintenanceLogRepository) List(ctx context.Context, limit, offset int64
 	for cursor.Next(ctx) {
 		var d domain.MaintenanceLog
 		if err := cursor.Decode(&d); err != nil {
-			return nil, fmt.Errorf("failed to decode maintenanceLog: %w", err)
+			return nil, fmt.Errorf("failed to decode maintenance log %w", err)
 		}
 		maintenanceLogs = append(maintenanceLogs, &d)
 	}

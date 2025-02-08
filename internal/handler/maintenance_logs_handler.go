@@ -3,7 +3,6 @@ package handler
 import (
 	"fmt"
 	"net/http"
-	"time"
 
 	"github.com/gorilla/mux"
 	"github.com/jwald3/waybill/internal/domain"
@@ -37,7 +36,6 @@ type MaintenanceLogCreateRequest struct {
 }
 
 type MaintenanceLogUpdateRequest struct {
-	ID          primitive.ObjectID            `json:"id,omitempty"`
 	TruckID     *primitive.ObjectID           `json:"truck_id"`
 	Date        string                        `json:"date"`
 	ServiceType domain.MaintenanceServiceType `json:"service_type"`
@@ -82,10 +80,7 @@ func maintenanceLogRequestToDomainUpdate(req MaintenanceLogUpdateRequest) (*doma
 		return nil, fmt.Errorf("invalid service type provided: %s", req.ServiceType)
 	}
 
-	now := time.Now()
-
 	return &domain.MaintenanceLog{
-		ID:          req.ID,
 		TruckID:     req.TruckID,
 		Date:        req.Date,
 		ServiceType: req.ServiceType,
@@ -93,8 +88,6 @@ func maintenanceLogRequestToDomainUpdate(req MaintenanceLogUpdateRequest) (*doma
 		Mechanic:    req.Mechanic,
 		Location:    req.Location,
 		Cost:        req.Cost,
-		CreatedAt:   primitive.NewDateTimeFromTime(now),
-		UpdatedAt:   primitive.NewDateTimeFromTime(now),
 	}, nil
 }
 
