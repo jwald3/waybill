@@ -194,7 +194,7 @@ func (h *DriverHandler) Update(w http.ResponseWriter, r *http.Request) {
 	driver.ID = objectID
 
 	if err := h.driverService.Update(r.Context(), driver); err != nil {
-		WriteJSON(w, http.StatusInternalServerError, Response{Error: "failed to update user"})
+		WriteJSON(w, http.StatusInternalServerError, Response{Error: "failed to update driver"})
 		return
 	}
 

@@ -37,7 +37,6 @@ type FuelLogCreateRequest struct {
 }
 
 type FuelLogUpdateRequest struct {
-	ID               primitive.ObjectID  `json:"id"`
 	TruckID          *primitive.ObjectID `json:"truck_id"`
 	DriverID         *primitive.ObjectID `json:"driver_id"`
 	Date             string              `json:"date"`
@@ -85,7 +84,6 @@ func fuelLogRequestToDomainUpdate(req FuelLogUpdateRequest) (*domain.FuelLog, er
 	now := time.Now()
 
 	return &domain.FuelLog{
-		ID:               req.ID,
 		TruckID:          req.TruckID,
 		DriverID:         req.DriverID,
 		Date:             req.Date,
@@ -180,7 +178,7 @@ func (h *FuelLogHandler) Update(w http.ResponseWriter, r *http.Request) {
 	fuelLog.ID = objectID
 
 	if err := h.fuelLogService.Update(r.Context(), fuelLog); err != nil {
-		WriteJSON(w, http.StatusInternalServerError, Response{Error: "failed to update user"})
+		WriteJSON(w, http.StatusInternalServerError, Response{Error: "failed to update fuel log"})
 		return
 	}
 

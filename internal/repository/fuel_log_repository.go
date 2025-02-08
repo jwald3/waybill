@@ -113,9 +113,13 @@ func (r *fuelLogRepository) Update(ctx context.Context, fuelLog *domain.FuelLog)
 		},
 	}
 
-	_, err := r.fuelLogs.UpdateOne(ctx, filter, update)
+	result, err := r.fuelLogs.UpdateOne(ctx, filter, update)
 	if err != nil {
-		return fmt.Errorf("failed to update fuelLog: %w", err)
+		return fmt.Errorf("failed to update fuel log: %w", err)
+	}
+
+	if result.MatchedCount == 0 {
+		return fmt.Errorf("fuel log entry not found")
 	}
 
 	return nil
@@ -125,7 +129,7 @@ func (r *fuelLogRepository) Delete(ctx context.Context, id primitive.ObjectID) e
 	filter := bson.M{"_id": id}
 	_, err := r.fuelLogs.DeleteOne(ctx, filter)
 	if err != nil {
-		return fmt.Errorf("failed to delete fuelLog: %w", err)
+		return fmt.Errorf("failed to delete fuel log: %w", err)
 	}
 	return nil
 }
