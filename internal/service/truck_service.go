@@ -19,7 +19,7 @@ type TruckService interface {
 	GetById(ctx context.Context, id primitive.ObjectID) (*domain.Truck, error)
 	Update(ctx context.Context, truck *domain.Truck) error
 	Delete(ctx context.Context, id primitive.ObjectID) error
-	List(ctx context.Context, limit, offset int64) ([]*domain.Truck, error)
+	List(ctx context.Context, limit, offset int64) (*repository.ListTrucksResult, error)
 }
 
 type truckService struct {
@@ -76,14 +76,21 @@ func (s *truckService) Delete(ctx context.Context, id primitive.ObjectID) error 
 	return nil
 }
 
-func (s *truckService) List(ctx context.Context, limit, offset int64) ([]*domain.Truck, error) {
-	trucks, err := s.truckRepo.List(ctx, limit, offset)
+func (s *truckService) List(ctx context.Context, limit, offset int64) (*repository.ListTrucksResult, error) {
+	if ctx == nil {
+		return nil, fmt.Errorf("context is required")
+	}
 
+	result, err := s.truckRepo.List(ctx, limit, offset)
 	if err != nil {
 		return nil, fmt.Errorf("failed to list trucks: %w", err)
 	}
 
-	return trucks, nil
+	if result.Trucks == nil {
+		result.Trucks = []*domain.Truck{}
+	}
+
+	return result, nil
 }
 
 // atomic methods

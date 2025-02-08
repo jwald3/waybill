@@ -19,7 +19,7 @@ type MaintenanceLogService interface {
 	GetById(ctx context.Context, id primitive.ObjectID) (*domain.MaintenanceLog, error)
 	Update(ctx context.Context, maintenanceLog *domain.MaintenanceLog) error
 	Delete(ctx context.Context, id primitive.ObjectID) error
-	List(ctx context.Context, limit, offset int64) ([]*domain.MaintenanceLog, error)
+	List(ctx context.Context, limit, offset int64) (*repository.ListMaintenanceLogsResult, error)
 }
 
 type maintenanceLogService struct {
@@ -76,12 +76,19 @@ func (s *maintenanceLogService) Delete(ctx context.Context, id primitive.ObjectI
 	return nil
 }
 
-func (s *maintenanceLogService) List(ctx context.Context, limit, offset int64) ([]*domain.MaintenanceLog, error) {
-	maintenanceLogs, err := s.maintenanceLogRepo.List(ctx, limit, offset)
+func (s *maintenanceLogService) List(ctx context.Context, limit, offset int64) (*repository.ListMaintenanceLogsResult, error) {
+	if ctx == nil {
+		return nil, fmt.Errorf("context is required")
+	}
 
+	result, err := s.maintenanceLogRepo.List(ctx, limit, offset)
 	if err != nil {
 		return nil, fmt.Errorf("failed to list maintenance logs: %w", err)
 	}
 
-	return maintenanceLogs, nil
+	if result.MaintenanceLogs == nil {
+		result.MaintenanceLogs = []*domain.MaintenanceLog{}
+	}
+
+	return result, nil
 }

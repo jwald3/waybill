@@ -240,16 +240,30 @@ func (h *TruckHandler) List(w http.ResponseWriter, r *http.Request) {
 	limit := getQueryIntParam(r, "limit", 10)
 	offset := getQueryIntParam(r, "offset", 0)
 
-	trucks, err := h.truckService.List(r.Context(), int64(limit), int64(offset))
+	result, err := h.truckService.List(r.Context(), int64(limit), int64(offset))
 	if err != nil {
 		WriteJSON(w, http.StatusInternalServerError, Response{Error: "failed to fetch trucks"})
 		return
 	}
 
-	truckResponses := make([]TruckResponse, len(trucks))
-	for i, t := range trucks {
+	truckResponses := make([]TruckResponse, len(result.Trucks))
+	for i, t := range result.Trucks {
 		truckResponses[i] = truckDomainToResponse(t)
 	}
 
-	WriteJSON(w, http.StatusOK, Response{Data: ListTrucksResponse{Trucks: truckResponses}})
+	var nextOffset *int64
+	if int64(offset)+int64(limit) < result.Total {
+		next := int64(offset + limit)
+		nextOffset = &next
+	}
+
+	response := PaginatedResponse{
+		Items:      truckResponses,
+		Total:      result.Total,
+		Limit:      int64(limit),
+		Offset:     int64(offset),
+		NextOffset: nextOffset,
+	}
+
+	WriteJSON(w, http.StatusOK, response)
 }

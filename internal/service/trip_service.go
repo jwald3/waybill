@@ -19,7 +19,7 @@ type TripService interface {
 	GetById(ctx context.Context, id primitive.ObjectID) (*domain.Trip, error)
 	Update(ctx context.Context, trip *domain.Trip) error
 	Delete(ctx context.Context, id primitive.ObjectID) error
-	List(ctx context.Context, limit, offset int64) ([]*domain.Trip, error)
+	List(ctx context.Context, limit, offset int64) (*repository.ListTripsResult, error)
 }
 
 type tripService struct {
@@ -76,12 +76,19 @@ func (s *tripService) Delete(ctx context.Context, id primitive.ObjectID) error {
 	return nil
 }
 
-func (s *tripService) List(ctx context.Context, limit, offset int64) ([]*domain.Trip, error) {
-	trips, err := s.tripRepo.List(ctx, limit, offset)
+func (s *tripService) List(ctx context.Context, limit, offset int64) (*repository.ListTripsResult, error) {
+	if ctx == nil {
+		return nil, fmt.Errorf("context is required")
+	}
 
+	result, err := s.tripRepo.List(ctx, limit, offset)
 	if err != nil {
 		return nil, fmt.Errorf("failed to list trips: %w", err)
 	}
 
-	return trips, nil
+	if result.Trips == nil {
+		result.Trips = []*domain.Trip{}
+	}
+
+	return result, nil
 }

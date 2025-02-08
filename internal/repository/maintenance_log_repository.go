@@ -21,7 +21,12 @@ type MaintenanceLogRepository interface {
 	GetById(ctx context.Context, id primitive.ObjectID) (*domain.MaintenanceLog, error)
 	Update(ctx context.Context, maintenanceLog *domain.MaintenanceLog) error
 	Delete(ctx context.Context, id primitive.ObjectID) error
-	List(ctx context.Context, limit, offset int64) ([]*domain.MaintenanceLog, error)
+	List(ctx context.Context, limit, offset int64) (*ListMaintenanceLogsResult, error)
+}
+
+type ListMaintenanceLogsResult struct {
+	MaintenanceLogs []*domain.MaintenanceLog
+	Total           int64
 }
 
 func NewMaintenanceLogRepository(db *database.MongoDB) MaintenanceLogRepository {
@@ -117,7 +122,22 @@ func (r *maintenanceLogRepository) Delete(ctx context.Context, id primitive.Obje
 	return nil
 }
 
-func (r *maintenanceLogRepository) List(ctx context.Context, limit, offset int64) ([]*domain.MaintenanceLog, error) {
+func (r *maintenanceLogRepository) List(ctx context.Context, limit, offset int64) (*ListMaintenanceLogsResult, error) {
+	if limit <= 0 {
+		limit = 10
+	}
+	if limit > 100 {
+		limit = 100
+	}
+	if offset < 0 {
+		offset = 0
+	}
+
+	total, err := r.maintenanceLogs.CountDocuments(ctx, bson.M{})
+	if err != nil {
+		return nil, fmt.Errorf("failed to get total count: %w", err)
+	}
+
 	pipeline := mongo.Pipeline{
 		{{Key: "$sort", Value: bson.M{"_id": -1}}},
 		{{Key: "$skip", Value: offset}},
@@ -139,22 +159,17 @@ func (r *maintenanceLogRepository) List(ctx context.Context, limit, offset int64
 
 	cursor, err := r.maintenanceLogs.Aggregate(ctx, pipeline)
 	if err != nil {
-		return nil, fmt.Errorf("failed retrieve list of users: %w", err)
+		return nil, fmt.Errorf("failed to execute aggregate query: %w", err)
 	}
 	defer cursor.Close(ctx)
 
-	var maintenanceLogs []*domain.MaintenanceLog
-	for cursor.Next(ctx) {
-		var d domain.MaintenanceLog
-		if err := cursor.Decode(&d); err != nil {
-			return nil, fmt.Errorf("failed to decode maintenance log %w", err)
-		}
-		maintenanceLogs = append(maintenanceLogs, &d)
+	maintenanceLogs := make([]*domain.MaintenanceLog, 0, limit)
+	if err := cursor.All(ctx, &maintenanceLogs); err != nil {
+		return nil, fmt.Errorf("failed to decode maintenance logs: %w", err)
 	}
 
-	if err := cursor.Err(); err != nil {
-		return nil, fmt.Errorf("cursor error: %w", err)
-	}
-
-	return maintenanceLogs, nil
+	return &ListMaintenanceLogsResult{
+		MaintenanceLogs: maintenanceLogs,
+		Total:           total,
+	}, nil
 }

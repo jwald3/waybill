@@ -21,7 +21,12 @@ type TruckRepository interface {
 	GetById(ctx context.Context, id primitive.ObjectID) (*domain.Truck, error)
 	Update(ctx context.Context, truck *domain.Truck) error
 	Delete(ctx context.Context, id primitive.ObjectID) error
-	List(ctx context.Context, limit, offset int64) ([]*domain.Truck, error)
+	List(ctx context.Context, limit, offset int64) (*ListTrucksResult, error)
+}
+
+type ListTrucksResult struct {
+	Trucks []*domain.Truck
+	Total  int64
 }
 
 func NewTruckRepository(db *database.MongoDB) TruckRepository {
@@ -122,7 +127,22 @@ func (r *truckRepository) Delete(ctx context.Context, id primitive.ObjectID) err
 	return nil
 }
 
-func (r *truckRepository) List(ctx context.Context, limit, offset int64) ([]*domain.Truck, error) {
+func (r *truckRepository) List(ctx context.Context, limit, offset int64) (*ListTrucksResult, error) {
+	if limit <= 0 {
+		limit = 10
+	}
+	if limit > 100 {
+		limit = 100
+	}
+	if offset < 0 {
+		offset = 0
+	}
+
+	total, err := r.trucks.CountDocuments(ctx, bson.M{})
+	if err != nil {
+		return nil, fmt.Errorf("failed to get total count: %w", err)
+	}
+
 	pipeline := mongo.Pipeline{
 		{{Key: "$sort", Value: bson.M{"_id": -1}}},
 		{{Key: "$skip", Value: offset}},
@@ -144,22 +164,17 @@ func (r *truckRepository) List(ctx context.Context, limit, offset int64) ([]*dom
 
 	cursor, err := r.trucks.Aggregate(ctx, pipeline)
 	if err != nil {
-		return nil, fmt.Errorf("failed to retrieve list of trucks: %w", err)
+		return nil, fmt.Errorf("failed to execute aggregate query: %w", err)
 	}
 	defer cursor.Close(ctx)
 
-	var trucks []*domain.Truck
-	for cursor.Next(ctx) {
-		var t domain.Truck
-		if err := cursor.Decode(&t); err != nil {
-			return nil, fmt.Errorf("failed to decode truck: %w", err)
-		}
-		trucks = append(trucks, &t)
+	trucks := make([]*domain.Truck, 0, limit)
+	if err := cursor.All(ctx, &trucks); err != nil {
+		return nil, fmt.Errorf("failed to decode trucks: %w", err)
 	}
 
-	if err := cursor.Err(); err != nil {
-		return nil, fmt.Errorf("cursor error: %w", err)
-	}
-
-	return trucks, nil
+	return &ListTrucksResult{
+		Trucks: trucks,
+		Total:  total,
+	}, nil
 }

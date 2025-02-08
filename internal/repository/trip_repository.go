@@ -21,7 +21,12 @@ type TripRepository interface {
 	GetById(ctx context.Context, id primitive.ObjectID) (*domain.Trip, error)
 	Update(ctx context.Context, trip *domain.Trip) error
 	Delete(ctx context.Context, id primitive.ObjectID) error
-	List(ctx context.Context, limit, offset int64) ([]*domain.Trip, error)
+	List(ctx context.Context, limit, offset int64) (*ListTripsResult, error)
+}
+
+type ListTripsResult struct {
+	Trips []*domain.Trip
+	Total int64
 }
 
 func NewTripRepository(db *database.MongoDB) TripRepository {
@@ -156,7 +161,22 @@ func (r *tripRepository) Delete(ctx context.Context, id primitive.ObjectID) erro
 	return nil
 }
 
-func (r *tripRepository) List(ctx context.Context, limit, offset int64) ([]*domain.Trip, error) {
+func (r *tripRepository) List(ctx context.Context, limit, offset int64) (*ListTripsResult, error) {
+	if limit <= 0 {
+		limit = 10
+	}
+	if limit > 100 {
+		limit = 100
+	}
+	if offset < 0 {
+		offset = 0
+	}
+
+	total, err := r.trips.CountDocuments(ctx, bson.M{})
+	if err != nil {
+		return nil, fmt.Errorf("failed to get total count: %w", err)
+	}
+
 	pipeline := mongo.Pipeline{
 		{{Key: "$sort", Value: bson.M{"_id": -1}}},
 		{{Key: "$skip", Value: offset}},
@@ -211,22 +231,17 @@ func (r *tripRepository) List(ctx context.Context, limit, offset int64) ([]*doma
 
 	cursor, err := r.trips.Aggregate(ctx, pipeline)
 	if err != nil {
-		return nil, fmt.Errorf("failed retrieve list of users: %w", err)
+		return nil, fmt.Errorf("failed to execute aggregate query: %w", err)
 	}
 	defer cursor.Close(ctx)
 
-	var trips []*domain.Trip
-	for cursor.Next(ctx) {
-		var d domain.Trip
-		if err := cursor.Decode(&d); err != nil {
-			return nil, fmt.Errorf("failed to decode trip: %w", err)
-		}
-		trips = append(trips, &d)
+	trips := make([]*domain.Trip, 0, limit)
+	if err := cursor.All(ctx, &trips); err != nil {
+		return nil, fmt.Errorf("failed to decode trips: %w", err)
 	}
 
-	if err := cursor.Err(); err != nil {
-		return nil, fmt.Errorf("cursor error: %w", err)
-	}
-
-	return trips, nil
+	return &ListTripsResult{
+		Trips: trips,
+		Total: total,
+	}, nil
 }
