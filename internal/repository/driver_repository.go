@@ -21,7 +21,12 @@ type DriverRepository interface {
 	GetById(ctx context.Context, id primitive.ObjectID) (*domain.Driver, error)
 	Update(ctx context.Context, driver *domain.Driver) error
 	Delete(ctx context.Context, id primitive.ObjectID) error
-	List(ctx context.Context, limit, offset int64) ([]*domain.Driver, error)
+	List(ctx context.Context, limit, offset int64) (*ListDriversResult, error)
+}
+
+type ListDriversResult struct {
+	Drivers []*domain.Driver
+	Total   int64
 }
 
 func NewDriverRepository(db *database.MongoDB) DriverRepository {
@@ -127,7 +132,22 @@ func (r *driverRepository) Delete(ctx context.Context, id primitive.ObjectID) er
 	return nil
 }
 
-func (r *driverRepository) List(ctx context.Context, limit, offset int64) ([]*domain.Driver, error) {
+func (r *driverRepository) List(ctx context.Context, limit, offset int64) (*ListDriversResult, error) {
+	if limit <= 0 {
+		limit = 10
+	}
+	if limit > 100 {
+		limit = 100
+	}
+	if offset < 0 {
+		offset = 0
+	}
+
+	total, err := r.drivers.CountDocuments(ctx, bson.M{})
+	if err != nil {
+		return nil, fmt.Errorf("failed to get total count: %w", err)
+	}
+
 	pipeline := mongo.Pipeline{
 		{{Key: "$sort", Value: bson.M{"_id": -1}}},
 		{{Key: "$skip", Value: offset}},
@@ -151,22 +171,17 @@ func (r *driverRepository) List(ctx context.Context, limit, offset int64) ([]*do
 
 	cursor, err := r.drivers.Aggregate(ctx, pipeline)
 	if err != nil {
-		return nil, fmt.Errorf("failed retrieve list of users: %w", err)
+		return nil, fmt.Errorf("failed to execute aggregate query: %w", err)
 	}
 	defer cursor.Close(ctx)
 
-	var drivers []*domain.Driver
-	for cursor.Next(ctx) {
-		var d domain.Driver
-		if err := cursor.Decode(&d); err != nil {
-			return nil, fmt.Errorf("failed to decode driver: %w", err)
-		}
-		drivers = append(drivers, &d)
+	drivers := make([]*domain.Driver, 0, limit)
+	if err := cursor.All(ctx, &drivers); err != nil {
+		return nil, fmt.Errorf("failed to decode drivers: %w", err)
 	}
 
-	if err := cursor.Err(); err != nil {
-		return nil, fmt.Errorf("cursor error: %w", err)
-	}
-
-	return drivers, nil
+	return &ListDriversResult{
+		Drivers: drivers,
+		Total:   total,
+	}, nil
 }

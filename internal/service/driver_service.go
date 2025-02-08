@@ -19,7 +19,7 @@ type DriverService interface {
 	GetById(ctx context.Context, id primitive.ObjectID) (*domain.Driver, error)
 	Update(ctx context.Context, driver *domain.Driver) error
 	Delete(ctx context.Context, id primitive.ObjectID) error
-	List(ctx context.Context, limit, offset int64) ([]*domain.Driver, error)
+	List(ctx context.Context, limit, offset int64) (*repository.ListDriversResult, error)
 }
 
 type driverService struct {
@@ -80,14 +80,21 @@ func (s *driverService) Delete(ctx context.Context, id primitive.ObjectID) error
 	return nil
 }
 
-func (s *driverService) List(ctx context.Context, limit, offset int64) ([]*domain.Driver, error) {
-	drivers, err := s.driverRepo.List(ctx, limit, offset)
+func (s *driverService) List(ctx context.Context, limit, offset int64) (*repository.ListDriversResult, error) {
+	if ctx == nil {
+		return nil, fmt.Errorf("context is required")
+	}
 
+	result, err := s.driverRepo.List(ctx, limit, offset)
 	if err != nil {
 		return nil, fmt.Errorf("failed to list drivers: %w", err)
 	}
 
-	return drivers, nil
+	if result.Drivers == nil {
+		result.Drivers = []*domain.Driver{}
+	}
+
+	return result, nil
 }
 
 // Atomic methods

@@ -12,6 +12,14 @@ type Response struct {
 	Message string `json:"message,omitempty"`
 }
 
+type PaginatedResponse struct {
+	Items      interface{} `json:"items"`
+	Total      int64       `json:"total"`
+	Limit      int64       `json:"limit"`
+	Offset     int64       `json:"offset"`
+	NextOffset *int64      `json:"next_offset,omitempty"`
+}
+
 func WriteJSON(w http.ResponseWriter, status int, data any) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(status)

@@ -221,16 +221,30 @@ func (h *DriverHandler) List(w http.ResponseWriter, r *http.Request) {
 	limit := getQueryIntParam(r, "limit", 10)
 	offset := getQueryIntParam(r, "offset", 0)
 
-	drivers, err := h.driverService.List(r.Context(), int64(limit), int64(offset))
+	result, err := h.driverService.List(r.Context(), int64(limit), int64(offset))
 	if err != nil {
 		WriteJSON(w, http.StatusInternalServerError, Response{Error: "failed to fetch drivers"})
 		return
 	}
 
-	driverResponses := make([]domain.Driver, len(drivers))
-	for i, d := range drivers {
-		driverResponses[i] = *d
+	driverResponses := make([]DriverResponse, len(result.Drivers))
+	for i, d := range result.Drivers {
+		driverResponses[i] = driverDomainToResponse(d)
 	}
 
-	WriteJSON(w, http.StatusOK, Response{Data: driverResponses})
+	var nextOffset *int64
+	if int64(offset)+int64(limit) < result.Total {
+		next := int64(offset + limit)
+		nextOffset = &next
+	}
+
+	response := PaginatedResponse{
+		Items:      driverResponses,
+		Total:      result.Total,
+		Limit:      int64(limit),
+		Offset:     int64(offset),
+		NextOffset: nextOffset,
+	}
+
+	WriteJSON(w, http.StatusOK, response)
 }
