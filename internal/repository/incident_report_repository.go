@@ -21,7 +21,12 @@ type IncidentReportRepository interface {
 	GetById(ctx context.Context, id primitive.ObjectID) (*domain.IncidentReport, error)
 	Update(ctx context.Context, incidentReport *domain.IncidentReport) error
 	Delete(ctx context.Context, id primitive.ObjectID) error
-	List(ctx context.Context, limit, offset int64) ([]*domain.IncidentReport, error)
+	List(ctx context.Context, limit, offset int64) (*ListIncidentReportsResult, error)
+}
+
+type ListIncidentReportsResult struct {
+	IncidentReports []*domain.IncidentReport
+	Total           int64
 }
 
 func NewIncidentReportRepository(db *database.MongoDB) IncidentReportRepository {
@@ -140,7 +145,22 @@ func (r *incidentReportRepository) Delete(ctx context.Context, id primitive.Obje
 	return nil
 }
 
-func (r *incidentReportRepository) List(ctx context.Context, limit, offset int64) ([]*domain.IncidentReport, error) {
+func (r *incidentReportRepository) List(ctx context.Context, limit, offset int64) (*ListIncidentReportsResult, error) {
+	if limit <= 0 {
+		limit = 10
+	}
+	if limit > 100 {
+		limit = 100
+	}
+	if offset < 0 {
+		offset = 0
+	}
+
+	total, err := r.incidentReports.CountDocuments(ctx, bson.M{})
+	if err != nil {
+		return nil, fmt.Errorf("failed to get total count: %w", err)
+	}
+
 	pipeline := mongo.Pipeline{
 		{{Key: "$sort", Value: bson.M{"_id": -1}}},
 		{{Key: "$skip", Value: offset}},
@@ -184,22 +204,17 @@ func (r *incidentReportRepository) List(ctx context.Context, limit, offset int64
 
 	cursor, err := r.incidentReports.Aggregate(ctx, pipeline)
 	if err != nil {
-		return nil, fmt.Errorf("failed retrieve list of users: %w", err)
+		return nil, fmt.Errorf("failed to execute aggregate query: %w", err)
 	}
 	defer cursor.Close(ctx)
 
-	var incidentReports []*domain.IncidentReport
-	for cursor.Next(ctx) {
-		var d domain.IncidentReport
-		if err := cursor.Decode(&d); err != nil {
-			return nil, fmt.Errorf("failed to decode incidentReport: %w", err)
-		}
-		incidentReports = append(incidentReports, &d)
+	incidentReports := make([]*domain.IncidentReport, 0, limit)
+	if err := cursor.All(ctx, &incidentReports); err != nil {
+		return nil, fmt.Errorf("failed to decode incident reports: %w", err)
 	}
 
-	if err := cursor.Err(); err != nil {
-		return nil, fmt.Errorf("cursor error: %w", err)
-	}
-
-	return incidentReports, nil
+	return &ListIncidentReportsResult{
+		IncidentReports: incidentReports,
+		Total:           total,
+	}, nil
 }

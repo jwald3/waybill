@@ -208,16 +208,30 @@ func (h *IncidentReportHandler) List(w http.ResponseWriter, r *http.Request) {
 	limit := getQueryIntParam(r, "limit", 10)
 	offset := getQueryIntParam(r, "offset", 0)
 
-	incidentReports, err := h.incidentReportService.List(r.Context(), int64(limit), int64(offset))
+	result, err := h.incidentReportService.List(r.Context(), int64(limit), int64(offset))
 	if err != nil {
 		WriteJSON(w, http.StatusInternalServerError, Response{Error: "failed to fetch incident reports"})
 		return
 	}
 
-	incidentReportResponses := make([]IncidentReportResponse, len(incidentReports))
-	for i, d := range incidentReports {
+	incidentReportResponses := make([]IncidentReportResponse, len(result.IncidentReports))
+	for i, d := range result.IncidentReports {
 		incidentReportResponses[i] = incidentReportDomainToResponse(d)
 	}
 
-	WriteJSON(w, http.StatusOK, Response{Data: ListIncidentReportsResponse{IncidentReports: incidentReportResponses}})
+	var nextOffset *int64
+	if int64(offset)+int64(limit) < result.Total {
+		next := int64(offset + limit)
+		nextOffset = &next
+	}
+
+	response := PaginatedResponse{
+		Items:      incidentReportResponses,
+		Total:      result.Total,
+		Limit:      int64(limit),
+		Offset:     int64(offset),
+		NextOffset: nextOffset,
+	}
+
+	WriteJSON(w, http.StatusOK, response)
 }

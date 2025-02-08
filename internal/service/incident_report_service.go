@@ -19,7 +19,7 @@ type IncidentReportService interface {
 	GetById(ctx context.Context, id primitive.ObjectID) (*domain.IncidentReport, error)
 	Update(ctx context.Context, incidentReport *domain.IncidentReport) error
 	Delete(ctx context.Context, id primitive.ObjectID) error
-	List(ctx context.Context, limit, offset int64) ([]*domain.IncidentReport, error)
+	List(ctx context.Context, limit, offset int64) (*repository.ListIncidentReportsResult, error)
 }
 
 type incidentReportService struct {
@@ -76,12 +76,19 @@ func (s *incidentReportService) Delete(ctx context.Context, id primitive.ObjectI
 	return nil
 }
 
-func (s *incidentReportService) List(ctx context.Context, limit, offset int64) ([]*domain.IncidentReport, error) {
-	incidentReports, err := s.incidentReportRepo.List(ctx, limit, offset)
+func (s *incidentReportService) List(ctx context.Context, limit, offset int64) (*repository.ListIncidentReportsResult, error) {
+	if ctx == nil {
+		return nil, fmt.Errorf("context is required")
+	}
 
+	result, err := s.incidentReportRepo.List(ctx, limit, offset)
 	if err != nil {
 		return nil, fmt.Errorf("failed to list incident reports: %w", err)
 	}
 
-	return incidentReports, nil
+	if result.IncidentReports == nil {
+		result.IncidentReports = []*domain.IncidentReport{}
+	}
+
+	return result, nil
 }
