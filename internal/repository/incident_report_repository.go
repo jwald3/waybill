@@ -119,9 +119,13 @@ func (r *incidentReportRepository) Update(ctx context.Context, incidentReport *d
 		},
 	}
 
-	_, err := r.incidentReports.UpdateOne(ctx, filter, update)
+	result, err := r.incidentReports.UpdateOne(ctx, filter, update)
 	if err != nil {
 		return fmt.Errorf("failed to update incidentReport: %w", err)
+	}
+
+	if result.MatchedCount == 0 {
+		return fmt.Errorf("incident report not found")
 	}
 
 	return nil

@@ -2,7 +2,6 @@ package handler
 
 import (
 	"net/http"
-	"time"
 
 	"github.com/gorilla/mux"
 	"github.com/jwald3/waybill/internal/domain"
@@ -81,7 +80,6 @@ func fuelLogRequestToDomainCreate(req FuelLogCreateRequest) (*domain.FuelLog, er
 }
 
 func fuelLogRequestToDomainUpdate(req FuelLogUpdateRequest) (*domain.FuelLog, error) {
-	now := time.Now()
 
 	return &domain.FuelLog{
 		TruckID:          req.TruckID,
@@ -92,7 +90,6 @@ func fuelLogRequestToDomainUpdate(req FuelLogUpdateRequest) (*domain.FuelLog, er
 		TotalCost:        req.TotalCost,
 		Location:         req.Location,
 		OdometerReading:  req.OdometerReading,
-		UpdatedAt:        primitive.NewDateTimeFromTime(now),
 	}, nil
 }
 

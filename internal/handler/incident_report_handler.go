@@ -3,7 +3,6 @@ package handler
 import (
 	"fmt"
 	"net/http"
-	"time"
 
 	"github.com/gorilla/mux"
 	"github.com/jwald3/waybill/internal/domain"
@@ -38,7 +37,6 @@ type IncidentReportCreateRequest struct {
 }
 
 type IncidentReportUpdateRequest struct {
-	ID             primitive.ObjectID  `json:"_id,omitempty"`
 	TripID         *primitive.ObjectID `json:"trip_id"`
 	TruckID        *primitive.ObjectID `json:"truck_id"`
 	DriverID       *primitive.ObjectID `json:"driver_id"`
@@ -88,10 +86,7 @@ func incidentReportRequestToDomainUpdate(req IncidentReportUpdateRequest) (*doma
 		return nil, fmt.Errorf("invalid incident report type: %s", req.Type)
 	}
 
-	now := time.Now()
-
 	return &domain.IncidentReport{
-		ID:             req.ID,
 		TripID:         req.TripID,
 		TruckID:        req.TruckID,
 		DriverID:       req.DriverID,
@@ -100,8 +95,6 @@ func incidentReportRequestToDomainUpdate(req IncidentReportUpdateRequest) (*doma
 		Date:           req.Date,
 		Location:       req.Location,
 		DamageEstimate: req.DamageEstimate,
-		CreatedAt:      primitive.NewDateTimeFromTime(now),
-		UpdatedAt:      primitive.NewDateTimeFromTime(now),
 	}, nil
 }
 
