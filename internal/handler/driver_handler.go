@@ -65,8 +65,6 @@ type DriverResponse struct {
 	Email             domain.Email            `json:"email"`
 	Address           domain.Address          `json:"address"`
 	EmploymentStatus  domain.EmploymentStatus `json:"employment_status"`
-	AssignedTruckID   *primitive.ObjectID     `json:"assigned_truck_id,omitempty"`
-	AssignedTruck     *domain.Truck           `json:"assigned_truck,omitempty"`
 	CreatedAt         primitive.DateTime      `json:"created_at"`
 	UpdatedAt         primitive.DateTime      `json:"updated_at"`
 }
@@ -127,8 +125,6 @@ func driverDomainToResponse(d *domain.Driver) DriverResponse {
 		Email:             d.Email,
 		Address:           d.Address,
 		EmploymentStatus:  d.EmploymentStatus,
-		AssignedTruck:     d.AssignedTruck,
-		AssignedTruckID:   d.AssignedTruckID,
 		CreatedAt:         d.CreatedAt,
 		UpdatedAt:         d.UpdatedAt,
 	}

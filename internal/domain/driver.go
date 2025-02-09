@@ -48,21 +48,19 @@ func (e EmploymentStatus) IsValid() bool {
 }
 
 type Driver struct {
-	ID                primitive.ObjectID  `bson:"_id,omitempty" json:"_id,omitempty"`
-	FirstName         string              `bson:"first_name" json:"first_name"`
-	LastName          string              `bson:"last_name" json:"last_name"`
-	DOB               string              `bson:"dob" json:"dob"`
-	LicenseNumber     string              `bson:"license_number" json:"license_number"`
-	LicenseState      string              `bson:"license_state" json:"license_state"`
-	LicenseExpiration string              `bson:"license_expiration" json:"license_expiration"`
-	Phone             PhoneNumber         `bson:"phone" json:"phone"`
-	Email             Email               `bson:"email" json:"email"`
-	Address           Address             `bson:"address" json:"address"`
-	EmploymentStatus  EmploymentStatus    `bson:"employment_status" json:"employment_status"`
-	AssignedTruckID   *primitive.ObjectID `bson:"assigned_truck_id,omitempty" json:"assigned_truck_id,omitempty"`
-	AssignedTruck     *Truck              `bson:"assigned_truck,omitempty" json:"assigned_truck,omitempty"`
-	CreatedAt         primitive.DateTime  `bson:"created_at" json:"created_at"`
-	UpdatedAt         primitive.DateTime  `bson:"updated_at" json:"updated_at"`
+	ID                primitive.ObjectID `bson:"_id,omitempty" json:"_id,omitempty"`
+	FirstName         string             `bson:"first_name" json:"first_name"`
+	LastName          string             `bson:"last_name" json:"last_name"`
+	DOB               string             `bson:"dob" json:"dob"`
+	LicenseNumber     string             `bson:"license_number" json:"license_number"`
+	LicenseState      string             `bson:"license_state" json:"license_state"`
+	LicenseExpiration string             `bson:"license_expiration" json:"license_expiration"`
+	Phone             PhoneNumber        `bson:"phone" json:"phone"`
+	Email             Email              `bson:"email" json:"email"`
+	Address           Address            `bson:"address" json:"address"`
+	EmploymentStatus  EmploymentStatus   `bson:"employment_status" json:"employment_status"`
+	CreatedAt         primitive.DateTime `bson:"created_at" json:"created_at"`
+	UpdatedAt         primitive.DateTime `bson:"updated_at" json:"updated_at"`
 }
 
 type Address struct {
@@ -106,7 +104,6 @@ func NewDriver(
 		Email:             validEmail,
 		Address:           address,
 		EmploymentStatus:  EmploymentStatusActive,
-		AssignedTruckID:   nil,
 		CreatedAt:         primitive.NewDateTimeFromTime(now),
 		UpdatedAt:         primitive.NewDateTimeFromTime(now),
 	}, nil
