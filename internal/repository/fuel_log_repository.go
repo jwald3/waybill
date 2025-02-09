@@ -131,11 +131,15 @@ func (r *fuelLogRepository) Update(ctx context.Context, fuelLog *domain.FuelLog)
 }
 
 func (r *fuelLogRepository) Delete(ctx context.Context, id primitive.ObjectID) error {
-	filter := bson.M{"_id": id}
-	_, err := r.fuelLogs.DeleteOne(ctx, filter)
+	result, err := r.fuelLogs.DeleteOne(ctx, bson.M{"_id": id})
 	if err != nil {
 		return fmt.Errorf("failed to delete fuel log: %w", err)
 	}
+
+	if result.DeletedCount == 0 {
+		return domain.ErrFuelLogNotFound
+	}
+
 	return nil
 }
 

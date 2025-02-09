@@ -153,11 +153,15 @@ func (r *tripRepository) Update(ctx context.Context, trip *domain.Trip) error {
 }
 
 func (r *tripRepository) Delete(ctx context.Context, id primitive.ObjectID) error {
-	filter := bson.M{"_id": id}
-	_, err := r.trips.DeleteOne(ctx, filter)
+	result, err := r.trips.DeleteOne(ctx, bson.M{"_id": id})
 	if err != nil {
 		return fmt.Errorf("failed to delete trip: %w", err)
 	}
+
+	if result.DeletedCount == 0 {
+		return domain.ErrTripNotFound
+	}
+
 	return nil
 }
 

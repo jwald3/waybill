@@ -137,11 +137,15 @@ func (r *incidentReportRepository) Update(ctx context.Context, incidentReport *d
 }
 
 func (r *incidentReportRepository) Delete(ctx context.Context, id primitive.ObjectID) error {
-	filter := bson.M{"_id": id}
-	_, err := r.incidentReports.DeleteOne(ctx, filter)
+	result, err := r.incidentReports.DeleteOne(ctx, bson.M{"_id": id})
 	if err != nil {
 		return fmt.Errorf("failed to delete incidentReport: %w", err)
 	}
+
+	if result.DeletedCount == 0 {
+		return domain.ErrIncidentReportNotFound
+	}
+
 	return nil
 }
 

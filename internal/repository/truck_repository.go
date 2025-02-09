@@ -119,11 +119,15 @@ func (r *truckRepository) Update(ctx context.Context, truck *domain.Truck) error
 }
 
 func (r *truckRepository) Delete(ctx context.Context, id primitive.ObjectID) error {
-	filter := bson.M{"_id": id}
-	_, err := r.trucks.DeleteOne(ctx, filter)
+	result, err := r.trucks.DeleteOne(ctx, bson.M{"_id": id})
 	if err != nil {
 		return fmt.Errorf("failed to delete truck: %w", err)
 	}
+
+	if result.DeletedCount == 0 {
+		return domain.ErrTruckNotFound
+	}
+
 	return nil
 }
 

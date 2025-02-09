@@ -91,11 +91,15 @@ func (r *facilityRepository) Update(ctx context.Context, facility *domain.Facili
 }
 
 func (r *facilityRepository) Delete(ctx context.Context, id primitive.ObjectID) error {
-	filter := bson.M{"_id": id}
-	_, err := r.facilities.DeleteOne(ctx, filter)
+	result, err := r.facilities.DeleteOne(ctx, bson.M{"_id": id})
 	if err != nil {
 		return fmt.Errorf("failed to delete facility: %w", err)
 	}
+
+	if result.DeletedCount == 0 {
+		return domain.ErrFacilityNotFound
+	}
+
 	return nil
 }
 
