@@ -64,12 +64,11 @@ func (s *truckService) Update(ctx context.Context, truck *domain.Truck) error {
 }
 
 func (s *truckService) Delete(ctx context.Context, id primitive.ObjectID) error {
-	_, err := s.truckRepo.GetById(ctx, id)
-	if err != nil {
-		return fmt.Errorf(truckNotFound, err)
-	}
-
 	if err := s.truckRepo.Delete(ctx, id); err != nil {
+		if err == domain.ErrTruckNotFound {
+			return err
+		}
+
 		return fmt.Errorf("failed to delete truck: %w", err)
 	}
 

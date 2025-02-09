@@ -64,12 +64,11 @@ func (s *maintenanceLogService) Update(ctx context.Context, maintenanceLog *doma
 }
 
 func (s *maintenanceLogService) Delete(ctx context.Context, id primitive.ObjectID) error {
-	_, err := s.maintenanceLogRepo.GetById(ctx, id)
-	if err != nil {
-		return fmt.Errorf(maintenanceLogNotFound, err)
-	}
-
 	if err := s.maintenanceLogRepo.Delete(ctx, id); err != nil {
+		if err == domain.ErrMaintenanceLogNotFound {
+			return err
+		}
+
 		return fmt.Errorf("failed to delete maintenance log: %w", err)
 	}
 

@@ -64,12 +64,10 @@ func (s *facilityService) Update(ctx context.Context, facility *domain.Facility)
 }
 
 func (s *facilityService) Delete(ctx context.Context, id primitive.ObjectID) error {
-	_, err := s.facilityRepo.GetById(ctx, id)
-	if err != nil {
-		return fmt.Errorf(facilityNotFound, err)
-	}
-
 	if err := s.facilityRepo.Delete(ctx, id); err != nil {
+		if err == domain.ErrFacilityNotFound {
+			return err
+		}
 		return fmt.Errorf("failed to delete facility: %w", err)
 	}
 

@@ -64,12 +64,11 @@ func (s *tripService) Update(ctx context.Context, trip *domain.Trip) error {
 }
 
 func (s *tripService) Delete(ctx context.Context, id primitive.ObjectID) error {
-	_, err := s.tripRepo.GetById(ctx, id)
-	if err != nil {
-		return fmt.Errorf(tripNotFound, err)
-	}
-
 	if err := s.tripRepo.Delete(ctx, id); err != nil {
+		if err == domain.ErrTripNotFound {
+			return err
+		}
+
 		return fmt.Errorf("failed to delete trip: %w", err)
 	}
 

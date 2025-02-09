@@ -64,12 +64,10 @@ func (s *fuelLogService) Update(ctx context.Context, fuelLog *domain.FuelLog) er
 }
 
 func (s *fuelLogService) Delete(ctx context.Context, id primitive.ObjectID) error {
-	_, err := s.fuelLogRepo.GetById(ctx, id)
-	if err != nil {
-		return fmt.Errorf(fuelLogNotFound, err)
-	}
-
 	if err := s.fuelLogRepo.Delete(ctx, id); err != nil {
+		if err == domain.ErrFuelLogNotFound {
+			return err
+		}
 		return fmt.Errorf("failed to delete fuel log: %w", err)
 	}
 

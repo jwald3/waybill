@@ -64,12 +64,10 @@ func (s *incidentReportService) Update(ctx context.Context, incidentReport *doma
 }
 
 func (s *incidentReportService) Delete(ctx context.Context, id primitive.ObjectID) error {
-	_, err := s.incidentReportRepo.GetById(ctx, id)
-	if err != nil {
-		return fmt.Errorf(incidentReportNotFound, err)
-	}
-
 	if err := s.incidentReportRepo.Delete(ctx, id); err != nil {
+		if err == domain.ErrIncidentReportNotFound {
+			return err
+		}
 		return fmt.Errorf("failed to delete incident report: %w", err)
 	}
 
