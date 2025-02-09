@@ -224,16 +224,22 @@ func (h *TruckHandler) Delete(w http.ResponseWriter, r *http.Request) {
 	idStr := mux.Vars(r)["id"]
 	objectID, err := primitive.ObjectIDFromHex(idStr)
 	if err != nil {
-		WriteJSON(w, http.StatusBadRequest, Response{Error: err.Error()})
+		WriteJSON(w, http.StatusBadRequest, Response{Error: invalidTruckId})
 		return
 	}
 
-	if err := h.truckService.Delete(r.Context(), objectID); err != nil {
+	err = h.truckService.Delete(r.Context(), objectID)
+	if err != nil {
+		if err == domain.ErrTruckNotFound {
+			WriteJSON(w, http.StatusNotFound, Response{Error: "truck not found"})
+			return
+		}
+
 		WriteJSON(w, http.StatusInternalServerError, Response{Error: "failed to delete truck"})
 		return
 	}
 
-	WriteJSON(w, http.StatusOK, Response{Message: "truck deleted successfully"})
+	WriteJSON(w, http.StatusNoContent, nil)
 }
 
 func (h *TruckHandler) List(w http.ResponseWriter, r *http.Request) {

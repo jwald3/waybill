@@ -182,16 +182,22 @@ func (h *FacilityHandler) Delete(w http.ResponseWriter, r *http.Request) {
 	idStr := mux.Vars(r)["id"]
 	objectID, err := primitive.ObjectIDFromHex(idStr)
 	if err != nil {
-		WriteJSON(w, http.StatusBadRequest, Response{Error: err.Error()})
+		WriteJSON(w, http.StatusBadRequest, Response{Error: invalidFacilityId})
 		return
 	}
 
-	if err := h.facilityService.Delete(r.Context(), objectID); err != nil {
+	err = h.facilityService.Delete(r.Context(), objectID)
+	if err != nil {
+		if err == domain.ErrFacilityNotFound {
+			WriteJSON(w, http.StatusNotFound, Response{Error: "facility not found"})
+			return
+		}
+
 		WriteJSON(w, http.StatusInternalServerError, Response{Error: "failed to delete facility"})
 		return
 	}
 
-	WriteJSON(w, http.StatusOK, Response{Message: "facility deleted successfully"})
+	WriteJSON(w, http.StatusNoContent, nil)
 }
 
 func (h *FacilityHandler) List(w http.ResponseWriter, r *http.Request) {

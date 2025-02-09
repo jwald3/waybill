@@ -222,12 +222,17 @@ func (h *TripHandler) Delete(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err := h.tripService.Delete(r.Context(), objectID); err != nil {
+	err = h.tripService.Delete(r.Context(), objectID)
+	if err != nil {
+		if err == domain.ErrTripNotFound {
+			WriteJSON(w, http.StatusNotFound, Response{Error: "trip not found"})
+			return
+		}
 		WriteJSON(w, http.StatusInternalServerError, Response{Error: "failed to delete trip"})
 		return
 	}
 
-	WriteJSON(w, http.StatusOK, Response{Message: "trip deleted successfully"})
+	WriteJSON(w, http.StatusNoContent, nil)
 }
 
 func (h *TripHandler) List(w http.ResponseWriter, r *http.Request) {

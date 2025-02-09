@@ -191,7 +191,7 @@ func (h *MaintenanceLogHandler) Delete(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	WriteJSON(w, http.StatusOK, Response{Message: "maintenance log deleted successfully"})
+	WriteJSON(w, http.StatusNoContent, nil)
 }
 
 func (h *MaintenanceLogHandler) List(w http.ResponseWriter, r *http.Request) {

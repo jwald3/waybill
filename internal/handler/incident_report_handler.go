@@ -192,16 +192,22 @@ func (h *IncidentReportHandler) Delete(w http.ResponseWriter, r *http.Request) {
 	idStr := mux.Vars(r)["id"]
 	objectID, err := primitive.ObjectIDFromHex(idStr)
 	if err != nil {
-		WriteJSON(w, http.StatusBadRequest, Response{Error: err.Error()})
+		WriteJSON(w, http.StatusBadRequest, Response{Error: invalidIncidentReportId})
 		return
 	}
 
-	if err := h.incidentReportService.Delete(r.Context(), objectID); err != nil {
+	err = h.incidentReportService.Delete(r.Context(), objectID)
+	if err != nil {
+		if err == domain.ErrIncidentReportNotFound {
+			WriteJSON(w, http.StatusNotFound, Response{Error: "incident report not found"})
+			return
+		}
+
 		WriteJSON(w, http.StatusInternalServerError, Response{Error: "failed to delete incident report"})
 		return
 	}
 
-	WriteJSON(w, http.StatusOK, Response{Message: "incident report deleted successfully"})
+	WriteJSON(w, http.StatusNoContent, nil)
 }
 
 func (h *IncidentReportHandler) List(w http.ResponseWriter, r *http.Request) {

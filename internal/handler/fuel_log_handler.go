@@ -186,16 +186,22 @@ func (h *FuelLogHandler) Delete(w http.ResponseWriter, r *http.Request) {
 	idStr := mux.Vars(r)["id"]
 	objectID, err := primitive.ObjectIDFromHex(idStr)
 	if err != nil {
-		WriteJSON(w, http.StatusBadRequest, Response{Error: err.Error()})
+		WriteJSON(w, http.StatusBadRequest, Response{Error: invalidFuelLogId})
 		return
 	}
 
-	if err := h.fuelLogService.Delete(r.Context(), objectID); err != nil {
+	err = h.fuelLogService.Delete(r.Context(), objectID)
+	if err != nil {
+		if err == domain.ErrFuelLogNotFound {
+			WriteJSON(w, http.StatusNotFound, Response{Error: "fuel log not found"})
+			return
+		}
+
 		WriteJSON(w, http.StatusInternalServerError, Response{Error: "failed to delete fuel log"})
 		return
 	}
 
-	WriteJSON(w, http.StatusOK, Response{Message: "fuel log deleted successfully"})
+	WriteJSON(w, http.StatusNoContent, nil)
 }
 
 func (h *FuelLogHandler) List(w http.ResponseWriter, r *http.Request) {
