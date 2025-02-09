@@ -14,32 +14,10 @@ import (
 	"github.com/jwald3/waybill/internal/database"
 	"github.com/jwald3/waybill/internal/handler"
 	"github.com/jwald3/waybill/internal/logger"
+	"github.com/jwald3/waybill/internal/middleware"
 	"github.com/jwald3/waybill/internal/repository"
 	"github.com/jwald3/waybill/internal/service"
 	"go.uber.org/zap"
-)
-
-var (
-	driversBase   = "/api/v1/drivers"
-	driversWithId = "/api/v1/drivers/{id}"
-
-	trucksBase   = "/api/v1/trucks"
-	trucksWithId = "/api/v1/trucks/{id}"
-
-	facilitiesBase   = "/api/v1/facilities"
-	facilitiesWithId = "/api/v1/facilities/{id}"
-
-	tripsBase   = "/api/v1/trips"
-	tripsWithId = "/api/v1/trips/{id}"
-
-	fuelLogsBase   = "/api/v1/fuel-logs"
-	fuelLogsWithId = "/api/v1/fuel-logs/{id}"
-
-	incidentReportsBase   = "/api/v1/incident-reports"
-	incidentReportsWithId = "/api/v1/incident-reports/{id}"
-
-	maintenanceLogsBase   = "/api/v1/maintenance-logs"
-	maintenanceLogsWithId = "/api/v1/maintenance-logs/{id}"
 )
 
 func main() {
@@ -54,77 +32,23 @@ func main() {
 	}
 	defer db.Close()
 
-	driverRepo := repository.NewDriverRepository(db)
-	driverService := service.NewDriverService(db, driverRepo)
-	driverHandler := handler.NewDriverHandler(driverService)
-
-	truckRepo := repository.NewTruckRepository(db)
-	truckService := service.NewTruckService(db, truckRepo)
-	truckHandler := handler.NewTruckHandler(truckService)
-
-	facilityRepo := repository.NewFacilityRepository(db)
-	facilityService := service.NewFacilityService(db, facilityRepo)
-	facilityHandler := handler.NewFacilityHandler(facilityService)
-
-	tripRepo := repository.NewTripRepository(db)
-	tripService := service.NewTripService(db, tripRepo)
-	tripHandler := handler.NewTripHandler(tripService)
-
-	fuelLogRepo := repository.NewFuelLogRepository(db)
-	fuelLogService := service.NewFuelLogService(db, fuelLogRepo)
-	fuelLogHandler := handler.NewFuelLogHandler(fuelLogService)
-
-	incidentReportRepo := repository.NewIncidentReportRepository(db)
-	incidentReportService := service.NewIncidentReportService(db, incidentReportRepo)
-	incidentReportHandler := handler.NewIncidentReportHandler(incidentReportService)
-
-	maintenanceLogRepo := repository.NewMaintenanceLogRepository(db)
-	maintenanceLogService := service.NewMaintenanceLogService(db, maintenanceLogRepo)
-	maintenanceLogHandler := handler.NewMaintenanceLogHandler(maintenanceLogService)
+	handlers := initializeHandlers(db)
 
 	router := mux.NewRouter()
+	router.Use(middleware.Logging(log))
+	router.Use(middleware.Recovery(log))
+	router.Use(middleware.CORS)
 
-	router.HandleFunc(driversBase, driverHandler.List).Methods(http.MethodGet)
-	router.HandleFunc(driversBase, driverHandler.Create).Methods(http.MethodPost)
-	router.HandleFunc(driversWithId, driverHandler.GetById).Methods(http.MethodGet)
-	router.HandleFunc(driversWithId, driverHandler.Update).Methods(http.MethodPut)
-	router.HandleFunc(driversWithId, driverHandler.Delete).Methods(http.MethodDelete)
+	router.HandleFunc("/health", handler.HealthCheck).Methods(http.MethodGet)
 
-	router.HandleFunc(trucksBase, truckHandler.List).Methods(http.MethodGet)
-	router.HandleFunc(trucksBase, truckHandler.Create).Methods(http.MethodPost)
-	router.HandleFunc(trucksWithId, truckHandler.GetById).Methods(http.MethodGet)
-	router.HandleFunc(trucksWithId, truckHandler.Update).Methods(http.MethodPut)
-	router.HandleFunc(trucksWithId, truckHandler.Delete).Methods(http.MethodDelete)
-
-	router.HandleFunc(facilitiesBase, facilityHandler.List).Methods(http.MethodGet)
-	router.HandleFunc(facilitiesBase, facilityHandler.Create).Methods(http.MethodPost)
-	router.HandleFunc(facilitiesWithId, facilityHandler.GetById).Methods(http.MethodGet)
-	router.HandleFunc(facilitiesWithId, facilityHandler.Update).Methods(http.MethodPut)
-	router.HandleFunc(facilitiesWithId, facilityHandler.Delete).Methods(http.MethodDelete)
-
-	router.HandleFunc(tripsBase, tripHandler.List).Methods(http.MethodGet)
-	router.HandleFunc(tripsBase, tripHandler.Create).Methods(http.MethodPost)
-	router.HandleFunc(tripsWithId, tripHandler.GetById).Methods(http.MethodGet)
-	router.HandleFunc(tripsWithId, tripHandler.Update).Methods(http.MethodPut)
-	router.HandleFunc(tripsWithId, tripHandler.Delete).Methods(http.MethodDelete)
-
-	router.HandleFunc(fuelLogsBase, fuelLogHandler.List).Methods(http.MethodGet)
-	router.HandleFunc(fuelLogsBase, fuelLogHandler.Create).Methods(http.MethodPost)
-	router.HandleFunc(fuelLogsWithId, fuelLogHandler.GetById).Methods(http.MethodGet)
-	router.HandleFunc(fuelLogsWithId, fuelLogHandler.Update).Methods(http.MethodPut)
-	router.HandleFunc(fuelLogsWithId, fuelLogHandler.Delete).Methods(http.MethodDelete)
-
-	router.HandleFunc(incidentReportsBase, incidentReportHandler.List).Methods(http.MethodGet)
-	router.HandleFunc(incidentReportsBase, incidentReportHandler.Create).Methods(http.MethodPost)
-	router.HandleFunc(incidentReportsWithId, incidentReportHandler.GetById).Methods(http.MethodGet)
-	router.HandleFunc(incidentReportsWithId, incidentReportHandler.Update).Methods(http.MethodPut)
-	router.HandleFunc(incidentReportsWithId, incidentReportHandler.Delete).Methods(http.MethodDelete)
-
-	router.HandleFunc(maintenanceLogsBase, maintenanceLogHandler.List).Methods(http.MethodGet)
-	router.HandleFunc(maintenanceLogsBase, maintenanceLogHandler.Create).Methods(http.MethodPost)
-	router.HandleFunc(maintenanceLogsWithId, maintenanceLogHandler.GetById).Methods(http.MethodGet)
-	router.HandleFunc(maintenanceLogsWithId, maintenanceLogHandler.Update).Methods(http.MethodPut)
-	router.HandleFunc(maintenanceLogsWithId, maintenanceLogHandler.Delete).Methods(http.MethodDelete)
+	v1 := router.PathPrefix("/api/v1").Subrouter()
+	registerDriverRoutes(v1, handlers.driver)
+	registerFacilityRoutes(v1, handlers.facility)
+	registerFuelLogRoutes(v1, handlers.fuelLog)
+	registerIncidentReportRoutes(v1, handlers.incidentReport)
+	registerMaintenanceLogRoutes(v1, handlers.maintenanceLog)
+	registerTripRoutes(v1, handlers.trip)
+	registerTruckRoutes(v1, handlers.truck)
 
 	server := &http.Server{
 		Addr:         fmt.Sprintf("%s:%s", cfg.Server.Host, cfg.Server.Port),
@@ -133,9 +57,6 @@ func main() {
 		WriteTimeout: cfg.Server.WriteTimeout,
 		IdleTimeout:  cfg.Server.IdleTimeout,
 	}
-
-	stopChan := make(chan os.Signal, 1)
-	signal.Notify(stopChan, os.Interrupt, syscall.SIGTERM)
 
 	go func() {
 		log.Info("starting server...",
@@ -147,7 +68,9 @@ func main() {
 		}
 	}()
 
-	<-stopChan
+	quit := make(chan os.Signal, 1)
+	signal.Notify(quit, os.Interrupt, syscall.SIGTERM)
+	<-quit
 
 	log.Info("shutting down server...")
 
@@ -159,4 +82,101 @@ func main() {
 	}
 
 	log.Info("server gracefully stopped.")
+}
+
+type handlers struct {
+	driver         *handler.DriverHandler
+	facility       *handler.FacilityHandler
+	fuelLog        *handler.FuelLogHandler
+	incidentReport *handler.IncidentReportHandler
+	maintenanceLog *handler.MaintenanceLogHandler
+	trip           *handler.TripHandler
+	truck          *handler.TruckHandler
+}
+
+func initializeHandlers(db *database.MongoDB) *handlers {
+	// Initialize repositories
+	driverRepo := repository.NewDriverRepository(db)
+	facilityRepo := repository.NewFacilityRepository(db)
+	fuelLogRepo := repository.NewFuelLogRepository(db)
+	incidentReportRepo := repository.NewIncidentReportRepository(db)
+	maintenanceLogRepo := repository.NewMaintenanceLogRepository(db)
+	tripRepo := repository.NewTripRepository(db)
+	truckRepo := repository.NewTruckRepository(db)
+
+	// Initialize services
+	driverService := service.NewDriverService(db, driverRepo)
+	facilityService := service.NewFacilityService(db, facilityRepo)
+	fuelLogService := service.NewFuelLogService(db, fuelLogRepo)
+	incidentReportService := service.NewIncidentReportService(db, incidentReportRepo)
+	maintenanceLogService := service.NewMaintenanceLogService(db, maintenanceLogRepo)
+	tripService := service.NewTripService(db, tripRepo)
+	truckService := service.NewTruckService(db, truckRepo)
+
+	// Initialize handlers
+	return &handlers{
+		driver:         handler.NewDriverHandler(driverService),
+		facility:       handler.NewFacilityHandler(facilityService),
+		fuelLog:        handler.NewFuelLogHandler(fuelLogService),
+		incidentReport: handler.NewIncidentReportHandler(incidentReportService),
+		maintenanceLog: handler.NewMaintenanceLogHandler(maintenanceLogService),
+		trip:           handler.NewTripHandler(tripService),
+		truck:          handler.NewTruckHandler(truckService),
+	}
+}
+
+func registerDriverRoutes(r *mux.Router, h *handler.DriverHandler) {
+	r.HandleFunc("/drivers", h.List).Methods(http.MethodGet)
+	r.HandleFunc("/drivers", h.Create).Methods(http.MethodPost)
+	r.HandleFunc("/drivers/{id}", h.GetById).Methods(http.MethodGet)
+	r.HandleFunc("/drivers/{id}", h.Update).Methods(http.MethodPut)
+	r.HandleFunc("/drivers/{id}", h.Delete).Methods(http.MethodDelete)
+}
+
+func registerFacilityRoutes(r *mux.Router, h *handler.FacilityHandler) {
+	r.HandleFunc("/facilities", h.List).Methods(http.MethodGet)
+	r.HandleFunc("/facilities", h.Create).Methods(http.MethodPost)
+	r.HandleFunc("/facilities/{id}", h.GetById).Methods(http.MethodGet)
+	r.HandleFunc("/facilities/{id}", h.Update).Methods(http.MethodPut)
+	r.HandleFunc("/facilities/{id}", h.Delete).Methods(http.MethodDelete)
+}
+
+func registerFuelLogRoutes(r *mux.Router, h *handler.FuelLogHandler) {
+	r.HandleFunc("/fuel-logs", h.List).Methods(http.MethodGet)
+	r.HandleFunc("/fuel-logs", h.Create).Methods(http.MethodPost)
+	r.HandleFunc("/fuel-logs/{id}", h.GetById).Methods(http.MethodGet)
+	r.HandleFunc("/fuel-logs/{id}", h.Update).Methods(http.MethodPut)
+	r.HandleFunc("/fuel-logs/{id}", h.Delete).Methods(http.MethodDelete)
+}
+
+func registerIncidentReportRoutes(r *mux.Router, h *handler.IncidentReportHandler) {
+	r.HandleFunc("/incident-reports", h.List).Methods(http.MethodGet)
+	r.HandleFunc("/incident-reports", h.Create).Methods(http.MethodPost)
+	r.HandleFunc("/incident-reports/{id}", h.GetById).Methods(http.MethodGet)
+	r.HandleFunc("/incident-reports/{id}", h.Update).Methods(http.MethodPut)
+	r.HandleFunc("/incident-reports/{id}", h.Delete).Methods(http.MethodDelete)
+}
+
+func registerMaintenanceLogRoutes(r *mux.Router, h *handler.MaintenanceLogHandler) {
+	r.HandleFunc("/maintenance-logs", h.List).Methods(http.MethodGet)
+	r.HandleFunc("/maintenance-logs", h.Create).Methods(http.MethodPost)
+	r.HandleFunc("/maintenance-logs/{id}", h.GetById).Methods(http.MethodGet)
+	r.HandleFunc("/maintenance-logs/{id}", h.Update).Methods(http.MethodPut)
+	r.HandleFunc("/maintenance-logs/{id}", h.Delete).Methods(http.MethodDelete)
+}
+
+func registerTripRoutes(r *mux.Router, h *handler.TripHandler) {
+	r.HandleFunc("/trips", h.List).Methods(http.MethodGet)
+	r.HandleFunc("/trips", h.Create).Methods(http.MethodPost)
+	r.HandleFunc("/trips/{id}", h.GetById).Methods(http.MethodGet)
+	r.HandleFunc("/trips/{id}", h.Update).Methods(http.MethodPut)
+	r.HandleFunc("/trips/{id}", h.Delete).Methods(http.MethodDelete)
+}
+
+func registerTruckRoutes(r *mux.Router, h *handler.TruckHandler) {
+	r.HandleFunc("/trucks", h.List).Methods(http.MethodGet)
+	r.HandleFunc("/trucks", h.Create).Methods(http.MethodPost)
+	r.HandleFunc("/trucks/{id}", h.GetById).Methods(http.MethodGet)
+	r.HandleFunc("/trucks/{id}", h.Update).Methods(http.MethodPut)
+	r.HandleFunc("/trucks/{id}", h.Delete).Methods(http.MethodDelete)
 }
