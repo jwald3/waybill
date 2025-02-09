@@ -45,6 +45,10 @@ type FacilityUpdateRequest struct {
 	ServicesAvailable []domain.FacilityService `json:"services_available"`
 }
 
+type FacilityUpdateAvailableServicesRequest struct {
+	AvailableServices []domain.FacilityService `json:"services_available"`
+}
+
 type FacilityResponse struct {
 	ID                primitive.ObjectID       `json:"id,omitempty"`
 	FacilityNumber    string                   `json:"facility_number"`
@@ -230,4 +234,50 @@ func (h *FacilityHandler) List(w http.ResponseWriter, r *http.Request) {
 	}
 
 	WriteJSON(w, http.StatusOK, response)
+}
+
+func (h *FacilityHandler) UpdateAvailableFacilityServices(w http.ResponseWriter, r *http.Request) {
+	// Get facility ID from URL
+	idStr := mux.Vars(r)["id"]
+	objectID, err := primitive.ObjectIDFromHex(idStr)
+	if err != nil {
+		WriteJSON(w, http.StatusBadRequest, Response{Error: "invalid facility ID"})
+		return
+	}
+
+	// Parse request body
+	var req FacilityUpdateAvailableServicesRequest
+	if err := ReadJSON(r, &req); err != nil {
+		WriteJSON(w, http.StatusBadRequest, Response{Error: "invalid request payload"})
+		return
+	}
+
+	// Validate services before updating
+	for _, service := range req.AvailableServices {
+		if !service.IsValid() {
+			WriteJSON(w, http.StatusBadRequest, Response{Error: fmt.Sprintf("invalid facility service: %s", service)})
+			return
+		}
+	}
+
+	// Update services
+	err = h.facilityService.UpdateAvailableFacilityServices(r.Context(), objectID, req.AvailableServices)
+	if err != nil {
+		switch {
+		case err == domain.ErrFacilityNotFound:
+			WriteJSON(w, http.StatusNotFound, Response{Error: "facility not found"})
+		default:
+			WriteJSON(w, http.StatusInternalServerError, Response{Error: err.Error()})
+		}
+		return
+	}
+
+	// Fetch updated facility to return in response
+	updatedFacility, err := h.facilityService.GetById(r.Context(), objectID)
+	if err != nil {
+		WriteJSON(w, http.StatusInternalServerError, Response{Error: "services updated but failed to fetch updated facility"})
+		return
+	}
+
+	WriteJSON(w, http.StatusOK, Response{Data: facilityDomainToResponse(updatedFacility)})
 }

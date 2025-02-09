@@ -73,3 +73,15 @@ func NewFacility(
 		UpdatedAt:         primitive.NewDateTimeFromTime(now),
 	}, nil
 }
+
+func (f *Facility) ChangeServicesAvailable(servicesAvailable []FacilityService) error {
+	for _, service := range servicesAvailable {
+		if !service.IsValid() {
+			return fmt.Errorf("invalid facility service: %s", service)
+		}
+	}
+
+	f.ServicesAvailable = servicesAvailable
+	f.UpdatedAt = primitive.NewDateTimeFromTime(time.Now())
+	return nil
+}

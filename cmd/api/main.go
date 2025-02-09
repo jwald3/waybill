@@ -140,6 +140,7 @@ func registerFacilityRoutes(r *mux.Router, h *handler.FacilityHandler) {
 	r.HandleFunc("/facilities/{id}", h.GetById).Methods(http.MethodGet)
 	r.HandleFunc("/facilities/{id}", h.Update).Methods(http.MethodPut)
 	r.HandleFunc("/facilities/{id}", h.Delete).Methods(http.MethodDelete)
+	r.HandleFunc("/facilities/{id}/services", h.UpdateAvailableFacilityServices).Methods(http.MethodPatch)
 }
 
 func registerFuelLogRoutes(r *mux.Router, h *handler.FuelLogHandler) {

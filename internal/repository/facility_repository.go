@@ -23,6 +23,7 @@ type FacilityRepository interface {
 	Update(ctx context.Context, facility *domain.Facility) error
 	Delete(ctx context.Context, id primitive.ObjectID) error
 	List(ctx context.Context, limit, offset int64) (*ListFacilitiesResult, error)
+	UpdateAvailableFacilityServices(ctx context.Context, id primitive.ObjectID, servicesAvailable []domain.FacilityService) error
 }
 
 type ListFacilitiesResult struct {
@@ -141,4 +142,25 @@ func (r *facilityRepository) List(ctx context.Context, limit, offset int64) (*Li
 		Facilities: facilities,
 		Total:      total,
 	}, nil
+}
+
+func (r *facilityRepository) UpdateAvailableFacilityServices(ctx context.Context, id primitive.ObjectID, servicesAvailable []domain.FacilityService) error {
+	filter := bson.M{"_id": id}
+	update := bson.M{
+		"$set": bson.M{
+			"services_available": servicesAvailable,
+			"updated_at":         primitive.NewDateTimeFromTime(time.Now()),
+		},
+	}
+
+	result, err := r.facilities.UpdateOne(ctx, filter, update)
+	if err != nil {
+		return fmt.Errorf("failed to update facility services: %w", err)
+	}
+
+	if result.MatchedCount == 0 {
+		return domain.ErrFacilityNotFound
+	}
+
+	return nil
 }
