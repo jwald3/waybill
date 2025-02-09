@@ -22,6 +22,7 @@ type DriverRepository interface {
 	Update(ctx context.Context, driver *domain.Driver) error
 	Delete(ctx context.Context, id primitive.ObjectID) error
 	List(ctx context.Context, limit, offset int64) (*ListDriversResult, error)
+	UpdateEmploymentStatus(ctx context.Context, id primitive.ObjectID, status domain.EmploymentStatus) error
 }
 
 type ListDriversResult struct {
@@ -188,4 +189,25 @@ func (r *driverRepository) List(ctx context.Context, limit, offset int64) (*List
 		Drivers: drivers,
 		Total:   total,
 	}, nil
+}
+
+func (r *driverRepository) UpdateEmploymentStatus(ctx context.Context, id primitive.ObjectID, status domain.EmploymentStatus) error {
+	filter := bson.M{"_id": id}
+	update := bson.M{
+		"$set": bson.M{
+			"employment_status": status,
+			"updated_at":        primitive.NewDateTimeFromTime(time.Now()),
+		},
+	}
+
+	result, err := r.drivers.UpdateOne(ctx, filter, update)
+	if err != nil {
+		return fmt.Errorf("failed to update driver employment status: %w", err)
+	}
+
+	if result.MatchedCount == 0 {
+		return domain.ErrDriverNotFound
+	}
+
+	return nil
 }

@@ -20,6 +20,7 @@ type DriverService interface {
 	Update(ctx context.Context, driver *domain.Driver) error
 	Delete(ctx context.Context, id primitive.ObjectID) error
 	List(ctx context.Context, limit, offset int64) (*repository.ListDriversResult, error)
+	UpdateEmploymentStatus(ctx context.Context, id primitive.ObjectID, newStatus domain.EmploymentStatus) error
 }
 
 type driverService struct {
@@ -97,12 +98,25 @@ func (s *driverService) List(ctx context.Context, limit, offset int64) (*reposit
 
 // Atomic methods
 func (s *driverService) UpdateEmploymentStatus(ctx context.Context, id primitive.ObjectID, newStatus domain.EmploymentStatus) error {
+	if !newStatus.IsValid() {
+		return fmt.Errorf("invalid employment status: %s", newStatus)
+	}
+
 	driver, err := s.driverRepo.GetById(ctx, id)
 	if err != nil {
-		return fmt.Errorf(driverNotFound, err)
+		return fmt.Errorf("failed to get driver: %w", err)
 	}
+	if driver == nil {
+		return domain.ErrDriverNotFound
+	}
+
 	if err := driver.ChangeEmploymentStatus(newStatus); err != nil {
 		return err
 	}
-	return s.driverRepo.Update(ctx, driver)
+
+	if err := s.driverRepo.UpdateEmploymentStatus(ctx, id, newStatus); err != nil {
+		return fmt.Errorf("failed to update employment status: %w", err)
+	}
+
+	return nil
 }

@@ -49,6 +49,10 @@ type DriverUpdateRequest struct {
 	EmploymentStatus  domain.EmploymentStatus `json:"employment_status"`
 }
 
+type DriverUpdateEmploymentStatusRequest struct {
+	EmploymentStatus domain.EmploymentStatus `json:"employment_status"`
+}
+
 type DriverResponse struct {
 	ID                primitive.ObjectID      `json:"id,omitempty"`
 	FirstName         string                  `json:"first_name"`
@@ -252,4 +256,32 @@ func (h *DriverHandler) List(w http.ResponseWriter, r *http.Request) {
 	}
 
 	WriteJSON(w, http.StatusOK, response)
+}
+
+func (h *DriverHandler) UpdateEmploymentStatus(w http.ResponseWriter, r *http.Request) {
+	idStr := mux.Vars(r)["id"]
+	objectID, err := primitive.ObjectIDFromHex(idStr)
+	if err != nil {
+		WriteJSON(w, http.StatusBadRequest, Response{Error: err.Error()})
+		return
+	}
+
+	var req DriverUpdateEmploymentStatusRequest
+	if err := ReadJSON(r, &req); err != nil {
+		WriteJSON(w, http.StatusBadRequest, Response{Error: "invalid request payload"})
+		return
+	}
+
+	if err := h.driverService.UpdateEmploymentStatus(r.Context(), objectID, req.EmploymentStatus); err != nil {
+		WriteJSON(w, http.StatusInternalServerError, Response{Error: err.Error()})
+		return
+	}
+
+	updatedDriver, err := h.driverService.GetById(r.Context(), objectID)
+	if err != nil {
+		WriteJSON(w, http.StatusInternalServerError, Response{Error: "status updated but failed to fetch updated driver"})
+		return
+	}
+
+	WriteJSON(w, http.StatusOK, Response{Data: driverDomainToResponse(updatedDriver)})
 }

@@ -131,6 +131,7 @@ func registerDriverRoutes(r *mux.Router, h *handler.DriverHandler) {
 	r.HandleFunc("/drivers/{id}", h.GetById).Methods(http.MethodGet)
 	r.HandleFunc("/drivers/{id}", h.Update).Methods(http.MethodPut)
 	r.HandleFunc("/drivers/{id}", h.Delete).Methods(http.MethodDelete)
+	r.HandleFunc("/drivers/{id}/employment-status", h.UpdateEmploymentStatus).Methods(http.MethodPatch)
 }
 
 func registerFacilityRoutes(r *mux.Router, h *handler.FacilityHandler) {
