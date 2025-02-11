@@ -40,9 +40,8 @@ type Trip struct {
 	StartFacility   *Facility           `bson:"start_facility,omitempty" json:"start_facility,omitempty"`
 	EndFacilityID   *primitive.ObjectID `bson:"end_facility_id,omitempty" json:"end_facility_id,omitempty"`
 	EndFacility     *Facility           `bson:"end_facility,omitempty" json:"end_facility,omitempty"`
-	Route           Route               `bson:"route" json:"route"`
-	StartTime       primitive.DateTime  `bson:"start_time" json:"start_time"`
-	EndTime         primitive.DateTime  `bson:"end_time" json:"end_time"`
+	DepartureTime   TimeWindow          `bson:"departure_time" json:"departure_time"`
+	ArrivalTime     TimeWindow          `bson:"arrival_time" json:"arrival_time"`
 	Status          TripStatus          `bson:"status" json:"status"`
 	Cargo           Cargo               `bson:"cargo" json:"cargo"`
 	FuelUsage       float64             `bson:"fuel_usage_gallons" json:"fuel_usage_gallons"`
@@ -51,10 +50,9 @@ type Trip struct {
 	UpdatedAt       primitive.DateTime  `bson:"updated_at" json:"updated_at"`
 }
 
-type Route struct {
-	Origin      string   `bson:"origin" json:"origin"`
-	Destination string   `bson:"destination" json:"destination"`
-	Waypoints   []string `bson:"waypoints" json:"waypoints"`
+type TimeWindow struct {
+	Scheduled primitive.DateTime  `bson:"scheduled" json:"scheduled"`
+	Actual    *primitive.DateTime `bson:"actual,omitempty" json:"actual,omitempty"`
 }
 
 type Cargo struct {
@@ -70,9 +68,8 @@ func NewTrip(
 	truckId,
 	startFacilityID,
 	endFacilityID *primitive.ObjectID,
-	route Route,
-	startTime,
-	endTime primitive.DateTime,
+	departureTime,
+	arrivalTime TimeWindow,
 	cargo Cargo,
 	fuelUsage float64,
 	distanceMiles int) (*Trip, error) {
@@ -89,9 +86,8 @@ func NewTrip(
 		TruckID:         truckId,
 		StartFacilityID: startFacilityID,
 		EndFacilityID:   endFacilityID,
-		Route:           route,
-		StartTime:       startTime,
-		EndTime:         endTime,
+		DepartureTime:   departureTime,
+		ArrivalTime:     arrivalTime,
 		Status:          status,
 		Cargo:           cargo,
 		FuelUsage:       fuelUsage,

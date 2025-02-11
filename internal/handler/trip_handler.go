@@ -31,9 +31,8 @@ type TripCreateRequest struct {
 	TruckID         *primitive.ObjectID `json:"truck_id"`
 	StartFacilityID *primitive.ObjectID `json:"start_facility_id"`
 	EndFacilityID   *primitive.ObjectID `json:"end_facility_id"`
-	Route           domain.Route        `json:"route"`
-	StartTime       primitive.DateTime  `json:"start_time"`
-	EndTime         primitive.DateTime  `json:"end_time"`
+	DepartureTime   domain.TimeWindow   `json:"departure_time"`
+	ArrivalTime     domain.TimeWindow   `json:"arrival_time"`
 	Status          domain.TripStatus   `json:"status"`
 	Cargo           domain.Cargo        `json:"cargo"`
 	FuelUsage       float64             `json:"fuel_usage_gallons"`
@@ -46,9 +45,8 @@ type TripUpdateRequest struct {
 	TruckID         *primitive.ObjectID `json:"truck_id"`
 	StartFacilityID *primitive.ObjectID `json:"start_facility_id"`
 	EndFacilityID   *primitive.ObjectID `json:"end_facility_id"`
-	Route           domain.Route        `json:"route"`
-	StartTime       primitive.DateTime  `json:"start_time"`
-	EndTime         primitive.DateTime  `json:"end_time"`
+	DepartureTime   domain.TimeWindow   `json:"departure_time"`
+	ArrivalTime     domain.TimeWindow   `json:"arrival_time"`
 	Status          domain.TripStatus   `json:"status"`
 	Cargo           domain.Cargo        `json:"cargo"`
 	FuelUsage       float64             `json:"fuel_usage_gallons"`
@@ -66,9 +64,8 @@ type TripResponse struct {
 	StartFacility   *domain.Facility    `json:"start_facility,omitempty"`
 	EndFacilityID   *primitive.ObjectID `json:"end_facility_id,omitempty"`
 	EndFacility     *domain.Facility    `json:"end_facility,omitempty"`
-	Route           domain.Route        `json:"route"`
-	StartTime       primitive.DateTime  `json:"start_time"`
-	EndTime         primitive.DateTime  `json:"end_time"`
+	DepartureTime   domain.TimeWindow   `json:"departure_time"`
+	ArrivalTime     domain.TimeWindow   `json:"arrival_time"`
 	Status          domain.TripStatus   `json:"status"`
 	Cargo           domain.Cargo        `json:"cargo"`
 	FuelUsage       float64             `json:"fuel_usage_gallons"`
@@ -89,9 +86,8 @@ func tripRequestToDomainCreate(req TripCreateRequest) (*domain.Trip, error) {
 		req.TruckID,
 		req.StartFacilityID,
 		req.EndFacilityID,
-		req.Route,
-		req.StartTime,
-		req.EndTime,
+		req.DepartureTime,
+		req.ArrivalTime,
 		req.Cargo,
 		req.FuelUsage,
 		req.DistanceMiles,
@@ -109,9 +105,8 @@ func tripRequestToDomainUpdate(req TripUpdateRequest) (*domain.Trip, error) {
 		TruckID:         req.TruckID,
 		StartFacilityID: req.StartFacilityID,
 		EndFacilityID:   req.EndFacilityID,
-		Route:           req.Route,
-		StartTime:       req.StartTime,
-		EndTime:         req.EndTime,
+		DepartureTime:   req.DepartureTime,
+		ArrivalTime:     req.ArrivalTime,
 		Status:          req.Status,
 		Cargo:           req.Cargo,
 		FuelUsage:       req.FuelUsage,
@@ -131,9 +126,8 @@ func tripDomainToResponse(t *domain.Trip) TripResponse {
 		StartFacility:   t.StartFacility,
 		EndFacilityID:   t.EndFacilityID,
 		EndFacility:     t.EndFacility,
-		Route:           t.Route,
-		StartTime:       t.StartTime,
-		EndTime:         t.EndTime,
+		DepartureTime:   t.DepartureTime,
+		ArrivalTime:     t.ArrivalTime,
 		Status:          t.Status,
 		Cargo:           t.Cargo,
 		FuelUsage:       t.FuelUsage,
