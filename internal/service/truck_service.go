@@ -94,7 +94,7 @@ func (s *truckService) List(ctx context.Context, limit, offset int64) (*reposito
 
 // atomic methods
 
-func (s *truckService) UpdateEmploymentStatus(ctx context.Context, id primitive.ObjectID, newStatus domain.TruckStatus) error {
+func (s *truckService) UpdateTruckStatus(ctx context.Context, id primitive.ObjectID, newStatus domain.TruckStatus) error {
 	truck, err := s.truckRepo.GetById(ctx, id)
 	if err != nil {
 		return fmt.Errorf(truckNotFound, err)
@@ -102,5 +102,27 @@ func (s *truckService) UpdateEmploymentStatus(ctx context.Context, id primitive.
 	if err := truck.ChangeTruckStatus(newStatus); err != nil {
 		return err
 	}
+	return s.truckRepo.Update(ctx, truck)
+}
+
+func (s *truckService) UpdateTruckMileage(ctx context.Context, id primitive.ObjectID, newMileage int) error {
+	truck, err := s.truckRepo.GetById(ctx, id)
+	if err != nil {
+		return fmt.Errorf(truckNotFound, err)
+	}
+
+	truck.Mileage = newMileage
+
+	return s.truckRepo.Update(ctx, truck)
+}
+
+func (s *truckService) UpdateTruckMaintenance(ctx context.Context, id primitive.ObjectID, lastMaintenance string) error {
+	truck, err := s.truckRepo.GetById(ctx, id)
+	if err != nil {
+		return fmt.Errorf(truckNotFound, err)
+	}
+
+	truck.LastMaintenance = lastMaintenance
+
 	return s.truckRepo.Update(ctx, truck)
 }
