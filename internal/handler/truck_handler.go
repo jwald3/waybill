@@ -57,6 +57,18 @@ type TruckUpdateRequest struct {
 	LastMaintenance  string              `json:"last_maintenance"`
 }
 
+type TruckUpdateStatusRequest struct {
+	Status domain.TruckStatus `json:"status"`
+}
+
+type TruckUpdateMileageRequest struct {
+	Mileage int `json:"mileage"`
+}
+
+type TruckUpdateLastMaintenanceRequest struct {
+	LastMaintenance string `json:"last_maintenance"`
+}
+
 type TruckResponse struct {
 	ID               primitive.ObjectID  `json:"id,omitempty"`
 	TruckNumber      string              `json:"truck_number"`
@@ -272,4 +284,89 @@ func (h *TruckHandler) List(w http.ResponseWriter, r *http.Request) {
 	}
 
 	WriteJSON(w, http.StatusOK, response)
+}
+
+// atomic methods
+func (h *TruckHandler) UpdateTruckStatus(w http.ResponseWriter, r *http.Request) {
+	idStr := mux.Vars(r)["id"]
+	objectID, err := primitive.ObjectIDFromHex(idStr)
+	if err != nil {
+		WriteJSON(w, http.StatusBadRequest, Response{Error: err.Error()})
+		return
+	}
+
+	var req TruckUpdateStatusRequest
+	if err := ReadJSON(r, &req); err != nil {
+		WriteJSON(w, http.StatusBadRequest, Response{Error: "invalid request payload"})
+		return
+	}
+
+	if err := h.truckService.UpdateTruckStatus(r.Context(), objectID, req.Status); err != nil {
+		WriteJSON(w, http.StatusInternalServerError, Response{Error: err.Error()})
+		return
+	}
+
+	updatedTruck, err := h.truckService.GetById(r.Context(), objectID)
+	if err != nil {
+		WriteJSON(w, http.StatusInternalServerError, Response{Error: "status updated but failed to fetch updated truck"})
+		return
+	}
+
+	WriteJSON(w, http.StatusOK, Response{Data: truckDomainToResponse(updatedTruck)})
+}
+
+func (h *TruckHandler) UpdateTruckMileage(w http.ResponseWriter, r *http.Request) {
+	idStr := mux.Vars(r)["id"]
+	objectID, err := primitive.ObjectIDFromHex(idStr)
+	if err != nil {
+		WriteJSON(w, http.StatusBadRequest, Response{Error: err.Error()})
+		return
+	}
+
+	var req TruckUpdateMileageRequest
+	if err := ReadJSON(r, &req); err != nil {
+		WriteJSON(w, http.StatusBadRequest, Response{Error: "invalid request payload"})
+		return
+	}
+
+	if err := h.truckService.UpdateTruckMileage(r.Context(), objectID, req.Mileage); err != nil {
+		WriteJSON(w, http.StatusInternalServerError, Response{Error: err.Error()})
+		return
+	}
+
+	updatedTruck, err := h.truckService.GetById(r.Context(), objectID)
+	if err != nil {
+		WriteJSON(w, http.StatusInternalServerError, Response{Error: "mileage updated but failed to fetch updated truck"})
+		return
+	}
+
+	WriteJSON(w, http.StatusOK, Response{Data: truckDomainToResponse(updatedTruck)})
+}
+
+func (h *TruckHandler) UpdateTruckLastMaintenance(w http.ResponseWriter, r *http.Request) {
+	idStr := mux.Vars(r)["id"]
+	objectID, err := primitive.ObjectIDFromHex(idStr)
+	if err != nil {
+		WriteJSON(w, http.StatusBadRequest, Response{Error: err.Error()})
+		return
+	}
+
+	var req TruckUpdateLastMaintenanceRequest
+	if err := ReadJSON(r, &req); err != nil {
+		WriteJSON(w, http.StatusBadRequest, Response{Error: "invalid request payload"})
+		return
+	}
+
+	if err := h.truckService.UpdateTruckMaintenance(r.Context(), objectID, req.LastMaintenance); err != nil {
+		WriteJSON(w, http.StatusInternalServerError, Response{Error: err.Error()})
+		return
+	}
+
+	updatedTruck, err := h.truckService.GetById(r.Context(), objectID)
+	if err != nil {
+		WriteJSON(w, http.StatusInternalServerError, Response{Error: "maintenance updated but failed to fetch updated truck"})
+		return
+	}
+
+	WriteJSON(w, http.StatusOK, Response{Data: truckDomainToResponse(updatedTruck)})
 }

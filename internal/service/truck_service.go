@@ -20,6 +20,9 @@ type TruckService interface {
 	Update(ctx context.Context, truck *domain.Truck) error
 	Delete(ctx context.Context, id primitive.ObjectID) error
 	List(ctx context.Context, limit, offset int64) (*repository.ListTrucksResult, error)
+	UpdateTruckStatus(ctx context.Context, id primitive.ObjectID, newStatus domain.TruckStatus) error
+	UpdateTruckMileage(ctx context.Context, id primitive.ObjectID, newMileage int) error
+	UpdateTruckMaintenance(ctx context.Context, id primitive.ObjectID, lastMaintenance string) error
 }
 
 type truckService struct {
