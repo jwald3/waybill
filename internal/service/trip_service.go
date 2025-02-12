@@ -21,6 +21,10 @@ type TripService interface {
 	Update(ctx context.Context, trip *domain.Trip) error
 	Delete(ctx context.Context, id primitive.ObjectID) error
 	List(ctx context.Context, limit, offset int64) (*repository.ListTripsResult, error)
+	BeginTrip(ctx context.Context, id primitive.ObjectID, departureTime time.Time) error
+	CancelTrip(ctx context.Context, id primitive.ObjectID) error
+	FinishTripSuccessfully(ctx context.Context, id primitive.ObjectID, arrivalTime time.Time) error
+	FinishTripUnsuccessfully(ctx context.Context, id primitive.ObjectID, arrivalTime time.Time) error
 }
 
 type tripService struct {
