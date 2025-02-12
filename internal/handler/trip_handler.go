@@ -3,6 +3,7 @@ package handler
 import (
 	"fmt"
 	"net/http"
+	"strings"
 	"time"
 
 	"github.com/gorilla/mux"
@@ -54,6 +55,10 @@ type TripUpdateRequest struct {
 	DistanceMiles   int                 `json:"distance_miles"`
 }
 
+type AddNoteRequest struct {
+	Content string `json:"content"`
+}
+
 type BeginTripRequest struct {
 	DepartureTime time.Time `json:"departure_time"`
 }
@@ -83,6 +88,7 @@ type TripResponse struct {
 	Cargo           domain.Cargo        `json:"cargo"`
 	FuelUsage       float64             `json:"fuel_usage_gallons"`
 	DistanceMiles   int                 `json:"distance_miles"`
+	Notes           []domain.TripNote   `json:"notes"`
 	CreatedAt       primitive.DateTime  `json:"created_at"`
 	UpdatedAt       primitive.DateTime  `json:"updated_at"`
 }
@@ -144,6 +150,7 @@ func tripDomainToResponse(t *domain.Trip) TripResponse {
 		Cargo:           t.Cargo,
 		FuelUsage:       t.FuelUsage,
 		DistanceMiles:   t.DistanceMiles,
+		Notes:           t.Notes,
 		CreatedAt:       t.CreatedAt,
 		UpdatedAt:       t.UpdatedAt,
 	}
@@ -271,6 +278,39 @@ func (h *TripHandler) List(w http.ResponseWriter, r *http.Request) {
 	}
 
 	WriteJSON(w, http.StatusOK, response)
+}
+
+func (h *TripHandler) AddNote(w http.ResponseWriter, r *http.Request) {
+	idStr := mux.Vars(r)["id"]
+	objectID, err := primitive.ObjectIDFromHex(idStr)
+	if err != nil {
+		WriteJSON(w, http.StatusBadRequest, Response{Error: err.Error()})
+		return
+	}
+
+	var req AddNoteRequest
+	if err := ReadJSON(r, &req); err != nil {
+		WriteJSON(w, http.StatusBadRequest, Response{Error: "invalid request payload"})
+		return
+	}
+
+	if strings.TrimSpace(req.Content) == "" {
+		WriteJSON(w, http.StatusBadRequest, Response{Error: "note content cannot be empty"})
+		return
+	}
+
+	if err := h.tripService.AddNote(r.Context(), objectID, req.Content); err != nil {
+		WriteJSON(w, http.StatusInternalServerError, Response{Error: err.Error()})
+		return
+	}
+
+	updatedTrip, err := h.tripService.GetById(r.Context(), objectID)
+	if err != nil {
+		WriteJSON(w, http.StatusInternalServerError, Response{Error: "note added but failed to fetch updated trip"})
+		return
+	}
+
+	WriteJSON(w, http.StatusOK, Response{Data: tripDomainToResponse(updatedTrip)})
 }
 
 func (h *TripHandler) BeginTrip(w http.ResponseWriter, r *http.Request) {

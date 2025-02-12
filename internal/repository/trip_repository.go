@@ -135,6 +135,7 @@ func (r *tripRepository) Update(ctx context.Context, trip *domain.Trip) error {
 			"cargo":              trip.Cargo,
 			"fuel_usage_gallons": trip.FuelUsage,
 			"distance_miles":     trip.DistanceMiles,
+			"notes":              trip.Notes,
 			"updated_at":         primitive.NewDateTimeFromTime(time.Now()),
 		},
 	}

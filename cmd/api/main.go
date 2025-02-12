@@ -173,6 +173,7 @@ func registerTripRoutes(r *mux.Router, h *handler.TripHandler) {
 	r.HandleFunc("/trips/{id}", h.GetById).Methods(http.MethodGet)
 	r.HandleFunc("/trips/{id}", h.Update).Methods(http.MethodPut)
 	r.HandleFunc("/trips/{id}", h.Delete).Methods(http.MethodDelete)
+	r.HandleFunc("/trips/{id}/notes", h.AddNote).Methods(http.MethodPost)
 	r.HandleFunc("/trips/{id}/begin", h.BeginTrip).Methods(http.MethodPatch)
 	r.HandleFunc("/trips/{id}/cancel", h.CancelTrip).Methods(http.MethodPatch)
 	r.HandleFunc("/trips/{id}/finish/success", h.FinishTripSuccessfully).Methods(http.MethodPatch)

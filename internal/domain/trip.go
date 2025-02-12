@@ -1,6 +1,8 @@
 package domain
 
 import (
+	"fmt"
+	"strings"
 	"time"
 
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -14,6 +16,7 @@ const (
 	TripStatusCompleted      TripStatus = "COMPLETED"
 	TripStatusFailedDelivery TripStatus = "FAILED_DELIVERY"
 	TripStatusCanceled       TripStatus = "CANCELED"
+	MaxNoteLength                       = 1000
 )
 
 func (s TripStatus) IsValid() bool {
@@ -68,6 +71,7 @@ type Trip struct {
 	Cargo           Cargo               `bson:"cargo" json:"cargo"`
 	FuelUsage       float64             `bson:"fuel_usage_gallons" json:"fuel_usage_gallons"`
 	DistanceMiles   int                 `bson:"distance_miles" json:"distance_miles"`
+	Notes           []TripNote          `bson:"notes" json:"notes"`
 	CreatedAt       primitive.DateTime  `bson:"created_at" json:"created_at"`
 	UpdatedAt       primitive.DateTime  `bson:"updated_at" json:"updated_at"`
 }
@@ -75,6 +79,11 @@ type Trip struct {
 type TimeWindow struct {
 	Scheduled primitive.DateTime  `bson:"scheduled" json:"scheduled"`
 	Actual    *primitive.DateTime `bson:"actual,omitempty" json:"actual,omitempty"`
+}
+
+type TripNote struct {
+	NoteTimestamp time.Time `bson:"note_timestamp" json:"note_timestamp"`
+	Content       string    `json:"content" bson:"content"`
 }
 
 type Cargo struct {
@@ -109,7 +118,25 @@ func NewTrip(
 		Cargo:           cargo,
 		FuelUsage:       fuelUsage,
 		DistanceMiles:   distanceMiles,
+		Notes:           make([]TripNote, 0),
 		CreatedAt:       primitive.NewDateTimeFromTime(now),
 		UpdatedAt:       primitive.NewDateTimeFromTime(now),
 	}, nil
+}
+
+func (t *Trip) AddNote(content string) error {
+	content = strings.TrimSpace(content)
+	if content == "" {
+		return fmt.Errorf("note content cannot be empty")
+	}
+	if len(content) > MaxNoteLength {
+		return fmt.Errorf("note content exceeds maximum length of %d characters", MaxNoteLength)
+	}
+
+	note := TripNote{
+		NoteTimestamp: time.Now(),
+		Content:       content,
+	}
+	t.Notes = append(t.Notes, note)
+	return nil
 }
