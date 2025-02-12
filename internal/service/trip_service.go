@@ -100,11 +100,14 @@ func (s *tripService) List(ctx context.Context, limit, offset int64) (*repositor
 func (s *tripService) CancelTrip(ctx context.Context, id primitive.ObjectID) error {
 	trip, err := s.tripRepo.GetById(ctx, id)
 	if err != nil {
-		return fmt.Errorf(truckNotFound, err)
+		return fmt.Errorf(tripNotFound, err)
+	}
+
+	if err := trip.Status.CanTransitionTo(domain.TripStatusCanceled); err != nil {
+		return err
 	}
 
 	trip.Status = domain.TripStatusCanceled
-
 	return s.tripRepo.Update(ctx, trip)
 }
 
@@ -114,17 +117,15 @@ func (s *tripService) BeginTrip(ctx context.Context, id primitive.ObjectID, depa
 		return fmt.Errorf(tripNotFound, err)
 	}
 
-	if trip.Status != domain.TripStatusScheduled {
-		return fmt.Errorf("trip must be in scheduled state to begin, current state: %s", trip.Status)
+	if err := trip.Status.CanTransitionTo(domain.TripStatusInTransit); err != nil {
+		return err
 	}
 
 	departure := primitive.NewDateTimeFromTime(departureTime)
-
 	trip.DepartureTime = domain.TimeWindow{
 		Scheduled: trip.DepartureTime.Scheduled,
 		Actual:    &departure,
 	}
-
 	trip.Status = domain.TripStatusInTransit
 
 	return s.tripRepo.Update(ctx, trip)
@@ -136,17 +137,15 @@ func (s *tripService) FinishTripSuccessfully(ctx context.Context, id primitive.O
 		return fmt.Errorf(tripNotFound, err)
 	}
 
-	if trip.Status != domain.TripStatusInTransit {
-		return fmt.Errorf("trip must be in transit to finish, current state: %s", trip.Status)
+	if err := trip.Status.CanTransitionTo(domain.TripStatusCompleted); err != nil {
+		return err
 	}
 
 	arrival := primitive.NewDateTimeFromTime(arrivalTime)
-
 	trip.ArrivalTime = domain.TimeWindow{
 		Scheduled: trip.ArrivalTime.Scheduled,
 		Actual:    &arrival,
 	}
-
 	trip.Status = domain.TripStatusCompleted
 
 	return s.tripRepo.Update(ctx, trip)
@@ -158,13 +157,15 @@ func (s *tripService) FinishTripUnsuccessfully(ctx context.Context, id primitive
 		return fmt.Errorf(tripNotFound, err)
 	}
 
-	arrival := primitive.NewDateTimeFromTime(arrivalTime)
+	if err := trip.Status.CanTransitionTo(domain.TripStatusFailedDelivery); err != nil {
+		return err
+	}
 
+	arrival := primitive.NewDateTimeFromTime(arrivalTime)
 	trip.ArrivalTime = domain.TimeWindow{
 		Scheduled: trip.ArrivalTime.Scheduled,
 		Actual:    &arrival,
 	}
-
 	trip.Status = domain.TripStatusFailedDelivery
 
 	return s.tripRepo.Update(ctx, trip)

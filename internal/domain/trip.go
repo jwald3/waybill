@@ -28,6 +28,29 @@ func (s TripStatus) IsValid() bool {
 	return false
 }
 
+func (s TripStatus) CanTransitionTo(desired TripStatus) error {
+	allowedTransitions := map[TripStatus][]TripStatus{
+		TripStatusScheduled:      {TripStatusInTransit, TripStatusCanceled},
+		TripStatusInTransit:      {TripStatusCompleted, TripStatusFailedDelivery},
+		TripStatusCompleted:      {},
+		TripStatusFailedDelivery: {},
+		TripStatusCanceled:       {},
+	}
+
+	allowed, exists := allowedTransitions[s]
+	if !exists {
+		return &TripStateError{CurrentState: s, DesiredState: desired}
+	}
+
+	for _, allowedStatus := range allowed {
+		if allowedStatus == desired {
+			return nil
+		}
+	}
+
+	return &TripStateError{CurrentState: s, DesiredState: desired}
+}
+
 type Trip struct {
 	ID              primitive.ObjectID  `bson:"_id,omitempty" json:"_id,omitempty"`
 	TripNumber      string              `bson:"trip_number" json:"trip_number"`

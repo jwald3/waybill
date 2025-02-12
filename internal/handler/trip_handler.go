@@ -3,7 +3,6 @@ package handler
 import (
 	"fmt"
 	"net/http"
-	"strings"
 	"time"
 
 	"github.com/gorilla/mux"
@@ -294,7 +293,9 @@ func (h *TripHandler) BeginTrip(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err := h.tripService.BeginTrip(r.Context(), objectID, req.DepartureTime); err != nil {
-		if strings.Contains(err.Error(), "must be in scheduled state") {
+		// attempt to parse the error into the type "TripStateError". If it parses correctly,
+		// that means it is actually a trip state error and it needs to be handled as such
+		if _, ok := err.(*domain.TripStateError); ok {
 			WriteJSON(w, http.StatusConflict, Response{Error: err.Error()})
 			return
 		}

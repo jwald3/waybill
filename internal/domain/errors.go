@@ -21,3 +21,12 @@ type TripStateError struct {
 func (e *TripStateError) Error() string {
 	return fmt.Sprintf("invalid state transition from %s to %s", e.CurrentState, e.DesiredState)
 }
+
+type TruckStateError struct {
+	CurrentState TruckStatus
+	DesiredState TruckStatus
+}
+
+func (e *TruckStateError) Error() string {
+	return fmt.Sprintf("invalid state transition from %s to %s", e.CurrentState, e.DesiredState)
+}
