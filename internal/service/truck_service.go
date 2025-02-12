@@ -102,9 +102,13 @@ func (s *truckService) UpdateTruckStatus(ctx context.Context, id primitive.Objec
 	if err != nil {
 		return fmt.Errorf(truckNotFound, err)
 	}
-	if err := truck.ChangeTruckStatus(newStatus); err != nil {
+
+	if err := truck.Status.CanTransitionTo(newStatus); err != nil {
 		return err
 	}
+
+	truck.Status = newStatus
+
 	return s.truckRepo.Update(ctx, truck)
 }
 

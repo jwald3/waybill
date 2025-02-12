@@ -302,6 +302,11 @@ func (h *TruckHandler) UpdateTruckStatus(w http.ResponseWriter, r *http.Request)
 	}
 
 	if err := h.truckService.UpdateTruckStatus(r.Context(), objectID, req.Status); err != nil {
+		if _, ok := err.(*domain.TruckStateError); ok {
+			WriteJSON(w, http.StatusConflict, Response{Error: err.Error()})
+			return
+		}
+
 		WriteJSON(w, http.StatusInternalServerError, Response{Error: err.Error()})
 		return
 	}
