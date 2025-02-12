@@ -129,7 +129,7 @@ func (r *facilityRepository) List(ctx context.Context, limit, offset int64) (*Li
 
 	cursor, err := r.facilities.Find(ctx, bson.M{}, findOptions)
 	if err != nil {
-		return nil, fmt.Errorf("failed retrieve list of users: %w", err)
+		return nil, fmt.Errorf("failed retrieve list of facilities: %w", err)
 	}
 	defer cursor.Close(ctx)
 
