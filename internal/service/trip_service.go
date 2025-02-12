@@ -3,6 +3,7 @@ package service
 import (
 	"context"
 	"fmt"
+	"time"
 
 	"github.com/jwald3/waybill/internal/database"
 	"github.com/jwald3/waybill/internal/domain"
@@ -90,4 +91,69 @@ func (s *tripService) List(ctx context.Context, limit, offset int64) (*repositor
 	}
 
 	return result, nil
+}
+
+func (s *tripService) CancelTrip(ctx context.Context, id primitive.ObjectID) error {
+	trip, err := s.tripRepo.GetById(ctx, id)
+	if err != nil {
+		return fmt.Errorf(truckNotFound, err)
+	}
+
+	trip.Status = domain.TripStatusCanceled
+
+	return s.tripRepo.Update(ctx, trip)
+}
+
+func (s *tripService) BeginTrip(ctx context.Context, id primitive.ObjectID, departureTime time.Time) error {
+	trip, err := s.tripRepo.GetById(ctx, id)
+	if err != nil {
+		return fmt.Errorf(truckNotFound, err)
+	}
+
+	departure := primitive.NewDateTimeFromTime(departureTime)
+
+	trip.DepartureTime = domain.TimeWindow{
+		Scheduled: trip.DepartureTime.Scheduled,
+		Actual:    &departure,
+	}
+
+	trip.Status = domain.TripStatusInTransit
+
+	return s.tripRepo.Update(ctx, trip)
+}
+
+func (s *tripService) FinishTripSuccessfully(ctx context.Context, id primitive.ObjectID, arrivalTime time.Time) error {
+	trip, err := s.tripRepo.GetById(ctx, id)
+	if err != nil {
+		return fmt.Errorf(truckNotFound, err)
+	}
+
+	arrival := primitive.NewDateTimeFromTime(arrivalTime)
+
+	trip.DepartureTime = domain.TimeWindow{
+		Scheduled: trip.DepartureTime.Scheduled,
+		Actual:    &arrival,
+	}
+
+	trip.Status = domain.TripStatusCompleted
+
+	return s.tripRepo.Update(ctx, trip)
+}
+
+func (s *tripService) FinishTripUnsuccessfully(ctx context.Context, id primitive.ObjectID, arrivalTime time.Time) error {
+	trip, err := s.tripRepo.GetById(ctx, id)
+	if err != nil {
+		return fmt.Errorf(truckNotFound, err)
+	}
+
+	arrival := primitive.NewDateTimeFromTime(arrivalTime)
+
+	trip.DepartureTime = domain.TimeWindow{
+		Scheduled: trip.DepartureTime.Scheduled,
+		Actual:    &arrival,
+	}
+
+	trip.Status = domain.TripStatusFailedDelivery
+
+	return s.tripRepo.Update(ctx, trip)
 }

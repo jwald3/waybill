@@ -81,7 +81,6 @@ type ListTripsResponse struct {
 func tripRequestToDomainCreate(req TripCreateRequest) (*domain.Trip, error) {
 	return domain.NewTrip(
 		req.TripNumber,
-		req.Status,
 		req.DriverID,
 		req.TruckID,
 		req.StartFacilityID,
