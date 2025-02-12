@@ -3,6 +3,8 @@ package handler
 import (
 	"fmt"
 	"net/http"
+	"strings"
+	"time"
 
 	"github.com/gorilla/mux"
 	"github.com/jwald3/waybill/internal/domain"
@@ -51,6 +53,18 @@ type TripUpdateRequest struct {
 	Cargo           domain.Cargo        `json:"cargo"`
 	FuelUsage       float64             `json:"fuel_usage_gallons"`
 	DistanceMiles   int                 `json:"distance_miles"`
+}
+
+type BeginTripRequest struct {
+	DepartureTime time.Time `json:"departure_time"`
+}
+
+type FinishTripSuccessfullyRequest struct {
+	ArrivalTime time.Time `json:"arrival_time"`
+}
+
+type FinishTripUnsuccessfullyRequest struct {
+	ArrivalTime time.Time `json:"arrival_time"`
 }
 
 type TripResponse struct {
@@ -258,4 +272,129 @@ func (h *TripHandler) List(w http.ResponseWriter, r *http.Request) {
 	}
 
 	WriteJSON(w, http.StatusOK, response)
+}
+
+func (h *TripHandler) BeginTrip(w http.ResponseWriter, r *http.Request) {
+	idStr := mux.Vars(r)["id"]
+	objectID, err := primitive.ObjectIDFromHex(idStr)
+	if err != nil {
+		WriteJSON(w, http.StatusBadRequest, Response{Error: err.Error()})
+		return
+	}
+
+	var req BeginTripRequest
+	if err := ReadJSON(r, &req); err != nil {
+		WriteJSON(w, http.StatusBadRequest, Response{Error: "invalid request payload"})
+		return
+	}
+
+	if req.DepartureTime.IsZero() {
+		WriteJSON(w, http.StatusBadRequest, Response{Error: "departure time is required"})
+		return
+	}
+
+	if err := h.tripService.BeginTrip(r.Context(), objectID, req.DepartureTime); err != nil {
+		if strings.Contains(err.Error(), "must be in scheduled state") {
+			WriteJSON(w, http.StatusConflict, Response{Error: err.Error()})
+			return
+		}
+		WriteJSON(w, http.StatusInternalServerError, Response{Error: err.Error()})
+		return
+	}
+
+	updatedTrip, err := h.tripService.GetById(r.Context(), objectID)
+	if err != nil {
+		WriteJSON(w, http.StatusInternalServerError, Response{Error: "departure time set but failed to fetch updated trip"})
+		return
+	}
+
+	WriteJSON(w, http.StatusOK, Response{Data: tripDomainToResponse(updatedTrip)})
+}
+
+func (h *TripHandler) CancelTrip(w http.ResponseWriter, r *http.Request) {
+	idStr := mux.Vars(r)["id"]
+	objectID, err := primitive.ObjectIDFromHex(idStr)
+	if err != nil {
+		WriteJSON(w, http.StatusBadRequest, Response{Error: err.Error()})
+		return
+	}
+
+	if err := h.tripService.CancelTrip(r.Context(), objectID); err != nil {
+		WriteJSON(w, http.StatusInternalServerError, Response{Error: err.Error()})
+		return
+	}
+
+	updatedTrip, err := h.tripService.GetById(r.Context(), objectID)
+	if err != nil {
+		WriteJSON(w, http.StatusInternalServerError, Response{Error: "trip cancelled but failed to fetch updated trip"})
+		return
+	}
+
+	WriteJSON(w, http.StatusOK, Response{Data: tripDomainToResponse(updatedTrip)})
+}
+
+func (h *TripHandler) FinishTripSuccessfully(w http.ResponseWriter, r *http.Request) {
+	idStr := mux.Vars(r)["id"]
+	objectID, err := primitive.ObjectIDFromHex(idStr)
+	if err != nil {
+		WriteJSON(w, http.StatusBadRequest, Response{Error: err.Error()})
+		return
+	}
+
+	var req FinishTripSuccessfullyRequest
+	if err := ReadJSON(r, &req); err != nil {
+		WriteJSON(w, http.StatusBadRequest, Response{Error: "invalid request payload"})
+		return
+	}
+
+	if req.ArrivalTime.IsZero() {
+		WriteJSON(w, http.StatusBadRequest, Response{Error: "arrival time is required"})
+		return
+	}
+
+	if err := h.tripService.FinishTripSuccessfully(r.Context(), objectID, req.ArrivalTime); err != nil {
+		WriteJSON(w, http.StatusInternalServerError, Response{Error: err.Error()})
+		return
+	}
+
+	updatedTrip, err := h.tripService.GetById(r.Context(), objectID)
+	if err != nil {
+		WriteJSON(w, http.StatusInternalServerError, Response{Error: "arrival time set but failed to fetch updated trip"})
+		return
+	}
+
+	WriteJSON(w, http.StatusOK, Response{Data: tripDomainToResponse(updatedTrip)})
+}
+
+func (h *TripHandler) FinishTripUnsuccessfully(w http.ResponseWriter, r *http.Request) {
+	idStr := mux.Vars(r)["id"]
+	objectID, err := primitive.ObjectIDFromHex(idStr)
+	if err != nil {
+		WriteJSON(w, http.StatusBadRequest, Response{Error: err.Error()})
+		return
+	}
+
+	var req FinishTripUnsuccessfullyRequest
+	if err := ReadJSON(r, &req); err != nil {
+		WriteJSON(w, http.StatusBadRequest, Response{Error: "invalid request payload"})
+		return
+	}
+
+	if req.ArrivalTime.IsZero() {
+		WriteJSON(w, http.StatusBadRequest, Response{Error: "arrival time is required"})
+		return
+	}
+
+	if err := h.tripService.FinishTripUnsuccessfully(r.Context(), objectID, req.ArrivalTime); err != nil {
+		WriteJSON(w, http.StatusInternalServerError, Response{Error: err.Error()})
+		return
+	}
+
+	updatedTrip, err := h.tripService.GetById(r.Context(), objectID)
+	if err != nil {
+		WriteJSON(w, http.StatusInternalServerError, Response{Error: "arrival time set but failed to fetch updated trip"})
+		return
+	}
+
+	WriteJSON(w, http.StatusOK, Response{Data: tripDomainToResponse(updatedTrip)})
 }

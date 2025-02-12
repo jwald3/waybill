@@ -111,7 +111,11 @@ func (s *tripService) CancelTrip(ctx context.Context, id primitive.ObjectID) err
 func (s *tripService) BeginTrip(ctx context.Context, id primitive.ObjectID, departureTime time.Time) error {
 	trip, err := s.tripRepo.GetById(ctx, id)
 	if err != nil {
-		return fmt.Errorf(truckNotFound, err)
+		return fmt.Errorf(tripNotFound, err)
+	}
+
+	if trip.Status != domain.TripStatusScheduled {
+		return fmt.Errorf("trip must be in scheduled state to begin, current state: %s", trip.Status)
 	}
 
 	departure := primitive.NewDateTimeFromTime(departureTime)
@@ -129,13 +133,17 @@ func (s *tripService) BeginTrip(ctx context.Context, id primitive.ObjectID, depa
 func (s *tripService) FinishTripSuccessfully(ctx context.Context, id primitive.ObjectID, arrivalTime time.Time) error {
 	trip, err := s.tripRepo.GetById(ctx, id)
 	if err != nil {
-		return fmt.Errorf(truckNotFound, err)
+		return fmt.Errorf(tripNotFound, err)
+	}
+
+	if trip.Status != domain.TripStatusInTransit {
+		return fmt.Errorf("trip must be in transit to finish, current state: %s", trip.Status)
 	}
 
 	arrival := primitive.NewDateTimeFromTime(arrivalTime)
 
-	trip.DepartureTime = domain.TimeWindow{
-		Scheduled: trip.DepartureTime.Scheduled,
+	trip.ArrivalTime = domain.TimeWindow{
+		Scheduled: trip.ArrivalTime.Scheduled,
 		Actual:    &arrival,
 	}
 
@@ -147,13 +155,13 @@ func (s *tripService) FinishTripSuccessfully(ctx context.Context, id primitive.O
 func (s *tripService) FinishTripUnsuccessfully(ctx context.Context, id primitive.ObjectID, arrivalTime time.Time) error {
 	trip, err := s.tripRepo.GetById(ctx, id)
 	if err != nil {
-		return fmt.Errorf(truckNotFound, err)
+		return fmt.Errorf(tripNotFound, err)
 	}
 
 	arrival := primitive.NewDateTimeFromTime(arrivalTime)
 
-	trip.DepartureTime = domain.TimeWindow{
-		Scheduled: trip.DepartureTime.Scheduled,
+	trip.ArrivalTime = domain.TimeWindow{
+		Scheduled: trip.ArrivalTime.Scheduled,
 		Actual:    &arrival,
 	}
 
