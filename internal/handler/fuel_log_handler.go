@@ -25,8 +25,7 @@ var (
 // DTOS =======================================================
 
 type FuelLogCreateRequest struct {
-	TruckID          *primitive.ObjectID `json:"truck_id"`
-	DriverID         *primitive.ObjectID `json:"driver_id"`
+	TripID           *primitive.ObjectID `json:"trip_id"`
 	Date             string              `json:"date"`
 	GallonsPurchased float64             `json:"gallons_purchased"`
 	PricePerGallon   float64             `json:"price_per_gallon"`
@@ -36,8 +35,7 @@ type FuelLogCreateRequest struct {
 }
 
 type FuelLogUpdateRequest struct {
-	TruckID          *primitive.ObjectID `json:"truck_id"`
-	DriverID         *primitive.ObjectID `json:"driver_id"`
+	TripID           *primitive.ObjectID `json:"trip_id"`
 	Date             string              `json:"date"`
 	GallonsPurchased float64             `json:"gallons_purchased"`
 	PricePerGallon   float64             `json:"price_per_gallon"`
@@ -48,10 +46,8 @@ type FuelLogUpdateRequest struct {
 
 type FuelLogResponse struct {
 	ID               primitive.ObjectID  `json:"id,omitempty"`
-	TruckID          *primitive.ObjectID `json:"truck_id,omitempty"`
-	Truck            *domain.Truck       `json:"truck,omitempty"`
-	DriverID         *primitive.ObjectID `json:"driver_id,omitempty"`
-	Driver           *domain.Driver      `json:"driver,omitempty"`
+	TripID           *primitive.ObjectID `json:"trip_id,omitempty"`
+	Trip             *domain.Trip        `json:"trip,omitempty"`
 	Date             string              `json:"date"`
 	GallonsPurchased float64             `json:"gallons_purchased"`
 	PricePerGallon   float64             `json:"price_per_gallon"`
@@ -68,8 +64,7 @@ type ListFuelLogsResponse struct {
 
 func fuelLogRequestToDomainCreate(req FuelLogCreateRequest) (*domain.FuelLog, error) {
 	return domain.NewFuelLog(
-		req.TruckID,
-		req.DriverID,
+		req.TripID,
 		req.Date,
 		req.Location,
 		req.GallonsPurchased,
@@ -82,8 +77,7 @@ func fuelLogRequestToDomainCreate(req FuelLogCreateRequest) (*domain.FuelLog, er
 func fuelLogRequestToDomainUpdate(req FuelLogUpdateRequest) (*domain.FuelLog, error) {
 
 	return &domain.FuelLog{
-		TruckID:          req.TruckID,
-		DriverID:         req.DriverID,
+		TripID:           req.TripID,
 		Date:             req.Date,
 		GallonsPurchased: req.GallonsPurchased,
 		PricePerGallon:   req.PricePerGallon,
@@ -96,10 +90,8 @@ func fuelLogRequestToDomainUpdate(req FuelLogUpdateRequest) (*domain.FuelLog, er
 func fuelLogDomainToResponse(f *domain.FuelLog) FuelLogResponse {
 	return FuelLogResponse{
 		ID:               f.ID,
-		TruckID:          f.TruckID,
-		Truck:            f.Truck,
-		DriverID:         f.DriverID,
-		Driver:           f.Driver,
+		TripID:           f.TripID,
+		Trip:             f.Trip,
 		Date:             f.Date,
 		GallonsPurchased: f.GallonsPurchased,
 		PricePerGallon:   f.PricePerGallon,

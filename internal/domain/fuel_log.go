@@ -8,10 +8,8 @@ import (
 
 type FuelLog struct {
 	ID               primitive.ObjectID  `bson:"_id,omitempty" json:"id,omitempty"`
-	TruckID          *primitive.ObjectID `bson:"truck_id,omitempty" json:"truck_id,omitempty"`
-	Truck            *Truck              `bson:"truck,omitempty" json:"truck,omitempty"`
-	DriverID         *primitive.ObjectID `bson:"driver_id,omitempty" json:"driver_id,omitempty"`
-	Driver           *Driver             `bson:"driver,omitempty" json:"driver,omitempty"`
+	TripID           *primitive.ObjectID `bson:"trip_id,omitempty" json:"trip_id,omitempty"`
+	Trip             *Trip               `bson:"trip,omitempty" json:"trip,omitempty"`
 	Date             string              `bson:"date" json:"date"`
 	GallonsPurchased float64             `bson:"gallons_purchased" json:"gallons_purchased"`
 	PricePerGallon   float64             `bson:"price_per_gallon" json:"price_per_gallon"`
@@ -23,8 +21,7 @@ type FuelLog struct {
 }
 
 func NewFuelLog(
-	truckId,
-	driverId *primitive.ObjectID,
+	tripId *primitive.ObjectID,
 	date,
 	location string,
 	gallonsPurchased,
@@ -34,8 +31,7 @@ func NewFuelLog(
 	now := time.Now()
 
 	return &FuelLog{
-		TruckID:          truckId,
-		DriverID:         driverId,
+		TripID:           tripId,
 		Date:             date,
 		GallonsPurchased: gallonsPurchased,
 		PricePerGallon:   pricePerGallon,

@@ -54,29 +54,18 @@ func (r *fuelLogRepository) GetById(ctx context.Context, id primitive.ObjectID) 
 			"_id": id,
 		}}},
 		{{Key: "$lookup", Value: bson.M{
-			"from":         "trucks",
-			"localField":   "truck_id",
+			"from":         "trips",
+			"localField":   "trip_id",
 			"foreignField": "_id",
-			"as":           "truck",
+			"as":           "trip",
 		}}},
 		{{Key: "$unwind", Value: bson.M{
-			"path":                       "$truck",
-			"preserveNullAndEmptyArrays": true,
-		}}},
-		{{Key: "$lookup", Value: bson.M{
-			"from":         "drivers",
-			"localField":   "driver_id",
-			"foreignField": "_id",
-			"as":           "driver",
-		}}},
-		{{Key: "$unwind", Value: bson.M{
-			"path":                       "$driver",
+			"path":                       "$trip",
 			"preserveNullAndEmptyArrays": true,
 		}}},
 		{{
 			Key: "$project", Value: bson.M{
-				"truck_id":  0,
-				"driver_id": 0,
+				"truck_id": 0,
 			},
 		}},
 	}
@@ -106,8 +95,7 @@ func (r *fuelLogRepository) Update(ctx context.Context, fuelLog *domain.FuelLog)
 	filter := bson.M{"_id": fuelLog.ID}
 	update := bson.M{
 		"$set": bson.M{
-			"truck_id":          fuelLog.TruckID,
-			"driver_id":         fuelLog.DriverID,
+			"trip_id":           fuelLog.TripID,
 			"date":              fuelLog.Date,
 			"gallons_purchased": fuelLog.GallonsPurchased,
 			"price_per_gallon":  fuelLog.PricePerGallon,
@@ -164,36 +152,25 @@ func (r *fuelLogRepository) List(ctx context.Context, limit, offset int64) (*Lis
 		{{Key: "$skip", Value: offset}},
 		{{Key: "$limit", Value: limit}},
 		{{Key: "$lookup", Value: bson.M{
-			"from":         "trucks",
-			"localField":   "truck_id",
+			"from":         "trips",
+			"localField":   "trip_id",
 			"foreignField": "_id",
-			"as":           "truck",
+			"as":           "trip",
 		}}},
 		{{Key: "$unwind", Value: bson.M{
-			"path":                       "$truck",
-			"preserveNullAndEmptyArrays": true,
-		}}},
-		{{Key: "$lookup", Value: bson.M{
-			"from":         "drivers",
-			"localField":   "driver_id",
-			"foreignField": "_id",
-			"as":           "driver",
-		}}},
-		{{Key: "$unwind", Value: bson.M{
-			"path":                       "$driver",
+			"path":                       "$trip",
 			"preserveNullAndEmptyArrays": true,
 		}}},
 		{{
 			Key: "$project", Value: bson.M{
-				"truck_id":  0,
-				"driver_id": 0,
+				"truck_id": 0,
 			},
 		}},
 	}
 
 	cursor, err := r.fuelLogs.Aggregate(ctx, pipeline)
 	if err != nil {
-		return nil, fmt.Errorf("failed retrieve list of users: %w", err)
+		return nil, fmt.Errorf("failed to retrieve list of fuel logs: %w", err)
 	}
 	defer cursor.Close(ctx)
 
