@@ -83,14 +83,6 @@ func NewTrip(
 	fuelUsage float64,
 	distanceMiles int) (*Trip, error) {
 
-	sm := statemachine.NewStateMachine(TripStatusScheduled)
-
-	// Add all valid transitions
-	sm.AddTransition(TripStatusScheduled, TripStatusInTransit)
-	sm.AddTransition(TripStatusScheduled, TripStatusCanceled)
-	sm.AddTransition(TripStatusInTransit, TripStatusCompleted)
-	sm.AddTransition(TripStatusInTransit, TripStatusFailedDelivery)
-
 	now := time.Now()
 
 	trip := &Trip{
@@ -108,30 +100,47 @@ func NewTrip(
 		Notes:           make([]TripNote, 0),
 		CreatedAt:       primitive.NewDateTimeFromTime(now),
 		UpdatedAt:       primitive.NewDateTimeFromTime(now),
-		StateMachine:    sm,
 	}
 
+	if err := trip.initializeStateMachine(); err != nil {
+		return nil, fmt.Errorf("failed to initialize state machine: %w", err)
+	}
+
+	return trip, nil
+}
+
+func (t *Trip) initializeStateMachine() error {
+	sm := statemachine.NewStateMachine(TripStatusScheduled)
+
+	// Add all valid transitions
+	sm.AddTransition(TripStatusScheduled, TripStatusInTransit)
+	sm.AddTransition(TripStatusScheduled, TripStatusCanceled)
+	sm.AddTransition(TripStatusInTransit, TripStatusCompleted)
+	sm.AddTransition(TripStatusInTransit, TripStatusFailedDelivery)
+
+	// Configure entry actions
 	sm.SetEntryAction(TripStatusInTransit, func() error {
-		trip.Status = TripStatusInTransit
+		t.Status = TripStatusInTransit
 		return nil
 	})
 
 	sm.SetEntryAction(TripStatusCompleted, func() error {
-		trip.Status = TripStatusCompleted
+		t.Status = TripStatusCompleted
 		return nil
 	})
 
 	sm.SetEntryAction(TripStatusFailedDelivery, func() error {
-		trip.Status = TripStatusFailedDelivery
+		t.Status = TripStatusFailedDelivery
 		return nil
 	})
 
 	sm.SetEntryAction(TripStatusCanceled, func() error {
-		trip.Status = TripStatusCanceled
+		t.Status = TripStatusCanceled
 		return nil
 	})
 
-	return trip, nil
+	t.StateMachine = sm
+	return nil
 }
 
 func (t *Trip) BeginTrip(departureTime time.Time) error {
