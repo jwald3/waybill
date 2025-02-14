@@ -5,6 +5,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/jwald3/lollipop/pkg/statemachine"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
@@ -31,29 +32,6 @@ func (s TripStatus) IsValid() bool {
 	return false
 }
 
-func (s TripStatus) CanTransitionTo(desired TripStatus) error {
-	allowedTransitions := map[TripStatus][]TripStatus{
-		TripStatusScheduled:      {TripStatusInTransit, TripStatusCanceled},
-		TripStatusInTransit:      {TripStatusCompleted, TripStatusFailedDelivery},
-		TripStatusCompleted:      {},
-		TripStatusFailedDelivery: {},
-		TripStatusCanceled:       {},
-	}
-
-	allowed, exists := allowedTransitions[s]
-	if !exists {
-		return &TripStateError{CurrentState: s, DesiredState: desired}
-	}
-
-	for _, allowedStatus := range allowed {
-		if allowedStatus == desired {
-			return nil
-		}
-	}
-
-	return &TripStateError{CurrentState: s, DesiredState: desired}
-}
-
 type Trip struct {
 	ID              primitive.ObjectID  `bson:"_id,omitempty" json:"_id,omitempty"`
 	TripNumber      string              `bson:"trip_number" json:"trip_number"`
@@ -74,6 +52,7 @@ type Trip struct {
 	Notes           []TripNote          `bson:"notes" json:"notes"`
 	CreatedAt       primitive.DateTime  `bson:"created_at" json:"created_at"`
 	UpdatedAt       primitive.DateTime  `bson:"updated_at" json:"updated_at"`
+	StateMachine    *statemachine.StateMachine
 }
 
 type TimeWindow struct {
@@ -104,9 +83,17 @@ func NewTrip(
 	fuelUsage float64,
 	distanceMiles int) (*Trip, error) {
 
+	sm := statemachine.NewStateMachine(TripStatusScheduled)
+
+	// Add all valid transitions
+	sm.AddTransition(TripStatusScheduled, TripStatusInTransit)
+	sm.AddTransition(TripStatusScheduled, TripStatusCanceled)
+	sm.AddTransition(TripStatusInTransit, TripStatusCompleted)
+	sm.AddTransition(TripStatusInTransit, TripStatusFailedDelivery)
+
 	now := time.Now()
 
-	return &Trip{
+	trip := &Trip{
 		TripNumber:      tripNumber,
 		DriverID:        driverId,
 		TruckID:         truckId,
@@ -121,7 +108,87 @@ func NewTrip(
 		Notes:           make([]TripNote, 0),
 		CreatedAt:       primitive.NewDateTimeFromTime(now),
 		UpdatedAt:       primitive.NewDateTimeFromTime(now),
-	}, nil
+		StateMachine:    sm,
+	}
+
+	sm.SetEntryAction(TripStatusInTransit, func() error {
+		trip.Status = TripStatusInTransit
+		return nil
+	})
+
+	sm.SetEntryAction(TripStatusCompleted, func() error {
+		trip.Status = TripStatusCompleted
+		return nil
+	})
+
+	sm.SetEntryAction(TripStatusFailedDelivery, func() error {
+		trip.Status = TripStatusFailedDelivery
+		return nil
+	})
+
+	sm.SetEntryAction(TripStatusCanceled, func() error {
+		trip.Status = TripStatusCanceled
+		return nil
+	})
+
+	return trip, nil
+}
+
+func (t *Trip) BeginTrip(departureTime time.Time) error {
+	if err := t.StateMachine.Transition(TripStatusInTransit); err != nil {
+		return fmt.Errorf("failed to start trip from status %s: %w", t.Status, err)
+	}
+
+	departure := primitive.NewDateTimeFromTime(departureTime)
+
+	t.DepartureTime = TimeWindow{
+		Scheduled: t.DepartureTime.Scheduled,
+		Actual:    &departure,
+	}
+
+	t.UpdatedAt = primitive.NewDateTimeFromTime(time.Now())
+	return nil
+}
+
+func (t *Trip) CancelTrip() error {
+	if err := t.StateMachine.Transition(TripStatusCanceled); err != nil {
+		return fmt.Errorf("failed to cancel trip from status %s: %w", t.Status, err)
+	}
+
+	t.UpdatedAt = primitive.NewDateTimeFromTime(time.Now())
+	return nil
+}
+
+func (t *Trip) CompleteTripSuccessfully(arrivalTime time.Time) error {
+	if err := t.StateMachine.Transition(TripStatusCompleted); err != nil {
+		return fmt.Errorf("failed to complete trip from status %s: %w", t.Status, err)
+	}
+
+	now := time.Now()
+
+	arrival := primitive.NewDateTimeFromTime(arrivalTime)
+	t.ArrivalTime = TimeWindow{
+		Scheduled: t.ArrivalTime.Scheduled,
+		Actual:    &arrival,
+	}
+	t.UpdatedAt = primitive.NewDateTimeFromTime(now)
+	return nil
+}
+
+func (t *Trip) CompleteTripUnsuccessfully(arrivalTime time.Time) error {
+	if err := t.StateMachine.Transition(TripStatusFailedDelivery); err != nil {
+		return fmt.Errorf("failed to mark trip as failed delivery from status %s: %w", t.Status, err)
+	}
+
+	now := time.Now()
+
+	arrival := primitive.NewDateTimeFromTime(arrivalTime)
+	t.ArrivalTime = TimeWindow{
+		Scheduled: t.ArrivalTime.Scheduled,
+		Actual:    &arrival,
+	}
+	t.UpdatedAt = primitive.NewDateTimeFromTime(now)
+	return nil
 }
 
 func (t *Trip) AddNote(content string) error {
