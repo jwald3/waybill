@@ -116,6 +116,7 @@ func tripRequestToDomainUpdate(req TripUpdateRequest) (*domain.Trip, error) {
 		Cargo:           req.Cargo,
 		FuelUsage:       req.FuelUsage,
 		DistanceMiles:   req.DistanceMiles,
+		Notes:           make([]domain.TripNote, 0),
 	}, nil
 }
 

@@ -57,6 +57,10 @@ func (s *tripService) GetById(ctx context.Context, id primitive.ObjectID) (*doma
 		return nil, fmt.Errorf("trip with ID %v not found", id)
 	}
 
+	if trip.Notes == nil {
+		trip.Notes = make([]domain.TripNote, 0)
+	}
+
 	// Initialize the state machine for the retrieved trip
 	if err := trip.InitializeStateMachine(); err != nil {
 		return nil, fmt.Errorf("failed to initialize state machine: %w", err)
@@ -105,6 +109,11 @@ func (s *tripService) List(ctx context.Context, limit, offset int64) (*repositor
 
 func (s *tripService) AddNote(ctx context.Context, id primitive.ObjectID, content string) error {
 	trip, err := s.tripRepo.GetById(ctx, id)
+
+	if trip == nil {
+		return fmt.Errorf("trip with ID %v not found", id)
+	}
+
 	if err != nil {
 		return fmt.Errorf(tripNotFound, err)
 	}

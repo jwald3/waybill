@@ -214,5 +214,6 @@ func (t *Trip) AddNote(content string) error {
 		Content:       content,
 	}
 	t.Notes = append(t.Notes, note)
+
 	return nil
 }
