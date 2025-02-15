@@ -291,6 +291,7 @@ func (h *TripHandler) AddNote(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// Get the updated trip to return in the response
 	updatedTrip, err := h.tripService.GetById(r.Context(), objectID)
 	if err != nil {
 		WriteJSON(w, http.StatusInternalServerError, Response{Error: "note added but failed to fetch updated trip"})

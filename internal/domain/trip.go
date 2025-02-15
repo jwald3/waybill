@@ -102,14 +102,14 @@ func NewTrip(
 		UpdatedAt:       primitive.NewDateTimeFromTime(now),
 	}
 
-	if err := trip.initializeStateMachine(); err != nil {
+	if err := trip.InitializeStateMachine(); err != nil {
 		return nil, fmt.Errorf("failed to initialize state machine: %w", err)
 	}
 
 	return trip, nil
 }
 
-func (t *Trip) initializeStateMachine() error {
+func (t *Trip) InitializeStateMachine() error {
 	sm := statemachine.NewStateMachine(TripStatusScheduled)
 
 	// Add all valid transitions
