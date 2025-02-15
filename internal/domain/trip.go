@@ -5,7 +5,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/jwald3/lollipop/pkg/statemachine"
+	statemachine "github.com/jwald3/lollipop"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
@@ -113,10 +113,10 @@ func (t *Trip) initializeStateMachine() error {
 	sm := statemachine.NewStateMachine(TripStatusScheduled)
 
 	// Add all valid transitions
-	sm.AddTransition(TripStatusScheduled, TripStatusInTransit)
-	sm.AddTransition(TripStatusScheduled, TripStatusCanceled)
-	sm.AddTransition(TripStatusInTransit, TripStatusCompleted)
-	sm.AddTransition(TripStatusInTransit, TripStatusFailedDelivery)
+	sm.AddSimpleTransition(TripStatusScheduled, TripStatusInTransit)
+	sm.AddSimpleTransition(TripStatusScheduled, TripStatusCanceled)
+	sm.AddSimpleTransition(TripStatusInTransit, TripStatusCompleted)
+	sm.AddSimpleTransition(TripStatusInTransit, TripStatusFailedDelivery)
 
 	// Configure entry actions
 	sm.SetEntryAction(TripStatusInTransit, func() error {

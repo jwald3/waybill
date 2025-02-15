@@ -10,6 +10,8 @@ github.com/jwald3/lollipop v0.0.0-20250214010153-0c118b253671 h1:Z4Jrg4Lj1kTC0s2
 github.com/jwald3/lollipop v0.0.0-20250214010153-0c118b253671/go.mod h1:hq+k92xB034jHePTycH0+gVaANaLtGhJDsIyiSMWiiE=
 github.com/jwald3/lollipop v0.0.0-20250214043102-ff1513802085 h1:EDTt3qcs3T0ZZhlf5fZyr0SvtNhYvDmJfiKZ97usKWk=
 github.com/jwald3/lollipop v0.0.0-20250214043102-ff1513802085/go.mod h1:hq+k92xB034jHePTycH0+gVaANaLtGhJDsIyiSMWiiE=
+github.com/jwald3/lollipop v0.0.0-20250215012859-65e4ec051282 h1:xBlQZK4tyw3HvEy+G3Q/siI4R/xXcYV3mvOKGSTYsdk=
+github.com/jwald3/lollipop v0.0.0-20250215012859-65e4ec051282/go.mod h1:u0J/etVV8eQQ++yqzul3Atvn4ZDi2rQpO2OlcXRJVTY=
 github.com/klauspost/compress v1.16.7 h1:2mk3MPGNzKyxErAw8YaohYh69+pa4sIQSC0fPGCFR9I=
 github.com/klauspost/compress v1.16.7/go.mod h1:ntbaceVETuRiXiv4DpjP66DpAtAGkEQskQzEyD//IeE=
 github.com/montanaflynn/stats v0.7.1 h1:etflOAAHORrCC44V+aR6Ftzort912ZU+YLiSTuV8eaE=
