@@ -18,8 +18,7 @@ func NewDriverHandler(driverService service.DriverService) *DriverHandler {
 }
 
 var (
-	invalidDriverId   = "invalid driver id"
-	invalidDriverPath = "invalid path"
+	invalidDriverId = "invalid driver id"
 )
 
 // DTOS =======================================================

@@ -19,8 +19,7 @@ func NewTruckHandler(truckService service.TruckService) *TruckHandler {
 }
 
 var (
-	invalidTruckId   = "invalid truck id"
-	invalidTruckPath = "invalid path"
+	invalidTruckId = "invalid truck id"
 )
 
 // DTOS =======================================================

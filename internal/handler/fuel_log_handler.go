@@ -18,8 +18,7 @@ func NewFuelLogHandler(fuelLogService service.FuelLogService) *FuelLogHandler {
 }
 
 var (
-	invalidFuelLogId   = "invalid fuel log id"
-	invalidFuelLogPath = "invalid path"
+	invalidFuelLogId = "invalid fuel log id"
 )
 
 // DTOS =======================================================

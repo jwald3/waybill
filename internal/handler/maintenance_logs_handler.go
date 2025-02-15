@@ -18,11 +18,6 @@ func NewMaintenanceLogHandler(maintenanceLogService service.MaintenanceLogServic
 	return &MaintenanceLogHandler{maintenanceLogService: maintenanceLogService}
 }
 
-var (
-	invalidMaintenanceLogId   = "invalid maintenance log id"
-	invalidMaintenanceLogPath = "invalid path"
-)
-
 // DTOS =======================================================
 
 type MaintenanceLogCreateRequest struct {

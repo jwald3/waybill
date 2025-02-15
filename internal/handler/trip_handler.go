@@ -20,11 +20,6 @@ func NewTripHandler(tripService service.TripService) *TripHandler {
 	return &TripHandler{tripService: tripService}
 }
 
-var (
-	invalidTripId   = "invalid trip id"
-	invalidTripPath = "invalid path"
-)
-
 // DTOS =======================================================
 
 type TripCreateRequest struct {

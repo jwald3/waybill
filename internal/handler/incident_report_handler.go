@@ -19,8 +19,7 @@ func NewIncidentReportHandler(incidentReportService service.IncidentReportServic
 }
 
 var (
-	invalidIncidentReportId   = "invalid incident report id"
-	invalidIncidentReportPath = "invalid path"
+	invalidIncidentReportId = "invalid incident report id"
 )
 
 // DTOS =======================================================

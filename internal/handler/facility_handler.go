@@ -19,8 +19,7 @@ func NewFacilityHandler(facilityService service.FacilityService) *FacilityHandle
 }
 
 var (
-	invalidFacilityId   = "invalid facility id"
-	invalidFacilityPath = "invalid path"
+	invalidFacilityId = "invalid facility id"
 )
 
 // DTOS =======================================================
