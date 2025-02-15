@@ -1,7 +1,6 @@
 package handler
 
 import (
-	"fmt"
 	"net/http"
 	"strings"
 	"time"
@@ -30,7 +29,6 @@ type TripCreateRequest struct {
 	EndFacilityID   *primitive.ObjectID `json:"end_facility_id"`
 	DepartureTime   domain.TimeWindow   `json:"departure_time"`
 	ArrivalTime     domain.TimeWindow   `json:"arrival_time"`
-	Status          domain.TripStatus   `json:"status"`
 	Cargo           domain.Cargo        `json:"cargo"`
 	FuelUsage       float64             `json:"fuel_usage_gallons"`
 	DistanceMiles   int                 `json:"distance_miles"`
@@ -44,7 +42,6 @@ type TripUpdateRequest struct {
 	EndFacilityID   *primitive.ObjectID `json:"end_facility_id"`
 	DepartureTime   domain.TimeWindow   `json:"departure_time"`
 	ArrivalTime     domain.TimeWindow   `json:"arrival_time"`
-	Status          domain.TripStatus   `json:"status"`
 	Cargo           domain.Cargo        `json:"cargo"`
 	FuelUsage       float64             `json:"fuel_usage_gallons"`
 	DistanceMiles   int                 `json:"distance_miles"`
@@ -108,10 +105,6 @@ func tripRequestToDomainCreate(req TripCreateRequest) (*domain.Trip, error) {
 }
 
 func tripRequestToDomainUpdate(req TripUpdateRequest) (*domain.Trip, error) {
-	if !req.Status.IsValid() {
-		return nil, fmt.Errorf("invalid status provided: %s", req.Status)
-	}
-
 	return &domain.Trip{
 		TripNumber:      req.TripNumber,
 		DriverID:        req.DriverID,
@@ -120,7 +113,6 @@ func tripRequestToDomainUpdate(req TripUpdateRequest) (*domain.Trip, error) {
 		EndFacilityID:   req.EndFacilityID,
 		DepartureTime:   req.DepartureTime,
 		ArrivalTime:     req.ArrivalTime,
-		Status:          req.Status,
 		Cargo:           req.Cargo,
 		FuelUsage:       req.FuelUsage,
 		DistanceMiles:   req.DistanceMiles,

@@ -33,26 +33,26 @@ func (s TripStatus) IsValid() bool {
 }
 
 type Trip struct {
-	ID              primitive.ObjectID  `bson:"_id,omitempty" json:"_id,omitempty"`
-	TripNumber      string              `bson:"trip_number" json:"trip_number"`
-	DriverID        *primitive.ObjectID `bson:"driver_id,omitempty" json:"driver_id,omitempty"`
-	Driver          *Driver             `bson:"driver,omitempty" json:"driver,omitempty"`
-	TruckID         *primitive.ObjectID `bson:"truck_id,omitempty" json:"truck_id,omitempty"`
-	Truck           *Truck              `bson:"truck,omitempty" json:"truck,omitempty"`
-	StartFacilityID *primitive.ObjectID `bson:"start_facility_id,omitempty" json:"start_facility_id,omitempty"`
-	StartFacility   *Facility           `bson:"start_facility,omitempty" json:"start_facility,omitempty"`
-	EndFacilityID   *primitive.ObjectID `bson:"end_facility_id,omitempty" json:"end_facility_id,omitempty"`
-	EndFacility     *Facility           `bson:"end_facility,omitempty" json:"end_facility,omitempty"`
-	DepartureTime   TimeWindow          `bson:"departure_time" json:"departure_time"`
-	ArrivalTime     TimeWindow          `bson:"arrival_time" json:"arrival_time"`
-	Status          TripStatus          `bson:"status" json:"status"`
-	Cargo           Cargo               `bson:"cargo" json:"cargo"`
-	FuelUsage       float64             `bson:"fuel_usage_gallons" json:"fuel_usage_gallons"`
-	DistanceMiles   int                 `bson:"distance_miles" json:"distance_miles"`
-	Notes           []TripNote          `bson:"notes" json:"notes"`
-	CreatedAt       primitive.DateTime  `bson:"created_at" json:"created_at"`
-	UpdatedAt       primitive.DateTime  `bson:"updated_at" json:"updated_at"`
-	StateMachine    *statemachine.StateMachine
+	ID              primitive.ObjectID         `bson:"_id,omitempty" json:"_id,omitempty"`
+	TripNumber      string                     `bson:"trip_number" json:"trip_number"`
+	DriverID        *primitive.ObjectID        `bson:"driver_id,omitempty" json:"driver_id,omitempty"`
+	Driver          *Driver                    `bson:"driver,omitempty" json:"driver,omitempty"`
+	TruckID         *primitive.ObjectID        `bson:"truck_id,omitempty" json:"truck_id,omitempty"`
+	Truck           *Truck                     `bson:"truck,omitempty" json:"truck,omitempty"`
+	StartFacilityID *primitive.ObjectID        `bson:"start_facility_id,omitempty" json:"start_facility_id,omitempty"`
+	StartFacility   *Facility                  `bson:"start_facility,omitempty" json:"start_facility,omitempty"`
+	EndFacilityID   *primitive.ObjectID        `bson:"end_facility_id,omitempty" json:"end_facility_id,omitempty"`
+	EndFacility     *Facility                  `bson:"end_facility,omitempty" json:"end_facility,omitempty"`
+	DepartureTime   TimeWindow                 `bson:"departure_time" json:"departure_time"`
+	ArrivalTime     TimeWindow                 `bson:"arrival_time" json:"arrival_time"`
+	Status          TripStatus                 `bson:"status" json:"status"`
+	Cargo           Cargo                      `bson:"cargo" json:"cargo"`
+	FuelUsage       float64                    `bson:"fuel_usage_gallons" json:"fuel_usage_gallons"`
+	DistanceMiles   int                        `bson:"distance_miles" json:"distance_miles"`
+	Notes           []TripNote                 `bson:"notes" json:"notes"`
+	CreatedAt       primitive.DateTime         `bson:"created_at" json:"created_at"`
+	UpdatedAt       primitive.DateTime         `bson:"updated_at" json:"updated_at"`
+	StateMachine    *statemachine.StateMachine `bson:"-" json:"-"`
 }
 
 type TimeWindow struct {
