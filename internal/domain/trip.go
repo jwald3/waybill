@@ -110,7 +110,7 @@ func NewTrip(
 }
 
 func (t *Trip) InitializeStateMachine() error {
-	sm := statemachine.NewStateMachine(TripStatusScheduled)
+	sm := statemachine.NewStateMachine(t.Status)
 
 	// Add all valid transitions
 	sm.AddSimpleTransition(TripStatusScheduled, TripStatusInTransit)
