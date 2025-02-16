@@ -229,17 +229,29 @@ func (t *Truck) InitializeStateMachine() error {
 }
 
 func (t *Truck) MakeTruckAvailable() error {
+	if err := t.StateMachine.Transition(TruckStatusAvailable); err != nil {
+		return fmt.Errorf("failed to transition truck to available: %w", err)
+	}
 	return nil
 }
 
 func (t *Truck) SetTruckInTransit() error {
+	if err := t.StateMachine.Transition(TruckStatusInTransit); err != nil {
+		return fmt.Errorf("failed to transition truck to in-transit: %w", err)
+	}
 	return nil
 }
 
 func (t *Truck) SetTruckInMaintenance() error {
+	if err := t.StateMachine.Transition(TruckStatusUnderMaintenance); err != nil {
+		return fmt.Errorf("failed to transition truck to maintenance: %w", err)
+	}
 	return nil
 }
 
 func (t *Truck) RetireTruck() error {
+	if err := t.StateMachine.Transition(TruckStatusRetired); err != nil {
+		return fmt.Errorf("failed to transition truck to retired: %w", err)
+	}
 	return nil
 }
