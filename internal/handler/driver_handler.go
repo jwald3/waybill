@@ -48,10 +48,6 @@ type DriverUpdateRequest struct {
 	EmploymentStatus  domain.EmploymentStatus `json:"employment_status"`
 }
 
-type DriverUpdateEmploymentStatusRequest struct {
-	EmploymentStatus domain.EmploymentStatus `json:"employment_status"`
-}
-
 type DriverResponse struct {
 	ID                primitive.ObjectID      `json:"id,omitempty"`
 	FirstName         string                  `json:"first_name"`
@@ -253,7 +249,7 @@ func (h *DriverHandler) List(w http.ResponseWriter, r *http.Request) {
 	WriteJSON(w, http.StatusOK, response)
 }
 
-func (h *DriverHandler) UpdateEmploymentStatus(w http.ResponseWriter, r *http.Request) {
+func (h *DriverHandler) SuspendDriver(w http.ResponseWriter, r *http.Request) {
 	idStr := mux.Vars(r)["id"]
 	objectID, err := primitive.ObjectIDFromHex(idStr)
 	if err != nil {
@@ -261,13 +257,51 @@ func (h *DriverHandler) UpdateEmploymentStatus(w http.ResponseWriter, r *http.Re
 		return
 	}
 
-	var req DriverUpdateEmploymentStatusRequest
-	if err := ReadJSON(r, &req); err != nil {
-		WriteJSON(w, http.StatusBadRequest, Response{Error: "invalid request payload"})
+	if err := h.driverService.SuspendDriver(r.Context(), objectID); err != nil {
+		WriteJSON(w, http.StatusInternalServerError, Response{Error: err.Error()})
 		return
 	}
 
-	if err := h.driverService.UpdateEmploymentStatus(r.Context(), objectID, req.EmploymentStatus); err != nil {
+	updatedDriver, err := h.driverService.GetById(r.Context(), objectID)
+	if err != nil {
+		WriteJSON(w, http.StatusInternalServerError, Response{Error: "status updated but failed to fetch updated driver"})
+		return
+	}
+
+	WriteJSON(w, http.StatusOK, Response{Data: driverDomainToResponse(updatedDriver)})
+}
+
+func (h *DriverHandler) TerminateDriver(w http.ResponseWriter, r *http.Request) {
+	idStr := mux.Vars(r)["id"]
+	objectID, err := primitive.ObjectIDFromHex(idStr)
+	if err != nil {
+		WriteJSON(w, http.StatusBadRequest, Response{Error: err.Error()})
+		return
+	}
+
+	if err := h.driverService.TerminateDriver(r.Context(), objectID); err != nil {
+		WriteJSON(w, http.StatusInternalServerError, Response{Error: err.Error()})
+		return
+	}
+
+	updatedDriver, err := h.driverService.GetById(r.Context(), objectID)
+	if err != nil {
+		WriteJSON(w, http.StatusInternalServerError, Response{Error: "status updated but failed to fetch updated driver"})
+		return
+	}
+
+	WriteJSON(w, http.StatusOK, Response{Data: driverDomainToResponse(updatedDriver)})
+}
+
+func (h *DriverHandler) ActivateDriver(w http.ResponseWriter, r *http.Request) {
+	idStr := mux.Vars(r)["id"]
+	objectID, err := primitive.ObjectIDFromHex(idStr)
+	if err != nil {
+		WriteJSON(w, http.StatusBadRequest, Response{Error: err.Error()})
+		return
+	}
+
+	if err := h.driverService.ActivateDriver(r.Context(), objectID); err != nil {
 		WriteJSON(w, http.StatusInternalServerError, Response{Error: err.Error()})
 		return
 	}

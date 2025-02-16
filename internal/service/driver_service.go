@@ -20,7 +20,9 @@ type DriverService interface {
 	Update(ctx context.Context, driver *domain.Driver) error
 	Delete(ctx context.Context, id primitive.ObjectID) error
 	List(ctx context.Context, limit, offset int64) (*repository.ListDriversResult, error)
-	UpdateEmploymentStatus(ctx context.Context, id primitive.ObjectID, newStatus domain.EmploymentStatus) error
+	SuspendDriver(ctx context.Context, id primitive.ObjectID) error
+	TerminateDriver(ctx context.Context, id primitive.ObjectID) error
+	ActivateDriver(ctx context.Context, id primitive.ObjectID) error
 }
 
 type driverService struct {
@@ -97,11 +99,7 @@ func (s *driverService) List(ctx context.Context, limit, offset int64) (*reposit
 }
 
 // Atomic methods
-func (s *driverService) UpdateEmploymentStatus(ctx context.Context, id primitive.ObjectID, newStatus domain.EmploymentStatus) error {
-	if !newStatus.IsValid() {
-		return fmt.Errorf("invalid employment status: %s", newStatus)
-	}
-
+func (s *driverService) SuspendDriver(ctx context.Context, id primitive.ObjectID) error {
 	driver, err := s.driverRepo.GetById(ctx, id)
 	if err != nil {
 		return fmt.Errorf("failed to get driver: %w", err)
@@ -110,13 +108,53 @@ func (s *driverService) UpdateEmploymentStatus(ctx context.Context, id primitive
 		return domain.ErrDriverNotFound
 	}
 
-	if err := driver.ChangeEmploymentStatus(newStatus); err != nil {
+	if err := driver.InitializeStateMachine(); err != nil {
+		return fmt.Errorf("failed to initialize state machine: %w", err)
+	}
+
+	if err := driver.SuspendDriver(); err != nil {
 		return err
 	}
 
-	if err := s.driverRepo.UpdateEmploymentStatus(ctx, id, newStatus); err != nil {
-		return fmt.Errorf("failed to update employment status: %w", err)
+	return s.driverRepo.Update(ctx, driver)
+}
+
+func (s *driverService) TerminateDriver(ctx context.Context, id primitive.ObjectID) error {
+	driver, err := s.driverRepo.GetById(ctx, id)
+	if err != nil {
+		return fmt.Errorf("failed to get driver: %w", err)
+	}
+	if driver == nil {
+		return domain.ErrDriverNotFound
 	}
 
-	return nil
+	if err := driver.InitializeStateMachine(); err != nil {
+		return fmt.Errorf("failed to initialize state machine: %w", err)
+	}
+
+	if err := driver.TerminateDriver(); err != nil {
+		return err
+	}
+
+	return s.driverRepo.Update(ctx, driver)
+}
+
+func (s *driverService) ActivateDriver(ctx context.Context, id primitive.ObjectID) error {
+	driver, err := s.driverRepo.GetById(ctx, id)
+	if err != nil {
+		return fmt.Errorf("failed to get driver: %w", err)
+	}
+	if driver == nil {
+		return domain.ErrDriverNotFound
+	}
+
+	if err := driver.InitializeStateMachine(); err != nil {
+		return fmt.Errorf("failed to initialize state machine: %w", err)
+	}
+
+	if err := driver.ActivateDriver(); err != nil {
+		return err
+	}
+
+	return s.driverRepo.Update(ctx, driver)
 }

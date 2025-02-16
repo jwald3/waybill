@@ -117,20 +117,6 @@ func NewDriver(
 	return driver, nil
 }
 
-func (d *Driver) ChangeEmploymentStatus(newStatus EmploymentStatus) error {
-	if d.EmploymentStatus == EmploymentStatusTerminated {
-		return fmt.Errorf("cannot change status from TERMINATED")
-	}
-
-	if !newStatus.IsValid() {
-		return fmt.Errorf("invalid employment status: %s", newStatus)
-	}
-
-	d.EmploymentStatus = newStatus
-	d.UpdatedAt = primitive.NewDateTimeFromTime(time.Now())
-	return nil
-}
-
 func (d *Driver) InitializeStateMachine() error {
 	sm := statemachine.NewStateMachine(d.EmploymentStatus)
 
