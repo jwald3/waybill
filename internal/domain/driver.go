@@ -6,6 +6,7 @@ import (
 	"regexp"
 	"time"
 
+	statemachine "github.com/jwald3/lollipop"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
@@ -48,19 +49,20 @@ func (e EmploymentStatus) IsValid() bool {
 }
 
 type Driver struct {
-	ID                primitive.ObjectID `bson:"_id,omitempty" json:"_id,omitempty"`
-	FirstName         string             `bson:"first_name" json:"first_name"`
-	LastName          string             `bson:"last_name" json:"last_name"`
-	DOB               string             `bson:"dob" json:"dob"`
-	LicenseNumber     string             `bson:"license_number" json:"license_number"`
-	LicenseState      string             `bson:"license_state" json:"license_state"`
-	LicenseExpiration string             `bson:"license_expiration" json:"license_expiration"`
-	Phone             PhoneNumber        `bson:"phone" json:"phone"`
-	Email             Email              `bson:"email" json:"email"`
-	Address           Address            `bson:"address" json:"address"`
-	EmploymentStatus  EmploymentStatus   `bson:"employment_status" json:"employment_status"`
-	CreatedAt         primitive.DateTime `bson:"created_at" json:"created_at"`
-	UpdatedAt         primitive.DateTime `bson:"updated_at" json:"updated_at"`
+	ID                primitive.ObjectID         `bson:"_id,omitempty" json:"_id,omitempty"`
+	FirstName         string                     `bson:"first_name" json:"first_name"`
+	LastName          string                     `bson:"last_name" json:"last_name"`
+	DOB               string                     `bson:"dob" json:"dob"`
+	LicenseNumber     string                     `bson:"license_number" json:"license_number"`
+	LicenseState      string                     `bson:"license_state" json:"license_state"`
+	LicenseExpiration string                     `bson:"license_expiration" json:"license_expiration"`
+	Phone             PhoneNumber                `bson:"phone" json:"phone"`
+	Email             Email                      `bson:"email" json:"email"`
+	Address           Address                    `bson:"address" json:"address"`
+	EmploymentStatus  EmploymentStatus           `bson:"employment_status" json:"employment_status"`
+	CreatedAt         primitive.DateTime         `bson:"created_at" json:"created_at"`
+	UpdatedAt         primitive.DateTime         `bson:"updated_at" json:"updated_at"`
+	StateMachine      *statemachine.StateMachine `bson:"-" json:"-"`
 }
 
 type Address struct {
@@ -93,7 +95,7 @@ func NewDriver(
 
 	now := time.Now()
 
-	return &Driver{
+	driver := &Driver{
 		FirstName:         firstName,
 		LastName:          lastName,
 		DOB:               dateOfBirth,
@@ -106,7 +108,13 @@ func NewDriver(
 		EmploymentStatus:  EmploymentStatusActive,
 		CreatedAt:         primitive.NewDateTimeFromTime(now),
 		UpdatedAt:         primitive.NewDateTimeFromTime(now),
-	}, nil
+	}
+
+	if err := driver.InitializeStateMachine(); err != nil {
+		return nil, fmt.Errorf("failed to initialize state machine: %w", err)
+	}
+
+	return driver, nil
 }
 
 func (d *Driver) ChangeEmploymentStatus(newStatus EmploymentStatus) error {
@@ -120,5 +128,70 @@ func (d *Driver) ChangeEmploymentStatus(newStatus EmploymentStatus) error {
 
 	d.EmploymentStatus = newStatus
 	d.UpdatedAt = primitive.NewDateTimeFromTime(time.Now())
+	return nil
+}
+
+func (d *Driver) InitializeStateMachine() error {
+	sm := statemachine.NewStateMachine(d.EmploymentStatus)
+
+	sm.AddSimpleTransition(EmploymentStatusActive, EmploymentStatusSuspended)
+	sm.AddSimpleTransition(EmploymentStatusActive, EmploymentStatusTerminated)
+
+	sm.AddSimpleTransition(EmploymentStatusSuspended, EmploymentStatusActive)
+	sm.AddSimpleTransition(EmploymentStatusSuspended, EmploymentStatusTerminated)
+
+	sm.SetEntryAction(EmploymentStatusActive, func() error {
+		d.EmploymentStatus = EmploymentStatusActive
+		return nil
+	})
+
+	sm.SetEntryAction(EmploymentStatusSuspended, func() error {
+		d.EmploymentStatus = EmploymentStatusSuspended
+		return nil
+	})
+
+	sm.SetEntryAction(EmploymentStatusTerminated, func() error {
+		d.EmploymentStatus = EmploymentStatusTerminated
+		return nil
+	})
+
+	d.StateMachine = sm
+
+	return nil
+}
+
+func (d *Driver) SuspendDriver() error {
+	if err := d.StateMachine.Transition(EmploymentStatusSuspended); err != nil {
+		return fmt.Errorf("failed to suspend driver from status %s: %w", d.EmploymentStatus, err)
+	}
+
+	now := time.Now()
+
+	d.UpdatedAt = primitive.NewDateTimeFromTime(now)
+
+	return nil
+}
+
+func (d *Driver) TerminateDriver() error {
+	if err := d.StateMachine.Transition(EmploymentStatusTerminated); err != nil {
+		return fmt.Errorf("failed to terminate driver from status %s: %w", d.EmploymentStatus, err)
+	}
+
+	now := time.Now()
+
+	d.UpdatedAt = primitive.NewDateTimeFromTime(now)
+
+	return nil
+}
+
+func (d *Driver) ActivateDriver() error {
+	if err := d.StateMachine.Transition(EmploymentStatusActive); err != nil {
+		return fmt.Errorf("failed to activate driver from status %s: %w", d.EmploymentStatus, err)
+	}
+
+	now := time.Now()
+
+	d.UpdatedAt = primitive.NewDateTimeFromTime(now)
+
 	return nil
 }
