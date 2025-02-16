@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"time"
 
+	statemachine "github.com/jwald3/lollipop"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
@@ -116,23 +117,24 @@ func (s TruckStatus) CanTransitionTo(desired TruckStatus) error {
 }
 
 type Truck struct {
-	ID               primitive.ObjectID  `bson:"_id,omitempty" json:"id"`
-	TruckNumber      string              `bson:"truck_number" json:"truck_number"`
-	VIN              string              `bson:"vin" json:"vin"`
-	Make             string              `bson:"make" json:"make"`
-	Model            string              `bson:"model" json:"model"`
-	Year             int                 `bson:"year" json:"year"`
-	LicensePlate     LicensePlate        `bson:"license_plate" json:"license_plate"`
-	Mileage          int                 `bson:"mileage" json:"mileage"`
-	Status           TruckStatus         `bson:"status" json:"status"`
-	AssignedDriverID *primitive.ObjectID `bson:"assigned_driver_id,omitempty" json:"assigned_driver_id,omitempty"`
-	AssignedDriver   *Driver             `bson:"assigned_driver,omitempty" json:"assigned_driver,omitempty"`
-	TrailerType      TrailerType         `bson:"trailer_type" json:"trailer_type"`
-	CapacityTons     float64             `bson:"capacity_tons" json:"capacity_tons"`
-	FuelType         FuelType            `bson:"fuel_type" json:"fuel_type"`
-	LastMaintenance  string              `bson:"last_maintenance" json:"last_maintenance"`
-	CreatedAt        primitive.DateTime  `bson:"created_at" json:"created_at"`
-	UpdatedAt        primitive.DateTime  `bson:"updated_at" json:"updated_at"`
+	ID               primitive.ObjectID         `bson:"_id,omitempty" json:"id"`
+	TruckNumber      string                     `bson:"truck_number" json:"truck_number"`
+	VIN              string                     `bson:"vin" json:"vin"`
+	Make             string                     `bson:"make" json:"make"`
+	Model            string                     `bson:"model" json:"model"`
+	Year             int                        `bson:"year" json:"year"`
+	LicensePlate     LicensePlate               `bson:"license_plate" json:"license_plate"`
+	Mileage          int                        `bson:"mileage" json:"mileage"`
+	Status           TruckStatus                `bson:"status" json:"status"`
+	AssignedDriverID *primitive.ObjectID        `bson:"assigned_driver_id,omitempty" json:"assigned_driver_id,omitempty"`
+	AssignedDriver   *Driver                    `bson:"assigned_driver,omitempty" json:"assigned_driver,omitempty"`
+	TrailerType      TrailerType                `bson:"trailer_type" json:"trailer_type"`
+	CapacityTons     float64                    `bson:"capacity_tons" json:"capacity_tons"`
+	FuelType         FuelType                   `bson:"fuel_type" json:"fuel_type"`
+	LastMaintenance  string                     `bson:"last_maintenance" json:"last_maintenance"`
+	CreatedAt        primitive.DateTime         `bson:"created_at" json:"created_at"`
+	UpdatedAt        primitive.DateTime         `bson:"updated_at" json:"updated_at"`
+	StateMachine     *statemachine.StateMachine `bson:"-" json:"-"`
 }
 
 type LicensePlate struct {
@@ -145,7 +147,6 @@ func NewTruck(
 	vin,
 	vehicleMake,
 	model string,
-	status TruckStatus,
 	trailerType TrailerType,
 	fuelType FuelType,
 	LastMaintenance string,
@@ -162,13 +163,9 @@ func NewTruck(
 		return nil, fmt.Errorf("invalid trailer type provided: %s", trailerType)
 	}
 
-	if !status.IsValid() {
-		return nil, fmt.Errorf("invalid truck status provided: %s", status)
-	}
-
 	now := time.Now()
 
-	return &Truck{
+	truck := &Truck{
 		TruckNumber:      truckNumber,
 		VIN:              vin,
 		Make:             vehicleMake,
@@ -176,7 +173,7 @@ func NewTruck(
 		Year:             year,
 		LicensePlate:     licensePlate,
 		Mileage:          mileage,
-		Status:           status,
+		Status:           TruckStatusAvailable,
 		AssignedDriverID: nil,
 		TrailerType:      trailerType,
 		CapacityTons:     capacityTons,
@@ -184,5 +181,54 @@ func NewTruck(
 		LastMaintenance:  LastMaintenance,
 		CreatedAt:        primitive.NewDateTimeFromTime(now),
 		UpdatedAt:        primitive.NewDateTimeFromTime(now),
-	}, nil
+	}
+
+	if err := truck.InitializeStateMachine(); err != nil {
+		return nil, fmt.Errorf("failed to initialize state machine: %w", err)
+	}
+
+	return truck, nil
+}
+
+func (t *Truck) InitializeStateMachine() error {
+	sm := statemachine.NewStateMachine(t.Status)
+
+	// TruckStatusAvailable        TruckStatus = "AVAILABLE"
+	// TruckStatusInTransit        TruckStatus = "IN_TRANSIT"
+	// TruckStatusUnderMaintenance TruckStatus = "UNDER_MAINTENANCE"
+	// TruckStatusRetired          TruckStatus = "RETIRED"
+
+	sm.AddSimpleTransition(TruckStatusAvailable, TruckStatusInTransit)
+	sm.AddSimpleTransition(TruckStatusAvailable, TruckStatusUnderMaintenance)
+	sm.AddSimpleTransition(TruckStatusAvailable, TruckStatusRetired)
+
+	sm.AddSimpleTransition(TruckStatusInTransit, TruckStatusAvailable)
+	sm.AddSimpleTransition(TruckStatusInTransit, TruckStatusUnderMaintenance)
+
+	sm.AddSimpleTransition(TruckStatusUnderMaintenance, TruckStatusRetired)
+	sm.AddSimpleTransition(TruckStatusUnderMaintenance, TruckStatusAvailable)
+
+	sm.SetEntryAction(TruckStatusAvailable, func() error {
+		t.Status = TruckStatusAvailable
+		return nil
+	})
+
+	sm.SetEntryAction(TruckStatusInTransit, func() error {
+		t.Status = TruckStatusInTransit
+		return nil
+	})
+
+	sm.SetEntryAction(TruckStatusUnderMaintenance, func() error {
+		t.Status = TruckStatusUnderMaintenance
+		return nil
+	})
+
+	sm.SetEntryAction(TruckStatusRetired, func() error {
+		t.Status = TruckStatusRetired
+		return nil
+	})
+
+	t.StateMachine = sm
+
+	return nil
 }

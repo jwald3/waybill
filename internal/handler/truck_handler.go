@@ -98,7 +98,6 @@ func truckRequestToDomainCreate(req TruckCreateRequest) (*domain.Truck, error) {
 		req.VIN,
 		req.Make,
 		req.Model,
-		req.Status,
 		req.TrailerType,
 		req.FuelType,
 		req.LastMaintenance,
