@@ -193,11 +193,6 @@ func NewTruck(
 func (t *Truck) InitializeStateMachine() error {
 	sm := statemachine.NewStateMachine(t.Status)
 
-	// TruckStatusAvailable        TruckStatus = "AVAILABLE"
-	// TruckStatusInTransit        TruckStatus = "IN_TRANSIT"
-	// TruckStatusUnderMaintenance TruckStatus = "UNDER_MAINTENANCE"
-	// TruckStatusRetired          TruckStatus = "RETIRED"
-
 	sm.AddSimpleTransition(TruckStatusAvailable, TruckStatusInTransit)
 	sm.AddSimpleTransition(TruckStatusAvailable, TruckStatusUnderMaintenance)
 	sm.AddSimpleTransition(TruckStatusAvailable, TruckStatusRetired)
