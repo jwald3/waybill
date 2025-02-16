@@ -285,7 +285,7 @@ func (h *TruckHandler) List(w http.ResponseWriter, r *http.Request) {
 }
 
 // atomic methods
-func (h *TruckHandler) UpdateTruckStatus(w http.ResponseWriter, r *http.Request) {
+func (h *TruckHandler) MakeTruckAvailable(w http.ResponseWriter, r *http.Request) {
 	idStr := mux.Vars(r)["id"]
 	objectID, err := primitive.ObjectIDFromHex(idStr)
 	if err != nil {
@@ -293,18 +293,73 @@ func (h *TruckHandler) UpdateTruckStatus(w http.ResponseWriter, r *http.Request)
 		return
 	}
 
-	var req TruckUpdateStatusRequest
-	if err := ReadJSON(r, &req); err != nil {
-		WriteJSON(w, http.StatusBadRequest, Response{Error: "invalid request payload"})
+	if err := h.truckService.MakeTruckAvailable(r.Context(), objectID); err != nil {
+		WriteJSON(w, http.StatusInternalServerError, Response{Error: err.Error()})
 		return
 	}
 
-	if err := h.truckService.UpdateTruckStatus(r.Context(), objectID, req.Status); err != nil {
-		if _, ok := err.(*domain.TruckStateError); ok {
-			WriteJSON(w, http.StatusConflict, Response{Error: err.Error()})
-			return
-		}
+	updatedTruck, err := h.truckService.GetById(r.Context(), objectID)
+	if err != nil {
+		WriteJSON(w, http.StatusInternalServerError, Response{Error: "status updated but failed to fetch updated truck"})
+		return
+	}
 
+	WriteJSON(w, http.StatusOK, Response{Data: truckDomainToResponse(updatedTruck)})
+}
+
+func (h *TruckHandler) RetireTruck(w http.ResponseWriter, r *http.Request) {
+	idStr := mux.Vars(r)["id"]
+	objectID, err := primitive.ObjectIDFromHex(idStr)
+	if err != nil {
+		WriteJSON(w, http.StatusBadRequest, Response{Error: err.Error()})
+		return
+	}
+
+	if err := h.truckService.RetireTruck(r.Context(), objectID); err != nil {
+		WriteJSON(w, http.StatusInternalServerError, Response{Error: err.Error()})
+		return
+	}
+
+	updatedTruck, err := h.truckService.GetById(r.Context(), objectID)
+	if err != nil {
+		WriteJSON(w, http.StatusInternalServerError, Response{Error: "status updated but failed to fetch updated truck"})
+		return
+	}
+
+	WriteJSON(w, http.StatusOK, Response{Data: truckDomainToResponse(updatedTruck)})
+}
+
+func (h *TruckHandler) SetTruckInTransit(w http.ResponseWriter, r *http.Request) {
+	idStr := mux.Vars(r)["id"]
+	objectID, err := primitive.ObjectIDFromHex(idStr)
+	if err != nil {
+		WriteJSON(w, http.StatusBadRequest, Response{Error: err.Error()})
+		return
+	}
+
+	if err := h.truckService.SetTruckInTransit(r.Context(), objectID); err != nil {
+		WriteJSON(w, http.StatusInternalServerError, Response{Error: err.Error()})
+		return
+	}
+
+	updatedTruck, err := h.truckService.GetById(r.Context(), objectID)
+	if err != nil {
+		WriteJSON(w, http.StatusInternalServerError, Response{Error: "status updated but failed to fetch updated truck"})
+		return
+	}
+
+	WriteJSON(w, http.StatusOK, Response{Data: truckDomainToResponse(updatedTruck)})
+}
+
+func (h *TruckHandler) SetTruckInMaintenance(w http.ResponseWriter, r *http.Request) {
+	idStr := mux.Vars(r)["id"]
+	objectID, err := primitive.ObjectIDFromHex(idStr)
+	if err != nil {
+		WriteJSON(w, http.StatusBadRequest, Response{Error: err.Error()})
+		return
+	}
+
+	if err := h.truckService.SetTruckInMaintenance(r.Context(), objectID); err != nil {
 		WriteJSON(w, http.StatusInternalServerError, Response{Error: err.Error()})
 		return
 	}

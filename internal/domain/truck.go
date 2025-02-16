@@ -227,3 +227,19 @@ func (t *Truck) InitializeStateMachine() error {
 
 	return nil
 }
+
+func (t *Truck) MakeTruckAvailable() error {
+	return nil
+}
+
+func (t *Truck) SetTruckInTransit() error {
+	return nil
+}
+
+func (t *Truck) SetTruckInMaintenance() error {
+	return nil
+}
+
+func (t *Truck) RetireTruck() error {
+	return nil
+}

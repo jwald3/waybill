@@ -20,7 +20,10 @@ type TruckService interface {
 	Update(ctx context.Context, truck *domain.Truck) error
 	Delete(ctx context.Context, id primitive.ObjectID) error
 	List(ctx context.Context, limit, offset int64) (*repository.ListTrucksResult, error)
-	UpdateTruckStatus(ctx context.Context, id primitive.ObjectID, newStatus domain.TruckStatus) error
+	SetTruckInTransit(ctx context.Context, id primitive.ObjectID) error
+	SetTruckInMaintenance(ctx context.Context, id primitive.ObjectID) error
+	RetireTruck(ctx context.Context, id primitive.ObjectID) error
+	MakeTruckAvailable(ctx context.Context, id primitive.ObjectID) error
 	UpdateTruckMileage(ctx context.Context, id primitive.ObjectID, newMileage int) error
 	UpdateTruckMaintenance(ctx context.Context, id primitive.ObjectID, lastMaintenance string) error
 }
@@ -97,17 +100,90 @@ func (s *truckService) List(ctx context.Context, limit, offset int64) (*reposito
 
 // atomic methods
 
-func (s *truckService) UpdateTruckStatus(ctx context.Context, id primitive.ObjectID, newStatus domain.TruckStatus) error {
+func (s *truckService) SetTruckInTransit(ctx context.Context, id primitive.ObjectID) error {
 	truck, err := s.truckRepo.GetById(ctx, id)
+
 	if err != nil {
 		return fmt.Errorf(truckNotFound, err)
 	}
 
-	if err := truck.Status.CanTransitionTo(newStatus); err != nil {
-		return err
+	if truck == nil {
+		return fmt.Errorf("truck with ID %v not found", id)
 	}
 
-	truck.Status = newStatus
+	if err := truck.InitializeStateMachine(); err != nil {
+		return fmt.Errorf("failed to initialize state machine: %w", err)
+	}
+
+	if err := truck.SetTruckInTransit(); err != nil {
+		return fmt.Errorf("an error occurred when attempting to set truck in transit: %w", err)
+	}
+
+	return s.truckRepo.Update(ctx, truck)
+}
+
+func (s *truckService) SetTruckInMaintenance(ctx context.Context, id primitive.ObjectID) error {
+	truck, err := s.truckRepo.GetById(ctx, id)
+
+	if err != nil {
+		return fmt.Errorf(truckNotFound, err)
+	}
+
+	if truck == nil {
+		return fmt.Errorf("truck with ID %v not found", id)
+	}
+
+	if err := truck.InitializeStateMachine(); err != nil {
+		return fmt.Errorf("failed to initialize state machine: %w", err)
+	}
+
+	if err := truck.SetTruckInMaintenance(); err != nil {
+		return fmt.Errorf("an error occurred when attempting to set truck in maintenance: %w", err)
+	}
+
+	return s.truckRepo.Update(ctx, truck)
+}
+
+func (s *truckService) RetireTruck(ctx context.Context, id primitive.ObjectID) error {
+	truck, err := s.truckRepo.GetById(ctx, id)
+
+	if err != nil {
+		return fmt.Errorf(truckNotFound, err)
+	}
+
+	if truck == nil {
+		return fmt.Errorf("truck with ID %v not found", id)
+	}
+
+	if err := truck.InitializeStateMachine(); err != nil {
+		return fmt.Errorf("failed to initialize state machine: %w", err)
+	}
+
+	if err := truck.RetireTruck(); err != nil {
+		return fmt.Errorf("an error occurred when attempting to retire truck: %w", err)
+	}
+
+	return s.truckRepo.Update(ctx, truck)
+}
+
+func (s *truckService) MakeTruckAvailable(ctx context.Context, id primitive.ObjectID) error {
+	truck, err := s.truckRepo.GetById(ctx, id)
+
+	if err != nil {
+		return fmt.Errorf(truckNotFound, err)
+	}
+
+	if truck == nil {
+		return fmt.Errorf("truck with ID %v not found", id)
+	}
+
+	if err := truck.InitializeStateMachine(); err != nil {
+		return fmt.Errorf("failed to initialize state machine: %w", err)
+	}
+
+	if err := truck.MakeTruckAvailable(); err != nil {
+		return fmt.Errorf("an error occurred when attempting to make truck available: %w", err)
+	}
 
 	return s.truckRepo.Update(ctx, truck)
 }

@@ -188,7 +188,10 @@ func registerTruckRoutes(r *mux.Router, h *handler.TruckHandler) {
 	r.HandleFunc("/trucks/{id}", h.GetById).Methods(http.MethodGet)
 	r.HandleFunc("/trucks/{id}", h.Update).Methods(http.MethodPut)
 	r.HandleFunc("/trucks/{id}", h.Delete).Methods(http.MethodDelete)
-	r.HandleFunc("/trucks/{id}/status", h.UpdateTruckStatus).Methods(http.MethodPatch)
+	r.HandleFunc("/trucks/{id}/status/available", h.MakeTruckAvailable).Methods(http.MethodPatch)
+	r.HandleFunc("/trucks/{id}/status/maintenance", h.SetTruckInMaintenance).Methods(http.MethodPatch)
+	r.HandleFunc("/trucks/{id}/status/in-transit", h.SetTruckInTransit).Methods(http.MethodPatch)
+	r.HandleFunc("/trucks/{id}/status/retire", h.RetireTruck).Methods(http.MethodPatch)
 	r.HandleFunc("/trucks/{id}/mileage", h.UpdateTruckMileage).Methods(http.MethodPatch)
 	r.HandleFunc("/trucks/{id}/maintenance", h.UpdateTruckLastMaintenance).Methods(http.MethodPatch)
 }
