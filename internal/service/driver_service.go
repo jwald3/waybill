@@ -38,10 +38,6 @@ func NewDriverService(db *database.MongoDB, driverRepo repository.DriverReposito
 }
 
 func (s *driverService) Create(ctx context.Context, driver *domain.Driver) error {
-	if !driver.EmploymentStatus.IsValid() {
-		return fmt.Errorf("invalid employment status: %s", driver.EmploymentStatus)
-	}
-
 	if err := s.driverRepo.Create(ctx, driver); err != nil {
 		return fmt.Errorf("failed to create driver: %w", err)
 	}

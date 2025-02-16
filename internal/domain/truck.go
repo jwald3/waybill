@@ -80,17 +80,6 @@ const (
 	TruckStatusRetired          TruckStatus = "RETIRED"
 )
 
-func (s TruckStatus) IsValid() bool {
-	switch s {
-	case TruckStatusAvailable,
-		TruckStatusInTransit,
-		TruckStatusUnderMaintenance,
-		TruckStatusRetired:
-		return true
-	}
-	return false
-}
-
 func (s TruckStatus) CanTransitionTo(desired TruckStatus) error {
 	// this map provides the valid pathing that a truck's status may take. Any keys with empty slices are "dead ends"
 	allowedTransitions := map[TruckStatus][]TruckStatus{

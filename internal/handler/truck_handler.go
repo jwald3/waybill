@@ -117,10 +117,6 @@ func truckRequestToDomainUpdate(req TruckUpdateRequest) (*domain.Truck, error) {
 		return nil, fmt.Errorf("invalid trailer type provided: %s", req.TrailerType)
 	}
 
-	if !req.Status.IsValid() {
-		return nil, fmt.Errorf("invalid truck status provided: %s", req.Status)
-	}
-
 	return &domain.Truck{
 		TruckNumber:      req.TruckNumber,
 		VIN:              req.VIN,

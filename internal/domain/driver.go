@@ -38,16 +38,6 @@ const (
 	EmploymentStatusTerminated EmploymentStatus = "TERMINATED"
 )
 
-func (e EmploymentStatus) IsValid() bool {
-	switch e {
-	case EmploymentStatusActive,
-		EmploymentStatusSuspended,
-		EmploymentStatusTerminated:
-		return true
-	}
-	return false
-}
-
 type Driver struct {
 	ID                primitive.ObjectID         `bson:"_id,omitempty" json:"_id,omitempty"`
 	FirstName         string                     `bson:"first_name" json:"first_name"`

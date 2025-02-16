@@ -20,18 +20,6 @@ const (
 	MaxNoteLength                       = 1000
 )
 
-func (s TripStatus) IsValid() bool {
-	switch s {
-	case TripStatusScheduled,
-		TripStatusInTransit,
-		TripStatusCompleted,
-		TripStatusFailedDelivery,
-		TripStatusCanceled:
-		return true
-	}
-	return false
-}
-
 type Trip struct {
 	ID              primitive.ObjectID         `bson:"_id,omitempty" json:"_id,omitempty"`
 	TripNumber      string                     `bson:"trip_number" json:"trip_number"`
