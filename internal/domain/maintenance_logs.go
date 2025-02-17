@@ -64,3 +64,17 @@ func NewMaintenanceLog(
 		UpdatedAt:   primitive.NewDateTimeFromTime(now),
 	}, nil
 }
+
+type MaintenanceLogFilter struct {
+	TruckID     *primitive.ObjectID
+	ServiceType MaintenanceServiceType
+	Limit       int64
+	Offset      int64
+}
+
+func NewMaintenanceLogFilter() MaintenanceLogFilter {
+	return MaintenanceLogFilter{
+		Limit:  10,
+		Offset: 0,
+	}
+}
