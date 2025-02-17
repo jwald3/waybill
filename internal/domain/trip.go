@@ -97,6 +97,22 @@ func NewTrip(
 	return trip, nil
 }
 
+type TripFilter struct {
+	DriverID        *primitive.ObjectID
+	TruckID         *primitive.ObjectID
+	StartFacilityID *primitive.ObjectID
+	EndFacilityID   *primitive.ObjectID
+	Limit           int64
+	Offset          int64
+}
+
+func NewTripFilter() TripFilter {
+	return TripFilter{
+		Limit:  10,
+		Offset: 0,
+	}
+}
+
 func (t *Trip) InitializeStateMachine() error {
 	sm := statemachine.NewStateMachine(t.Status)
 
