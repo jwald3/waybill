@@ -20,6 +20,19 @@ type FuelLog struct {
 	UpdatedAt        primitive.DateTime  `bson:"updated_at" json:"updated_at"`
 }
 
+type FuelLogFilter struct {
+	TripID *primitive.ObjectID
+	Limit  int64
+	Offset int64
+}
+
+func NewFuelLogFilter() FuelLogFilter {
+	return FuelLogFilter{
+		Limit:  10,
+		Offset: 0,
+	}
+}
+
 func NewFuelLog(
 	tripId *primitive.ObjectID,
 	date,
