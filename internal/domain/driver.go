@@ -55,22 +55,6 @@ type Driver struct {
 	StateMachine      *statemachine.StateMachine `bson:"-" json:"-"`
 }
 
-type DriverFilter struct {
-	LicenseState     string
-	Phone            PhoneNumber
-	Email            Email
-	EmploymentStatus EmploymentStatus
-	Limit            int64
-	Offset           int64
-}
-
-func NewDriverFilter() DriverFilter {
-	return DriverFilter{
-		Limit:  10,
-		Offset: 0,
-	}
-}
-
 type Address struct {
 	Street string `bson:"street" json:"street"`
 	City   string `bson:"city" json:"city"`
@@ -121,6 +105,22 @@ func NewDriver(
 	}
 
 	return driver, nil
+}
+
+type DriverFilter struct {
+	LicenseState     string
+	Phone            PhoneNumber
+	Email            Email
+	EmploymentStatus EmploymentStatus
+	Limit            int64
+	Offset           int64
+}
+
+func NewDriverFilter() DriverFilter {
+	return DriverFilter{
+		Limit:  10,
+		Offset: 0,
+	}
 }
 
 func (d *Driver) InitializeStateMachine() error {
