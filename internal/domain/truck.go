@@ -179,6 +179,23 @@ func NewTruck(
 	return truck, nil
 }
 
+type TruckFilter struct {
+	VIN              string
+	Status           TruckStatus
+	AssignedDriverID *primitive.ObjectID
+	TrailerType      TrailerType
+	FuelType         FuelType
+	Limit            int64
+	Offset           int64
+}
+
+func NewTruckFilter() TruckFilter {
+	return TruckFilter{
+		Limit:  10,
+		Offset: 0,
+	}
+}
+
 func (t *Truck) InitializeStateMachine() error {
 	sm := statemachine.NewStateMachine(t.Status)
 
