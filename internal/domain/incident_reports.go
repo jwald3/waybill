@@ -81,3 +81,19 @@ func NewIncidentReport(
 		UpdatedAt:      primitive.NewDateTimeFromTime(now),
 	}, nil
 }
+
+type IncidentReportFilter struct {
+	TripID   *primitive.ObjectID
+	TruckID  *primitive.ObjectID
+	DriverID *primitive.ObjectID
+	Type     IncidentType
+	Limit    int64
+	Offset   int64
+}
+
+func NewIncidentReportFilter() IncidentReportFilter {
+	return IncidentReportFilter{
+		Limit:  10,
+		Offset: 0,
+	}
+}
