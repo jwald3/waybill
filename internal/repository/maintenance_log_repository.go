@@ -107,7 +107,7 @@ func (r *maintenanceLogRepository) Update(ctx context.Context, maintenanceLog *d
 	}
 
 	if result.MatchedCount == 0 {
-		return fmt.Errorf("maintenance log not found.")
+		return fmt.Errorf("maintenance log not found")
 	}
 
 	return nil

@@ -24,6 +24,7 @@ type FacilityRepository interface {
 	Delete(ctx context.Context, id primitive.ObjectID) error
 	List(ctx context.Context, limit, offset int64) (*ListFacilitiesResult, error)
 	UpdateAvailableFacilityServices(ctx context.Context, id primitive.ObjectID, servicesAvailable []domain.FacilityService) error
+	GetFacilitiesInState(ctx context.Context, stateCode string, limit, offset int64) (*ListFacilitiesResult, error)
 }
 
 type ListFacilitiesResult struct {
@@ -163,4 +164,46 @@ func (r *facilityRepository) UpdateAvailableFacilityServices(ctx context.Context
 	}
 
 	return nil
+}
+
+func (r *facilityRepository) GetFacilitiesInState(ctx context.Context, stateCode string, limit, offset int64) (*ListFacilitiesResult, error) {
+	filter := bson.M{"address.state": stateCode}
+
+	if limit <= 0 {
+		limit = 10
+	}
+
+	if limit > 100 {
+		limit = 100
+	}
+
+	if offset < 0 {
+		offset = 0
+	}
+
+	total, err := r.facilities.CountDocuments(ctx, filter)
+	if err != nil {
+		return nil, fmt.Errorf("unable to get total count: %w", err)
+	}
+
+	findOptions := options.Find()
+	findOptions.SetLimit(limit)
+	findOptions.SetSkip(offset)
+	findOptions.SetSort(bson.D{{Key: "_id", Value: -1}})
+
+	cursor, err := r.facilities.Find(ctx, filter, findOptions)
+	if err != nil {
+		return nil, fmt.Errorf("error finding documents: %w", err)
+	}
+	defer cursor.Close(ctx)
+
+	facilities := make([]*domain.Facility, 0, limit)
+	if err := cursor.All(ctx, &facilities); err != nil {
+		return nil, fmt.Errorf("failed to decode facilities: %w", err)
+	}
+
+	return &ListFacilitiesResult{
+		Facilities: facilities,
+		Total:      total,
+	}, nil
 }

@@ -6,6 +6,7 @@ import (
 
 	"github.com/gorilla/mux"
 	"github.com/jwald3/waybill/internal/domain"
+	"github.com/jwald3/waybill/internal/repository"
 	"github.com/jwald3/waybill/internal/service"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
@@ -204,13 +205,30 @@ func (h *FacilityHandler) Delete(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *FacilityHandler) List(w http.ResponseWriter, r *http.Request) {
+	queryParams := r.URL.Query()
+
+	stateCode := queryParams.Get("stateCode")
 	limit := getQueryIntParam(r, "limit", 10)
 	offset := getQueryIntParam(r, "offset", 0)
 
-	result, err := h.facilityService.List(r.Context(), int64(limit), int64(offset))
-	if err != nil {
-		WriteJSON(w, http.StatusInternalServerError, Response{Error: "failed to fetch facilities"})
-		return
+	var result *repository.ListFacilitiesResult
+
+	if stateCode == "" {
+		var err error
+
+		result, err = h.facilityService.List(r.Context(), int64(limit), int64(offset))
+		if err != nil {
+			WriteJSON(w, http.StatusInternalServerError, Response{Error: "failed to fetch facilities"})
+			return
+		}
+	} else {
+		var err error
+
+		result, err = h.facilityService.GetFacilitiesByState(r.Context(), stateCode, int64(limit), int64(offset))
+		if err != nil {
+			WriteJSON(w, http.StatusInternalServerError, Response{Error: "failed to fetch facilities"})
+			return
+		}
 	}
 
 	facilityResponses := make([]FacilityResponse, len(result.Facilities))
