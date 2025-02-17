@@ -45,6 +45,25 @@ type ContactInfo struct {
 	Email string `bson:"email" json:"email"`
 }
 
+type FacilityFilter struct {
+	StateCode       string
+	Type            string
+	ServicesInclude []FacilityService
+	MinCapacity     *int
+	MaxCapacity     *int
+	Limit           int64
+	Offset          int64
+}
+
+// we're going to set a limit of 10 and an offset of 0 by default, but the actual values will be set by the query params
+// in the handler. If we want to add any other defaults, we can do so here. Stuff like only showing active facilities, etc.
+func NewFacilityFilter() FacilityFilter {
+	return FacilityFilter{
+		Limit:  10,
+		Offset: 0,
+	}
+}
+
 func NewFacility(
 	facilityNumber string,
 	name string,

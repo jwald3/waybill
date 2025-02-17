@@ -3,10 +3,11 @@ package handler
 import (
 	"fmt"
 	"net/http"
+	"strconv"
+	"strings"
 
 	"github.com/gorilla/mux"
 	"github.com/jwald3/waybill/internal/domain"
-	"github.com/jwald3/waybill/internal/repository"
 	"github.com/jwald3/waybill/internal/service"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
@@ -205,30 +206,50 @@ func (h *FacilityHandler) Delete(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *FacilityHandler) List(w http.ResponseWriter, r *http.Request) {
-	queryParams := r.URL.Query()
+	filter := domain.NewFacilityFilter()
 
-	stateCode := queryParams.Get("stateCode")
-	limit := getQueryIntParam(r, "limit", 10)
-	offset := getQueryIntParam(r, "offset", 0)
+	// Parse query parameters, adding them to the filter if they're present
+	// any unrecognized query params will be ignored and not added to the filter
+	// we can expand the filter options as needed by adding more to the domain.FacilityFilter struct
+	if stateCode := r.URL.Query().Get("stateCode"); stateCode != "" {
+		filter.StateCode = stateCode
+	}
 
-	var result *repository.ListFacilitiesResult
+	if facilityType := r.URL.Query().Get("type"); facilityType != "" {
+		filter.Type = facilityType
+	}
 
-	if stateCode == "" {
-		var err error
-
-		result, err = h.facilityService.List(r.Context(), int64(limit), int64(offset))
-		if err != nil {
-			WriteJSON(w, http.StatusInternalServerError, Response{Error: "failed to fetch facilities"})
-			return
+	if services := r.URL.Query().Get("services"); services != "" {
+		// the API expects a comma-separated list of services, so we split it into a list and check each one
+		// the parameter could look like this: ?services=REPAIRS,LOADING_UNLOADING,LODGING
+		servicesList := strings.Split(services, ",")
+		for _, s := range servicesList {
+			service := domain.FacilityService(strings.TrimSpace(s))
+			if service.IsValid() {
+				filter.ServicesInclude = append(filter.ServicesInclude, service)
+			}
 		}
-	} else {
-		var err error
+	}
 
-		result, err = h.facilityService.GetFacilitiesByState(r.Context(), stateCode, int64(limit), int64(offset))
-		if err != nil {
-			WriteJSON(w, http.StatusInternalServerError, Response{Error: "failed to fetch facilities"})
-			return
+	if minCapStr := r.URL.Query().Get("minCapacity"); minCapStr != "" {
+		if minCap, err := strconv.Atoi(minCapStr); err == nil {
+			filter.MinCapacity = &minCap
 		}
+	}
+
+	if maxCapStr := r.URL.Query().Get("maxCapacity"); maxCapStr != "" {
+		if maxCap, err := strconv.Atoi(maxCapStr); err == nil {
+			filter.MaxCapacity = &maxCap
+		}
+	}
+
+	filter.Limit = int64(getQueryIntParam(r, "limit", 10))
+	filter.Offset = int64(getQueryIntParam(r, "offset", 0))
+
+	result, err := h.facilityService.ListWithFilter(r.Context(), filter)
+	if err != nil {
+		WriteJSON(w, http.StatusInternalServerError, Response{Error: "failed to fetch facilities"})
+		return
 	}
 
 	facilityResponses := make([]FacilityResponse, len(result.Facilities))
@@ -237,16 +258,16 @@ func (h *FacilityHandler) List(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var nextOffset *int64
-	if int64(offset)+int64(limit) < result.Total {
-		next := int64(offset + limit)
+	if filter.Offset+filter.Limit < result.Total {
+		next := filter.Offset + filter.Limit
 		nextOffset = &next
 	}
 
 	response := PaginatedResponse{
 		Items:      facilityResponses,
 		Total:      result.Total,
-		Limit:      int64(limit),
-		Offset:     int64(offset),
+		Limit:      filter.Limit,
+		Offset:     filter.Offset,
 		NextOffset: nextOffset,
 	}
 

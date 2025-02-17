@@ -19,8 +19,7 @@ type FacilityService interface {
 	GetById(ctx context.Context, id primitive.ObjectID) (*domain.Facility, error)
 	Update(ctx context.Context, facility *domain.Facility) error
 	Delete(ctx context.Context, id primitive.ObjectID) error
-	List(ctx context.Context, limit, offset int64) (*repository.ListFacilitiesResult, error)
-	GetFacilitiesByState(ctx context.Context, stateCode string, limit, offset int64) (*repository.ListFacilitiesResult, error)
+	ListWithFilter(ctx context.Context, filter domain.FacilityFilter) (*repository.ListFacilitiesResult, error)
 	UpdateAvailableFacilityServices(ctx context.Context, id primitive.ObjectID, servicesAvailable []domain.FacilityService) error
 }
 
@@ -76,31 +75,12 @@ func (s *facilityService) Delete(ctx context.Context, id primitive.ObjectID) err
 	return nil
 }
 
-func (s *facilityService) List(ctx context.Context, limit, offset int64) (*repository.ListFacilitiesResult, error) {
+func (s *facilityService) ListWithFilter(ctx context.Context, filter domain.FacilityFilter) (*repository.ListFacilitiesResult, error) {
 	if ctx == nil {
 		return nil, fmt.Errorf("context is required")
 	}
 
-	result, err := s.facilityRepo.List(ctx, limit, offset)
-
-	if err != nil {
-		return nil, fmt.Errorf("failed to list facilities: %w", err)
-	}
-
-	if result.Facilities == nil {
-		result.Facilities = []*domain.Facility{}
-	}
-
-	return result, nil
-}
-
-func (s *facilityService) GetFacilitiesByState(ctx context.Context, stateCode string, limit, offset int64) (*repository.ListFacilitiesResult, error) {
-	if ctx == nil {
-		return nil, fmt.Errorf("context is required")
-	}
-
-	result, err := s.facilityRepo.GetFacilitiesInState(ctx, stateCode, limit, offset)
-
+	result, err := s.facilityRepo.ListWithFilter(ctx, filter)
 	if err != nil {
 		return nil, fmt.Errorf("failed to list facilities: %w", err)
 	}

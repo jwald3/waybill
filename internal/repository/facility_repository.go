@@ -22,9 +22,8 @@ type FacilityRepository interface {
 	GetById(ctx context.Context, id primitive.ObjectID) (*domain.Facility, error)
 	Update(ctx context.Context, facility *domain.Facility) error
 	Delete(ctx context.Context, id primitive.ObjectID) error
-	List(ctx context.Context, limit, offset int64) (*ListFacilitiesResult, error)
+	ListWithFilter(ctx context.Context, filter domain.FacilityFilter) (*ListFacilitiesResult, error)
 	UpdateAvailableFacilityServices(ctx context.Context, id primitive.ObjectID, servicesAvailable []domain.FacilityService) error
-	GetFacilitiesInState(ctx context.Context, stateCode string, limit, offset int64) (*ListFacilitiesResult, error)
 }
 
 type ListFacilitiesResult struct {
@@ -105,36 +104,72 @@ func (r *facilityRepository) Delete(ctx context.Context, id primitive.ObjectID) 
 	return nil
 }
 
-func (r *facilityRepository) List(ctx context.Context, limit, offset int64) (*ListFacilitiesResult, error) {
-	if limit <= 0 {
-		limit = 10
+func (r *facilityRepository) ListWithFilter(ctx context.Context, filter domain.FacilityFilter) (*ListFacilitiesResult, error) {
+	// handle wrangling the filter values to make sure they're within the bounds we want to support.
+	// if we don't do this, we may get some unexpected results (including requesting 1000+ results from the db)
+	if filter.Limit <= 0 {
+		filter.Limit = 10
+	}
+	if filter.Limit > 100 {
+		filter.Limit = 100
+	}
+	if filter.Offset < 0 {
+		filter.Offset = 0
 	}
 
-	if limit > 100 {
-		limit = 100
+	filterQuery := bson.M{}
+
+	// go through each of the filter options and add them to the filter query if they're not empty
+	if filter.StateCode != "" {
+		filterQuery["address.state"] = filter.StateCode
 	}
 
-	if offset < 0 {
-		offset = 0
+	if filter.Type != "" {
+		filterQuery["type"] = filter.Type
 	}
 
-	total, err := r.facilities.CountDocuments(ctx, bson.M{})
+	if len(filter.ServicesInclude) > 0 {
+		filterQuery["services_available"] = bson.M{
+			"$all": filter.ServicesInclude,
+		}
+	}
+
+	if filter.MinCapacity != nil {
+		filterQuery["parking_capacity"] = bson.M{
+			"$gte": *filter.MinCapacity,
+		}
+	}
+
+	if filter.MaxCapacity != nil {
+		if _, exists := filterQuery["parking_capacity"]; exists {
+			filterQuery["parking_capacity"].(bson.M)["$lte"] = *filter.MaxCapacity
+		} else {
+			filterQuery["parking_capacity"] = bson.M{
+				"$lte": *filter.MaxCapacity,
+			}
+		}
+	}
+
+	// find the total number of facilities that match the filter (this is prior to pagination but after the filter is applied,
+	// so we're counting only the facilities that match the filter)
+	total, err := r.facilities.CountDocuments(ctx, filterQuery)
 	if err != nil {
 		return nil, fmt.Errorf("unable to get total count: %w", err)
 	}
 
 	findOptions := options.Find()
-	findOptions.SetLimit(limit)
-	findOptions.SetSkip(offset)
+	findOptions.SetLimit(filter.Limit)
+	findOptions.SetSkip(filter.Offset)
 	findOptions.SetSort(bson.D{{Key: "_id", Value: -1}})
 
-	cursor, err := r.facilities.Find(ctx, bson.M{}, findOptions)
+	// find the facilities that match the filter and return paginated results
+	cursor, err := r.facilities.Find(ctx, filterQuery, findOptions)
 	if err != nil {
-		return nil, fmt.Errorf("failed retrieve list of facilities: %w", err)
+		return nil, fmt.Errorf("failed to retrieve list of facilities: %w", err)
 	}
 	defer cursor.Close(ctx)
 
-	facilities := make([]*domain.Facility, 0, limit)
+	facilities := make([]*domain.Facility, 0, filter.Limit)
 	if err := cursor.All(ctx, &facilities); err != nil {
 		return nil, fmt.Errorf("failed to decode facilities: %w", err)
 	}
@@ -164,46 +199,4 @@ func (r *facilityRepository) UpdateAvailableFacilityServices(ctx context.Context
 	}
 
 	return nil
-}
-
-func (r *facilityRepository) GetFacilitiesInState(ctx context.Context, stateCode string, limit, offset int64) (*ListFacilitiesResult, error) {
-	filter := bson.M{"address.state": stateCode}
-
-	if limit <= 0 {
-		limit = 10
-	}
-
-	if limit > 100 {
-		limit = 100
-	}
-
-	if offset < 0 {
-		offset = 0
-	}
-
-	total, err := r.facilities.CountDocuments(ctx, filter)
-	if err != nil {
-		return nil, fmt.Errorf("unable to get total count: %w", err)
-	}
-
-	findOptions := options.Find()
-	findOptions.SetLimit(limit)
-	findOptions.SetSkip(offset)
-	findOptions.SetSort(bson.D{{Key: "_id", Value: -1}})
-
-	cursor, err := r.facilities.Find(ctx, filter, findOptions)
-	if err != nil {
-		return nil, fmt.Errorf("error finding documents: %w", err)
-	}
-	defer cursor.Close(ctx)
-
-	facilities := make([]*domain.Facility, 0, limit)
-	if err := cursor.All(ctx, &facilities); err != nil {
-		return nil, fmt.Errorf("failed to decode facilities: %w", err)
-	}
-
-	return &ListFacilitiesResult{
-		Facilities: facilities,
-		Total:      total,
-	}, nil
 }
