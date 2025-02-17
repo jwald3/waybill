@@ -80,31 +80,6 @@ const (
 	TruckStatusRetired          TruckStatus = "RETIRED"
 )
 
-func (s TruckStatus) CanTransitionTo(desired TruckStatus) error {
-	// this map provides the valid pathing that a truck's status may take. Any keys with empty slices are "dead ends"
-	allowedTransitions := map[TruckStatus][]TruckStatus{
-		TruckStatusAvailable:        {TruckStatusInTransit, TruckStatusUnderMaintenance, TruckStatusRetired},
-		TruckStatusInTransit:        {TruckStatusAvailable, TruckStatusUnderMaintenance, TruckStatusRetired},
-		TruckStatusUnderMaintenance: {TruckStatusAvailable, TruckStatusRetired},
-		TruckStatusRetired:          {},
-	}
-
-	// find the current state in the map and get all valid transitions
-	allowed, exists := allowedTransitions[s]
-	if !exists {
-		return &TruckStateError{CurrentState: s, DesiredState: desired}
-	}
-
-	for _, allowedStatus := range allowed {
-		// if the desired state is in the slice, it is a valid transition and there's no error
-		if allowedStatus == desired {
-			return nil
-		}
-	}
-
-	return &TruckStateError{CurrentState: s, DesiredState: desired}
-}
-
 type Truck struct {
 	ID               primitive.ObjectID         `bson:"_id,omitempty" json:"id"`
 	TruckNumber      string                     `bson:"truck_number" json:"truck_number"`
