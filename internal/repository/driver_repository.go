@@ -21,7 +21,7 @@ type DriverRepository interface {
 	GetById(ctx context.Context, id primitive.ObjectID) (*domain.Driver, error)
 	Update(ctx context.Context, driver *domain.Driver) error
 	Delete(ctx context.Context, id primitive.ObjectID) error
-	List(ctx context.Context, limit, offset int64) (*ListDriversResult, error)
+	List(ctx context.Context, filter domain.DriverFilter) (*ListDriversResult, error)
 	UpdateEmploymentStatus(ctx context.Context, id primitive.ObjectID, status domain.EmploymentStatus) error
 }
 
@@ -137,26 +137,44 @@ func (r *driverRepository) Delete(ctx context.Context, id primitive.ObjectID) er
 	return nil
 }
 
-func (r *driverRepository) List(ctx context.Context, limit, offset int64) (*ListDriversResult, error) {
-	if limit <= 0 {
-		limit = 10
+func (r *driverRepository) List(ctx context.Context, filter domain.DriverFilter) (*ListDriversResult, error) {
+	if filter.Limit <= 0 {
+		filter.Limit = 10
 	}
-	if limit > 100 {
-		limit = 100
+	if filter.Limit > 100 {
+		filter.Limit = 100
 	}
-	if offset < 0 {
-		offset = 0
+	if filter.Offset < 0 {
+		filter.Offset = 0
 	}
 
-	total, err := r.drivers.CountDocuments(ctx, bson.M{})
+	filterQuery := bson.M{}
+
+	if filter.LicenseState != "" {
+		filterQuery["license_state"] = filter.LicenseState
+	}
+
+	if filter.Phone != "" {
+		filterQuery["phone"] = filter.Phone
+	}
+
+	if filter.Email != "" {
+		filterQuery["email"] = filter.Email
+	}
+
+	if filter.EmploymentStatus != "" {
+		filterQuery["employment_status"] = filter.EmploymentStatus
+	}
+
+	total, err := r.drivers.CountDocuments(ctx, filterQuery)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get total count: %w", err)
 	}
 
 	pipeline := mongo.Pipeline{
 		{{Key: "$sort", Value: bson.M{"_id": -1}}},
-		{{Key: "$skip", Value: offset}},
-		{{Key: "$limit", Value: limit}},
+		{{Key: "$skip", Value: filter.Offset}},
+		{{Key: "$limit", Value: filter.Limit}},
 		{{Key: "$lookup", Value: bson.M{
 			"from":         "trucks",
 			"localField":   "assigned_truck_id",
@@ -180,7 +198,7 @@ func (r *driverRepository) List(ctx context.Context, limit, offset int64) (*List
 	}
 	defer cursor.Close(ctx)
 
-	drivers := make([]*domain.Driver, 0, limit)
+	drivers := make([]*domain.Driver, 0, filter.Limit)
 	if err := cursor.All(ctx, &drivers); err != nil {
 		return nil, fmt.Errorf("failed to decode drivers: %w", err)
 	}
