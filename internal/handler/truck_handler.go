@@ -263,7 +263,6 @@ func (h *TruckHandler) List(w http.ResponseWriter, r *http.Request) {
 		if id, err := primitive.ObjectIDFromHex(assignedDriver); err == nil {
 			filter.AssignedDriverID = &id
 		}
-
 	}
 
 	if trailerType := r.URL.Query().Get("trailerType"); trailerType != "" {
