@@ -21,7 +21,7 @@ type IncidentReportRepository interface {
 	GetById(ctx context.Context, id primitive.ObjectID) (*domain.IncidentReport, error)
 	Update(ctx context.Context, incidentReport *domain.IncidentReport) error
 	Delete(ctx context.Context, id primitive.ObjectID) error
-	List(ctx context.Context, limit, offset int64) (*ListIncidentReportsResult, error)
+	List(ctx context.Context, filter domain.IncidentReportFilter) (*ListIncidentReportsResult, error)
 }
 
 type ListIncidentReportsResult struct {
@@ -149,26 +149,44 @@ func (r *incidentReportRepository) Delete(ctx context.Context, id primitive.Obje
 	return nil
 }
 
-func (r *incidentReportRepository) List(ctx context.Context, limit, offset int64) (*ListIncidentReportsResult, error) {
-	if limit <= 0 {
-		limit = 10
+func (r *incidentReportRepository) List(ctx context.Context, filter domain.IncidentReportFilter) (*ListIncidentReportsResult, error) {
+	if filter.Limit <= 0 {
+		filter.Limit = 10
 	}
-	if limit > 100 {
-		limit = 100
+	if filter.Limit > 100 {
+		filter.Limit = 100
 	}
-	if offset < 0 {
-		offset = 0
+	if filter.Offset < 0 {
+		filter.Offset = 0
 	}
 
-	total, err := r.incidentReports.CountDocuments(ctx, bson.M{})
+	filterQuery := bson.M{}
+
+	if filter.TripID != &primitive.NilObjectID {
+		filterQuery["trip_id"] = filter.TripID
+	}
+
+	if filter.TruckID != &primitive.NilObjectID {
+		filterQuery["truck_id"] = filter.TruckID
+	}
+
+	if filter.DriverID != &primitive.NilObjectID {
+		filterQuery["driver_id"] = filter.DriverID
+	}
+
+	if filter.Type != "" {
+		filterQuery["type"] = filter.Type
+	}
+
+	total, err := r.incidentReports.CountDocuments(ctx, filterQuery)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get total count: %w", err)
 	}
 
 	pipeline := mongo.Pipeline{
 		{{Key: "$sort", Value: bson.M{"_id": -1}}},
-		{{Key: "$skip", Value: offset}},
-		{{Key: "$limit", Value: limit}},
+		{{Key: "$skip", Value: filter.Offset}},
+		{{Key: "$limit", Value: filter.Limit}},
 		{{Key: "$lookup", Value: bson.M{
 			"from":         "trips",
 			"localField":   "trip_id",
@@ -212,7 +230,7 @@ func (r *incidentReportRepository) List(ctx context.Context, limit, offset int64
 	}
 	defer cursor.Close(ctx)
 
-	incidentReports := make([]*domain.IncidentReport, 0, limit)
+	incidentReports := make([]*domain.IncidentReport, 0, filter.Limit)
 	if err := cursor.All(ctx, &incidentReports); err != nil {
 		return nil, fmt.Errorf("failed to decode incident reports: %w", err)
 	}
