@@ -10,7 +10,6 @@ import (
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
-	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
 type truckRepository struct {
@@ -165,11 +164,6 @@ func (r *truckRepository) List(ctx context.Context, filter domain.TruckFilter) (
 	if err != nil {
 		return nil, fmt.Errorf("failed to get total count: %w", err)
 	}
-
-	findOptions := options.Find()
-	findOptions.SetLimit(filter.Limit)
-	findOptions.SetSkip(filter.Offset)
-	findOptions.SetSort(bson.D{{Key: "_id", Value: -1}})
 
 	pipeline := mongo.Pipeline{
 		{{Key: "$sort", Value: bson.M{"_id": -1}}},
