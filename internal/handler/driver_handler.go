@@ -218,10 +218,25 @@ func (h *DriverHandler) Delete(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *DriverHandler) List(w http.ResponseWriter, r *http.Request) {
-	limit := getQueryIntParam(r, "limit", 10)
-	offset := getQueryIntParam(r, "offset", 0)
+	filter := domain.NewDriverFilter()
 
-	result, err := h.driverService.List(r.Context(), int64(limit), int64(offset))
+	if licenseState := r.URL.Query().Get("licenseState"); licenseState != "" {
+		filter.LicenseState = licenseState
+	}
+
+	if phone := r.URL.Query().Get("phone"); phone != "" {
+		filter.Phone = domain.PhoneNumber(phone)
+	}
+
+	if email := r.URL.Query().Get("email"); email != "" {
+		filter.Email = domain.Email(email)
+	}
+
+	if employmentStatus := r.URL.Query().Get("employmentStatus"); employmentStatus != "" {
+		filter.EmploymentStatus = domain.EmploymentStatus(employmentStatus)
+	}
+
+	result, err := h.driverService.List(r.Context(), filter)
 	if err != nil {
 		WriteJSON(w, http.StatusInternalServerError, Response{Error: "failed to fetch drivers"})
 		return
@@ -233,16 +248,16 @@ func (h *DriverHandler) List(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var nextOffset *int64
-	if int64(offset)+int64(limit) < result.Total {
-		next := int64(offset + limit)
+	if filter.Offset+filter.Limit < result.Total {
+		next := filter.Offset + filter.Limit
 		nextOffset = &next
 	}
 
 	response := PaginatedResponse{
 		Items:      driverResponses,
 		Total:      result.Total,
-		Limit:      int64(limit),
-		Offset:     int64(offset),
+		Limit:      filter.Limit,
+		Offset:     filter.Offset,
 		NextOffset: nextOffset,
 	}
 
