@@ -21,7 +21,7 @@ type FuelLogRepository interface {
 	GetById(ctx context.Context, id primitive.ObjectID) (*domain.FuelLog, error)
 	Update(ctx context.Context, fuelLog *domain.FuelLog) error
 	Delete(ctx context.Context, id primitive.ObjectID) error
-	List(ctx context.Context, limit, offset int64) (*ListFuelLogsResult, error)
+	List(ctx context.Context, filter domain.FuelLogFilter) (*ListFuelLogsResult, error)
 }
 
 type ListFuelLogsResult struct {
@@ -131,26 +131,32 @@ func (r *fuelLogRepository) Delete(ctx context.Context, id primitive.ObjectID) e
 	return nil
 }
 
-func (r *fuelLogRepository) List(ctx context.Context, limit, offset int64) (*ListFuelLogsResult, error) {
-	if limit <= 0 {
-		limit = 10
+func (r *fuelLogRepository) List(ctx context.Context, filter domain.FuelLogFilter) (*ListFuelLogsResult, error) {
+	if filter.Limit <= 0 {
+		filter.Limit = 10
 	}
-	if limit > 100 {
-		limit = 100
+	if filter.Limit > 100 {
+		filter.Limit = 100
 	}
-	if offset < 0 {
-		offset = 0
+	if filter.Offset < 0 {
+		filter.Offset = 0
 	}
 
-	total, err := r.fuelLogs.CountDocuments(ctx, bson.M{})
+	filterQuery := bson.M{}
+
+	if filter.TripID != &primitive.NilObjectID {
+		filterQuery["trip_id"] = filter.TripID
+	}
+
+	total, err := r.fuelLogs.CountDocuments(ctx, filterQuery)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get total count: %w", err)
 	}
 
 	pipeline := mongo.Pipeline{
 		{{Key: "$sort", Value: bson.M{"_id": -1}}},
-		{{Key: "$skip", Value: offset}},
-		{{Key: "$limit", Value: limit}},
+		{{Key: "$skip", Value: filter.Offset}},
+		{{Key: "$limit", Value: filter.Limit}},
 		{{Key: "$lookup", Value: bson.M{
 			"from":         "trips",
 			"localField":   "trip_id",
@@ -174,7 +180,7 @@ func (r *fuelLogRepository) List(ctx context.Context, limit, offset int64) (*Lis
 	}
 	defer cursor.Close(ctx)
 
-	fuelLogs := make([]*domain.FuelLog, 0, limit)
+	fuelLogs := make([]*domain.FuelLog, 0, filter.Limit)
 	if err := cursor.All(ctx, &fuelLogs); err != nil {
 		return nil, fmt.Errorf("failed to decode fuel logs: %w", err)
 	}
