@@ -19,7 +19,7 @@ type TruckService interface {
 	GetById(ctx context.Context, id primitive.ObjectID) (*domain.Truck, error)
 	Update(ctx context.Context, truck *domain.Truck) error
 	Delete(ctx context.Context, id primitive.ObjectID) error
-	List(ctx context.Context, limit, offset int64) (*repository.ListTrucksResult, error)
+	List(ctx context.Context, filter domain.TruckFilter) (*repository.ListTrucksResult, error)
 	SetTruckInTransit(ctx context.Context, id primitive.ObjectID) error
 	SetTruckInMaintenance(ctx context.Context, id primitive.ObjectID) error
 	RetireTruck(ctx context.Context, id primitive.ObjectID) error
@@ -81,12 +81,12 @@ func (s *truckService) Delete(ctx context.Context, id primitive.ObjectID) error 
 	return nil
 }
 
-func (s *truckService) List(ctx context.Context, limit, offset int64) (*repository.ListTrucksResult, error) {
+func (s *truckService) List(ctx context.Context, filter domain.TruckFilter) (*repository.ListTrucksResult, error) {
 	if ctx == nil {
 		return nil, fmt.Errorf("context is required")
 	}
 
-	result, err := s.truckRepo.List(ctx, limit, offset)
+	result, err := s.truckRepo.List(ctx, filter)
 	if err != nil {
 		return nil, fmt.Errorf("failed to list trucks: %w", err)
 	}

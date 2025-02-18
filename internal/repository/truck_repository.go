@@ -10,6 +10,7 @@ import (
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
+	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
 type truckRepository struct {
@@ -21,7 +22,7 @@ type TruckRepository interface {
 	GetById(ctx context.Context, id primitive.ObjectID) (*domain.Truck, error)
 	Update(ctx context.Context, truck *domain.Truck) error
 	Delete(ctx context.Context, id primitive.ObjectID) error
-	List(ctx context.Context, limit, offset int64) (*ListTrucksResult, error)
+	List(ctx context.Context, filter domain.TruckFilter) (*ListTrucksResult, error)
 }
 
 type ListTrucksResult struct {
@@ -131,26 +132,49 @@ func (r *truckRepository) Delete(ctx context.Context, id primitive.ObjectID) err
 	return nil
 }
 
-func (r *truckRepository) List(ctx context.Context, limit, offset int64) (*ListTrucksResult, error) {
-	if limit <= 0 {
-		limit = 10
+func (r *truckRepository) List(ctx context.Context, filter domain.TruckFilter) (*ListTrucksResult, error) {
+	if filter.Limit <= 0 {
+		filter.Limit = 10
 	}
-	if limit > 100 {
-		limit = 100
+	if filter.Limit > 100 {
+		filter.Limit = 100
 	}
-	if offset < 0 {
-		offset = 0
+	if filter.Offset < 0 {
+		filter.Offset = 0
 	}
 
-	total, err := r.trucks.CountDocuments(ctx, bson.M{})
+	filterQuery := bson.M{}
+
+	if filter.TrailerType != "" {
+		filterQuery["trailer_type"] = filter.TrailerType
+	}
+
+	if filter.FuelType != "" {
+		filterQuery["fuel_type"] = filter.FuelType
+	}
+
+	if filter.Status != "" {
+		filterQuery["status"] = filter.Status
+	}
+
+	if filter.AssignedDriverID != &primitive.NilObjectID {
+		filterQuery["assigned_driver_id"] = filter.AssignedDriverID
+	}
+
+	total, err := r.trucks.CountDocuments(ctx, filterQuery)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get total count: %w", err)
 	}
 
+	findOptions := options.Find()
+	findOptions.SetLimit(filter.Limit)
+	findOptions.SetSkip(filter.Offset)
+	findOptions.SetSort(bson.D{{Key: "_id", Value: -1}})
+
 	pipeline := mongo.Pipeline{
 		{{Key: "$sort", Value: bson.M{"_id": -1}}},
-		{{Key: "$skip", Value: offset}},
-		{{Key: "$limit", Value: limit}},
+		{{Key: "$skip", Value: filter.Offset}},
+		{{Key: "$limit", Value: filter.Limit}},
 		{{Key: "$lookup", Value: bson.M{
 			"from":         "drivers",
 			"localField":   "assigned_driver_id",
@@ -172,7 +196,7 @@ func (r *truckRepository) List(ctx context.Context, limit, offset int64) (*ListT
 	}
 	defer cursor.Close(ctx)
 
-	trucks := make([]*domain.Truck, 0, limit)
+	trucks := make([]*domain.Truck, 0, filter.Limit)
 	if err := cursor.All(ctx, &trucks); err != nil {
 		return nil, fmt.Errorf("failed to decode trucks: %w", err)
 	}

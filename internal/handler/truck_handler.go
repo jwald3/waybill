@@ -249,10 +249,35 @@ func (h *TruckHandler) Delete(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *TruckHandler) List(w http.ResponseWriter, r *http.Request) {
-	limit := getQueryIntParam(r, "limit", 10)
-	offset := getQueryIntParam(r, "offset", 0)
+	filter := domain.NewTruckFilter()
 
-	result, err := h.truckService.List(r.Context(), int64(limit), int64(offset))
+	if vin := r.URL.Query().Get("vin"); vin != "" {
+		filter.VIN = vin
+	}
+
+	if status := r.URL.Query().Get("status"); status != "" {
+		filter.Status = domain.TruckStatus(status)
+	}
+
+	if assignedDriver := r.URL.Query().Get("assignedDriver"); assignedDriver != "" {
+		if id, err := primitive.ObjectIDFromHex(assignedDriver); err == nil {
+			filter.AssignedDriverID = &id
+		}
+
+	}
+
+	if trailerType := r.URL.Query().Get("trailerType"); trailerType != "" {
+		filter.TrailerType = domain.TrailerType(trailerType)
+	}
+
+	if fuelType := r.URL.Query().Get("fuelType"); fuelType != "" {
+		filter.FuelType = domain.FuelType(fuelType)
+	}
+
+	filter.Limit = int64(getQueryIntParam(r, "limit", 10))
+	filter.Offset = int64(getQueryIntParam(r, "offset", 0))
+
+	result, err := h.truckService.List(r.Context(), filter)
 	if err != nil {
 		WriteJSON(w, http.StatusInternalServerError, Response{Error: "failed to fetch trucks"})
 		return
@@ -264,16 +289,16 @@ func (h *TruckHandler) List(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var nextOffset *int64
-	if int64(offset)+int64(limit) < result.Total {
-		next := int64(offset + limit)
+	if filter.Offset+filter.Limit < result.Total {
+		next := filter.Offset + filter.Limit
 		nextOffset = &next
 	}
 
 	response := PaginatedResponse{
 		Items:      truckResponses,
 		Total:      result.Total,
-		Limit:      int64(limit),
-		Offset:     int64(offset),
+		Limit:      filter.Limit,
+		Offset:     filter.Offset,
 		NextOffset: nextOffset,
 	}
 
