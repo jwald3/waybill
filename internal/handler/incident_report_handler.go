@@ -210,10 +210,36 @@ func (h *IncidentReportHandler) Delete(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *IncidentReportHandler) List(w http.ResponseWriter, r *http.Request) {
-	limit := getQueryIntParam(r, "limit", 10)
-	offset := getQueryIntParam(r, "offset", 0)
+	filter := domain.NewIncidentReportFilter()
 
-	result, err := h.incidentReportService.List(r.Context(), int64(limit), int64(offset))
+	/*
+		TripID   *primitive.ObjectID
+		TruckID  *primitive.ObjectID
+		DriverID *primitive.ObjectID
+	*/
+
+	if tripId := r.URL.Query().Get("tripID"); tripId != "" {
+		if id, err := primitive.ObjectIDFromHex(tripId); err != nil {
+			filter.TripID = &id
+		}
+	}
+
+	if truckId := r.URL.Query().Get("truckID"); truckId != "" {
+		if id, err := primitive.ObjectIDFromHex(truckId); err != nil {
+			filter.TruckID = &id
+		}
+	}
+
+	if truckId := r.URL.Query().Get("truckID"); truckId != "" {
+		if id, err := primitive.ObjectIDFromHex(truckId); err != nil {
+			filter.TruckID = &id
+		}
+	}
+
+	filter.Limit = int64(getQueryIntParam(r, "limit", 10))
+	filter.Offset = int64(getQueryIntParam(r, "offset", 0))
+
+	result, err := h.incidentReportService.List(r.Context(), filter)
 	if err != nil {
 		WriteJSON(w, http.StatusInternalServerError, Response{Error: "failed to fetch incident reports"})
 		return
@@ -225,16 +251,16 @@ func (h *IncidentReportHandler) List(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var nextOffset *int64
-	if int64(offset)+int64(limit) < result.Total {
-		next := int64(offset + limit)
+	if filter.Offset+filter.Limit < result.Total {
+		next := filter.Offset + filter.Limit
 		nextOffset = &next
 	}
 
 	response := PaginatedResponse{
 		Items:      incidentReportResponses,
 		Total:      result.Total,
-		Limit:      int64(limit),
-		Offset:     int64(offset),
+		Limit:      filter.Limit,
+		Offset:     filter.Offset,
 		NextOffset: nextOffset,
 	}
 
