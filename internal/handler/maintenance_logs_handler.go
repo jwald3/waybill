@@ -192,11 +192,6 @@ func (h *MaintenanceLogHandler) Delete(w http.ResponseWriter, r *http.Request) {
 func (h *MaintenanceLogHandler) List(w http.ResponseWriter, r *http.Request) {
 	filter := domain.NewMaintenanceLogFilter()
 
-	/*
-		TruckID     *primitive.ObjectID
-		ServiceType MaintenanceServiceType
-	*/
-
 	if truckId := r.URL.Query().Get("truckID"); truckId != "" {
 		if id, err := primitive.ObjectIDFromHex(truckId); err != nil {
 			filter.TruckID = &id
