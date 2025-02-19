@@ -190,10 +190,27 @@ func (h *MaintenanceLogHandler) Delete(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *MaintenanceLogHandler) List(w http.ResponseWriter, r *http.Request) {
-	limit := getQueryIntParam(r, "limit", 10)
-	offset := getQueryIntParam(r, "offset", 0)
+	filter := domain.NewMaintenanceLogFilter()
 
-	result, err := h.maintenanceLogService.List(r.Context(), int64(limit), int64(offset))
+	/*
+		TruckID     *primitive.ObjectID
+		ServiceType MaintenanceServiceType
+	*/
+
+	if truckId := r.URL.Query().Get("truckID"); truckId != "" {
+		if id, err := primitive.ObjectIDFromHex(truckId); err != nil {
+			filter.TruckID = &id
+		}
+	}
+
+	if serviceType := r.URL.Query().Get("serviceType"); serviceType != "" {
+		filter.ServiceType = domain.MaintenanceServiceType(serviceType)
+	}
+
+	filter.Limit = int64(getQueryIntParam(r, "limit", 10))
+	filter.Offset = int64(getQueryIntParam(r, "offset", 0))
+
+	result, err := h.maintenanceLogService.List(r.Context(), filter)
 	if err != nil {
 		WriteJSON(w, http.StatusInternalServerError, Response{Error: "failed to fetch maintenance logs"})
 		return
@@ -205,16 +222,16 @@ func (h *MaintenanceLogHandler) List(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var nextOffset *int64
-	if int64(offset)+int64(limit) < result.Total {
-		next := int64(offset + limit)
+	if filter.Offset+filter.Limit < result.Total {
+		next := filter.Offset + filter.Limit
 		nextOffset = &next
 	}
 
 	response := PaginatedResponse{
 		Items:      maintenanceLogResponses,
 		Total:      result.Total,
-		Limit:      int64(limit),
-		Offset:     int64(offset),
+		Limit:      filter.Limit,
+		Offset:     filter.Offset,
 		NextOffset: nextOffset,
 	}
 
