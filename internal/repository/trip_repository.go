@@ -21,7 +21,7 @@ type TripRepository interface {
 	GetById(ctx context.Context, id primitive.ObjectID) (*domain.Trip, error)
 	Update(ctx context.Context, trip *domain.Trip) error
 	Delete(ctx context.Context, id primitive.ObjectID) error
-	List(ctx context.Context, limit, offset int64) (*ListTripsResult, error)
+	List(ctx context.Context, filter domain.TripFilter) (*ListTripsResult, error)
 }
 
 type ListTripsResult struct {
@@ -165,26 +165,51 @@ func (r *tripRepository) Delete(ctx context.Context, id primitive.ObjectID) erro
 	return nil
 }
 
-func (r *tripRepository) List(ctx context.Context, limit, offset int64) (*ListTripsResult, error) {
-	if limit <= 0 {
-		limit = 10
+func (r *tripRepository) List(ctx context.Context, filter domain.TripFilter) (*ListTripsResult, error) {
+	if filter.Limit <= 0 {
+		filter.Limit = 10
 	}
-	if limit > 100 {
-		limit = 100
+	if filter.Limit > 100 {
+		filter.Limit = 100
 	}
-	if offset < 0 {
-		offset = 0
+	if filter.Offset < 0 {
+		filter.Offset = 0
 	}
 
-	total, err := r.trips.CountDocuments(ctx, bson.M{})
+	filterQuery := bson.M{}
+
+	/*
+		DriverID        *primitive.ObjectID
+		TruckID         *primitive.ObjectID
+		StartFacilityID *primitive.ObjectID
+		EndFacilityID   *primitive.ObjectID
+	*/
+
+	if filter.DriverID != &primitive.NilObjectID {
+		filterQuery["driver_id"] = filter.DriverID
+	}
+
+	if filter.TruckID != &primitive.NilObjectID {
+		filterQuery["truck_id"] = filter.TruckID
+	}
+
+	if filter.StartFacilityID != &primitive.NilObjectID {
+		filterQuery["start_facility_id"] = filter.StartFacilityID
+	}
+
+	if filter.EndFacilityID != &primitive.NilObjectID {
+		filterQuery["end_facility_id"] = filter.EndFacilityID
+	}
+
+	total, err := r.trips.CountDocuments(ctx, filterQuery)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get total count: %w", err)
 	}
 
 	pipeline := mongo.Pipeline{
 		{{Key: "$sort", Value: bson.M{"_id": -1}}},
-		{{Key: "$skip", Value: offset}},
-		{{Key: "$limit", Value: limit}},
+		{{Key: "$skip", Value: filter.Offset}},
+		{{Key: "$limit", Value: filter.Limit}},
 		{{Key: "$lookup", Value: bson.M{
 			"from":         "drivers",
 			"localField":   "driver_id",
@@ -239,7 +264,7 @@ func (r *tripRepository) List(ctx context.Context, limit, offset int64) (*ListTr
 	}
 	defer cursor.Close(ctx)
 
-	trips := make([]*domain.Trip, 0, limit)
+	trips := make([]*domain.Trip, 0, filter.Limit)
 	if err := cursor.All(ctx, &trips); err != nil {
 		return nil, fmt.Errorf("failed to decode trips: %w", err)
 	}
