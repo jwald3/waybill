@@ -147,7 +147,7 @@ func (r *maintenanceLogRepository) List(ctx context.Context, filter domain.Maint
 		filterQuery["service_type"] = filter.ServiceType
 	}
 
-	total, err := r.maintenanceLogs.CountDocuments(ctx, filter)
+	total, err := r.maintenanceLogs.CountDocuments(ctx, filterQuery)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get total count: %w", err)
 	}
