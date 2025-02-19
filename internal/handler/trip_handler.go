@@ -237,10 +237,36 @@ func (h *TripHandler) Delete(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *TripHandler) List(w http.ResponseWriter, r *http.Request) {
-	limit := getQueryIntParam(r, "limit", 10)
-	offset := getQueryIntParam(r, "offset", 0)
+	filter := domain.NewTripFilter()
 
-	result, err := h.tripService.List(r.Context(), int64(limit), int64(offset))
+	if driverId := r.URL.Query().Get("driverID"); driverId != "" {
+		if id, err := primitive.ObjectIDFromHex(driverId); err != nil {
+			filter.TruckID = &id
+		}
+	}
+
+	if truckId := r.URL.Query().Get("truckID"); truckId != "" {
+		if id, err := primitive.ObjectIDFromHex(truckId); err != nil {
+			filter.TruckID = &id
+		}
+	}
+
+	if startFacilityId := r.URL.Query().Get("startFacilityID"); startFacilityId != "" {
+		if id, err := primitive.ObjectIDFromHex(startFacilityId); err != nil {
+			filter.StartFacilityID = &id
+		}
+	}
+
+	if endFacilityId := r.URL.Query().Get("endFacilityID"); endFacilityId != "" {
+		if id, err := primitive.ObjectIDFromHex(endFacilityId); err != nil {
+			filter.EndFacilityID = &id
+		}
+	}
+
+	filter.Limit = int64(getQueryIntParam(r, "limit", 10))
+	filter.Offset = int64(getQueryIntParam(r, "offset", 0))
+
+	result, err := h.tripService.List(r.Context(), filter)
 	if err != nil {
 		WriteJSON(w, http.StatusInternalServerError, Response{Error: "failed to fetch trips"})
 		return
@@ -252,16 +278,16 @@ func (h *TripHandler) List(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var nextOffset *int64
-	if int64(offset)+int64(limit) < result.Total {
-		next := int64(offset + limit)
+	if filter.Offset+filter.Limit < result.Total {
+		next := filter.Offset + filter.Limit
 		nextOffset = &next
 	}
 
 	response := PaginatedResponse{
 		Items:      tripResponses,
 		Total:      result.Total,
-		Limit:      int64(limit),
-		Offset:     int64(offset),
+		Limit:      filter.Limit,
+		Offset:     filter.Offset,
 		NextOffset: nextOffset,
 	}
 
