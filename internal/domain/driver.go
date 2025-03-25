@@ -39,7 +39,7 @@ const (
 )
 
 type Driver struct {
-	ID                primitive.ObjectID         `bson:"_id,omitempty" json:"_id,omitempty"`
+	ID                primitive.ObjectID         `bson:"_id,omitempty" json:"id,omitempty"`
 	FirstName         string                     `bson:"first_name" json:"first_name"`
 	LastName          string                     `bson:"last_name" json:"last_name"`
 	DOB               string                     `bson:"dob" json:"dob"`

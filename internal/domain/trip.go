@@ -21,7 +21,7 @@ const (
 )
 
 type Trip struct {
-	ID              primitive.ObjectID         `bson:"_id,omitempty" json:"_id,omitempty"`
+	ID              primitive.ObjectID         `bson:"_id,omitempty" json:"id,omitempty"`
 	TripNumber      string                     `bson:"trip_number" json:"trip_number"`
 	DriverID        *primitive.ObjectID        `bson:"driver_id,omitempty" json:"driver_id,omitempty"`
 	Driver          *Driver                    `bson:"driver,omitempty" json:"driver,omitempty"`
