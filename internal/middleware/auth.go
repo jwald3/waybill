@@ -1,31 +1,49 @@
 package middleware
 
 import (
+	"context"
 	"net/http"
+	"strings"
 
-	"github.com/jwald3/waybill/internal/config"
+	"github.com/golang-jwt/jwt/v5"
 )
 
-// this is a SUPER basic API key-based authentication that uses a key stored on the server and requires that clients provide the key in their request headers. If the client key matches the server key, they can access the resources. Otherwise, they cannot.
-// I'll expand on a more robust auth system later on.
-func APIKeyAuth(next http.Handler) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		// we're going to access the API key as stored in config.go. Using the config means that we have the default value as a fallback.
-		cfg := config.Load()
-		validKey := cfg.App.APIKey
-		if validKey == "" {
-			// this should never happen outside of the default being an empty string or the user-defined value being empty
-			http.Error(w, "server not configured with an API key", http.StatusInternalServerError)
-			return
-		}
+type contextKey string
 
-		// access the client API key value from the header. If it doesn't match the server value, throw a 401. Otherwise, continue to the `next()` method (either the handler or additional middleware)
-		clientKey := r.Header.Get("X-API-Key")
-		if clientKey == "" || clientKey != validKey {
-			http.Error(w, "invalid or missing API key", http.StatusUnauthorized)
-			return
-		}
+const UserContextKey contextKey = "user"
 
-		next.ServeHTTP(w, r)
-	})
+func Auth(jwtKey []byte) func(http.Handler) http.Handler {
+	return func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			authHeader := r.Header.Get("Authorization")
+			if authHeader == "" {
+				http.Error(w, "unauthorized", http.StatusUnauthorized)
+				return
+			}
+
+			bearerToken := strings.Split(authHeader, " ")
+			if len(bearerToken) != 2 {
+				http.Error(w, "invalid token format", http.StatusUnauthorized)
+				return
+			}
+
+			token, err := jwt.Parse(bearerToken[1], func(token *jwt.Token) (interface{}, error) {
+				return jwtKey, nil
+			})
+
+			if err != nil || !token.Valid {
+				http.Error(w, "invalid token", http.StatusUnauthorized)
+				return
+			}
+
+			claims, ok := token.Claims.(jwt.MapClaims)
+			if !ok {
+				http.Error(w, "invalid token claims", http.StatusUnauthorized)
+				return
+			}
+
+			ctx := context.WithValue(r.Context(), UserContextKey, claims)
+			next.ServeHTTP(w, r.WithContext(ctx))
+		})
+	}
 }

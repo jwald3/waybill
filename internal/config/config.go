@@ -43,6 +43,10 @@ type Config struct {
 		Requests int
 		Duration time.Duration
 	}
+
+	Auth struct {
+		JWTKey string
+	}
 }
 
 func Load() *Config {
@@ -70,6 +74,8 @@ func Load() *Config {
 	config.RateLimit.Enabled = getBoolEnv("RATE_LIMIT_ENABLED", true)
 	config.RateLimit.Requests = getIntEnv("RATE_LIMIT_REQUESTS", 100)
 	config.RateLimit.Duration = getDurationEnv("RATE_LIMIT_DURATION", time.Hour)
+
+	config.Auth.JWTKey = getEnv("JWT_KEY", "your-secret-key-here")
 
 	return config
 }
