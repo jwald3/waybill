@@ -3,8 +3,10 @@ package handler
 import (
 	"net/http"
 
+	"github.com/golang-jwt/jwt/v5"
 	"github.com/gorilla/mux"
 	"github.com/jwald3/waybill/internal/domain"
+	"github.com/jwald3/waybill/internal/middleware"
 	"github.com/jwald3/waybill/internal/service"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
@@ -50,6 +52,7 @@ type DriverUpdateRequest struct {
 
 type DriverResponse struct {
 	ID                primitive.ObjectID      `json:"id,omitempty"`
+	UserID            primitive.ObjectID      `json:"user_id"`
 	FirstName         string                  `json:"first_name"`
 	LastName          string                  `json:"last_name"`
 	DOB               string                  `json:"dob"`
@@ -68,8 +71,9 @@ type ListDriversResponse struct {
 	Drivers []DriverResponse `json:"drivers"`
 }
 
-func driverRequestToDomainCreate(req DriverCreateRequest) (*domain.Driver, error) {
+func driverRequestToDomainCreate(userID primitive.ObjectID, req DriverCreateRequest) (*domain.Driver, error) {
 	return domain.NewDriver(
+		userID,
 		req.FirstName,
 		req.LastName,
 		req.DOB,
@@ -110,6 +114,7 @@ func driverRequestToDomainUpdate(req DriverUpdateRequest) (*domain.Driver, error
 func driverDomainToResponse(d *domain.Driver) DriverResponse {
 	return DriverResponse{
 		ID:                d.ID,
+		UserID:            d.UserID,
 		FirstName:         d.FirstName,
 		LastName:          d.LastName,
 		DOB:               d.DOB,
@@ -128,14 +133,31 @@ func driverDomainToResponse(d *domain.Driver) DriverResponse {
 // =================================================================
 
 func (h *DriverHandler) Create(w http.ResponseWriter, r *http.Request) {
-	var req DriverCreateRequest
+	claims, ok := r.Context().Value(middleware.UserContextKey).(jwt.MapClaims)
+	if !ok {
+		WriteJSON(w, http.StatusUnauthorized, Response{Error: "unauthorized"})
+		return
+	}
 
+	userIDStr, ok := claims["user_id"].(string)
+	if !ok {
+		WriteJSON(w, http.StatusUnauthorized, Response{Error: "invalid user id in token"})
+		return
+	}
+
+	userID, err := primitive.ObjectIDFromHex(userIDStr)
+	if err != nil {
+		WriteJSON(w, http.StatusUnauthorized, Response{Error: "invalid user id format"})
+		return
+	}
+
+	var req DriverCreateRequest
 	if err := ReadJSON(r, &req); err != nil {
 		WriteJSON(w, http.StatusBadRequest, Response{Error: "invalid request payload"})
 		return
 	}
 
-	driver, err := driverRequestToDomainCreate(req)
+	driver, err := driverRequestToDomainCreate(userID, req)
 	if err != nil {
 		WriteJSON(w, http.StatusBadRequest, Response{Error: err.Error()})
 		return
@@ -150,6 +172,24 @@ func (h *DriverHandler) Create(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *DriverHandler) GetById(w http.ResponseWriter, r *http.Request) {
+	claims, ok := r.Context().Value(middleware.UserContextKey).(jwt.MapClaims)
+	if !ok {
+		WriteJSON(w, http.StatusUnauthorized, Response{Error: "unauthorized"})
+		return
+	}
+
+	userIDStr, ok := claims["user_id"].(string)
+	if !ok {
+		WriteJSON(w, http.StatusUnauthorized, Response{Error: "invalid user id in token"})
+		return
+	}
+
+	userID, err := primitive.ObjectIDFromHex(userIDStr)
+	if err != nil {
+		WriteJSON(w, http.StatusUnauthorized, Response{Error: "invalid user id format"})
+		return
+	}
+
 	idStr := mux.Vars(r)["id"]
 	objectID, err := primitive.ObjectIDFromHex(idStr)
 	if err != nil {
@@ -157,7 +197,7 @@ func (h *DriverHandler) GetById(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	driver, err := h.driverService.GetById(r.Context(), objectID)
+	driver, err := h.driverService.GetById(r.Context(), objectID, userID)
 	if err != nil {
 		WriteJSON(w, http.StatusNotFound, Response{Error: "driver not found"})
 		return
@@ -197,6 +237,24 @@ func (h *DriverHandler) Update(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *DriverHandler) Delete(w http.ResponseWriter, r *http.Request) {
+	claims, ok := r.Context().Value(middleware.UserContextKey).(jwt.MapClaims)
+	if !ok {
+		WriteJSON(w, http.StatusUnauthorized, Response{Error: "unauthorized"})
+		return
+	}
+
+	userIDStr, ok := claims["user_id"].(string)
+	if !ok {
+		WriteJSON(w, http.StatusUnauthorized, Response{Error: "invalid user id in token"})
+		return
+	}
+
+	userID, err := primitive.ObjectIDFromHex(userIDStr)
+	if err != nil {
+		WriteJSON(w, http.StatusUnauthorized, Response{Error: "invalid user id format"})
+		return
+	}
+
 	idStr := mux.Vars(r)["id"]
 	objectID, err := primitive.ObjectIDFromHex(idStr)
 	if err != nil {
@@ -204,7 +262,7 @@ func (h *DriverHandler) Delete(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = h.driverService.Delete(r.Context(), objectID)
+	err = h.driverService.Delete(r.Context(), objectID, userID)
 	if err != nil {
 		if err == domain.ErrDriverNotFound {
 			WriteJSON(w, http.StatusNotFound, Response{Error: "driver not found"})
@@ -218,7 +276,26 @@ func (h *DriverHandler) Delete(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *DriverHandler) List(w http.ResponseWriter, r *http.Request) {
+	claims, ok := r.Context().Value(middleware.UserContextKey).(jwt.MapClaims)
+	if !ok {
+		WriteJSON(w, http.StatusUnauthorized, Response{Error: "unauthorized"})
+		return
+	}
+
+	userIDStr, ok := claims["user_id"].(string)
+	if !ok {
+		WriteJSON(w, http.StatusUnauthorized, Response{Error: "invalid user id in token"})
+		return
+	}
+
+	userID, err := primitive.ObjectIDFromHex(userIDStr)
+	if err != nil {
+		WriteJSON(w, http.StatusUnauthorized, Response{Error: "invalid user id format"})
+		return
+	}
+
 	filter := domain.NewDriverFilter()
+	filter.UserID = userID
 
 	if licenseState := r.URL.Query().Get("licenseState"); licenseState != "" {
 		filter.LicenseState = licenseState
@@ -265,6 +342,24 @@ func (h *DriverHandler) List(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *DriverHandler) SuspendDriver(w http.ResponseWriter, r *http.Request) {
+	claims, ok := r.Context().Value(middleware.UserContextKey).(jwt.MapClaims)
+	if !ok {
+		WriteJSON(w, http.StatusUnauthorized, Response{Error: "unauthorized"})
+		return
+	}
+
+	userIDStr, ok := claims["user_id"].(string)
+	if !ok {
+		WriteJSON(w, http.StatusUnauthorized, Response{Error: "invalid user id in token"})
+		return
+	}
+
+	userID, err := primitive.ObjectIDFromHex(userIDStr)
+	if err != nil {
+		WriteJSON(w, http.StatusUnauthorized, Response{Error: "invalid user id format"})
+		return
+	}
+
 	idStr := mux.Vars(r)["id"]
 	objectID, err := primitive.ObjectIDFromHex(idStr)
 	if err != nil {
@@ -272,12 +367,12 @@ func (h *DriverHandler) SuspendDriver(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err := h.driverService.SuspendDriver(r.Context(), objectID); err != nil {
+	if err := h.driverService.SuspendDriver(r.Context(), objectID, userID); err != nil {
 		WriteJSON(w, http.StatusInternalServerError, Response{Error: err.Error()})
 		return
 	}
 
-	updatedDriver, err := h.driverService.GetById(r.Context(), objectID)
+	updatedDriver, err := h.driverService.GetById(r.Context(), objectID, userID)
 	if err != nil {
 		WriteJSON(w, http.StatusInternalServerError, Response{Error: "status updated but failed to fetch updated driver"})
 		return
@@ -287,6 +382,24 @@ func (h *DriverHandler) SuspendDriver(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *DriverHandler) TerminateDriver(w http.ResponseWriter, r *http.Request) {
+	claims, ok := r.Context().Value(middleware.UserContextKey).(jwt.MapClaims)
+	if !ok {
+		WriteJSON(w, http.StatusUnauthorized, Response{Error: "unauthorized"})
+		return
+	}
+
+	userIDStr, ok := claims["user_id"].(string)
+	if !ok {
+		WriteJSON(w, http.StatusUnauthorized, Response{Error: "invalid user id in token"})
+		return
+	}
+
+	userID, err := primitive.ObjectIDFromHex(userIDStr)
+	if err != nil {
+		WriteJSON(w, http.StatusUnauthorized, Response{Error: "invalid user id format"})
+		return
+	}
+
 	idStr := mux.Vars(r)["id"]
 	objectID, err := primitive.ObjectIDFromHex(idStr)
 	if err != nil {
@@ -294,12 +407,12 @@ func (h *DriverHandler) TerminateDriver(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 
-	if err := h.driverService.TerminateDriver(r.Context(), objectID); err != nil {
+	if err := h.driverService.TerminateDriver(r.Context(), objectID, userID); err != nil {
 		WriteJSON(w, http.StatusInternalServerError, Response{Error: err.Error()})
 		return
 	}
 
-	updatedDriver, err := h.driverService.GetById(r.Context(), objectID)
+	updatedDriver, err := h.driverService.GetById(r.Context(), objectID, userID)
 	if err != nil {
 		WriteJSON(w, http.StatusInternalServerError, Response{Error: "status updated but failed to fetch updated driver"})
 		return
@@ -309,6 +422,24 @@ func (h *DriverHandler) TerminateDriver(w http.ResponseWriter, r *http.Request) 
 }
 
 func (h *DriverHandler) ActivateDriver(w http.ResponseWriter, r *http.Request) {
+	claims, ok := r.Context().Value(middleware.UserContextKey).(jwt.MapClaims)
+	if !ok {
+		WriteJSON(w, http.StatusUnauthorized, Response{Error: "unauthorized"})
+		return
+	}
+
+	userIDStr, ok := claims["user_id"].(string)
+	if !ok {
+		WriteJSON(w, http.StatusUnauthorized, Response{Error: "invalid user id in token"})
+		return
+	}
+
+	userID, err := primitive.ObjectIDFromHex(userIDStr)
+	if err != nil {
+		WriteJSON(w, http.StatusUnauthorized, Response{Error: "invalid user id format"})
+		return
+	}
+
 	idStr := mux.Vars(r)["id"]
 	objectID, err := primitive.ObjectIDFromHex(idStr)
 	if err != nil {
@@ -316,12 +447,12 @@ func (h *DriverHandler) ActivateDriver(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err := h.driverService.ActivateDriver(r.Context(), objectID); err != nil {
+	if err := h.driverService.ActivateDriver(r.Context(), objectID, userID); err != nil {
 		WriteJSON(w, http.StatusInternalServerError, Response{Error: err.Error()})
 		return
 	}
 
-	updatedDriver, err := h.driverService.GetById(r.Context(), objectID)
+	updatedDriver, err := h.driverService.GetById(r.Context(), objectID, userID)
 	if err != nil {
 		WriteJSON(w, http.StatusInternalServerError, Response{Error: "status updated but failed to fetch updated driver"})
 		return

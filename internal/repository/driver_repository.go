@@ -18,9 +18,9 @@ type driverRepository struct {
 
 type DriverRepository interface {
 	Create(ctx context.Context, driver *domain.Driver) error
-	GetById(ctx context.Context, id primitive.ObjectID) (*domain.Driver, error)
+	GetById(ctx context.Context, id primitive.ObjectID, userID primitive.ObjectID) (*domain.Driver, error)
 	Update(ctx context.Context, driver *domain.Driver) error
-	Delete(ctx context.Context, id primitive.ObjectID) error
+	Delete(ctx context.Context, id, userID primitive.ObjectID) error
 	List(ctx context.Context, filter domain.DriverFilter) (*ListDriversResult, error)
 	UpdateEmploymentStatus(ctx context.Context, id primitive.ObjectID, status domain.EmploymentStatus) error
 }
@@ -28,6 +28,16 @@ type DriverRepository interface {
 type ListDriversResult struct {
 	Drivers []*domain.Driver
 	Total   int64
+}
+
+type DriverFilter struct {
+	UserID           primitive.ObjectID
+	LicenseState     string
+	Phone            domain.PhoneNumber
+	Email            domain.Email
+	EmploymentStatus domain.EmploymentStatus
+	Limit            int64
+	Offset           int64
 }
 
 func NewDriverRepository(db *database.MongoDB) DriverRepository {
@@ -49,11 +59,12 @@ func (r *driverRepository) Create(ctx context.Context, driver *domain.Driver) er
 	return nil
 }
 
-func (r *driverRepository) GetById(ctx context.Context, id primitive.ObjectID) (*domain.Driver, error) {
+func (r *driverRepository) GetById(ctx context.Context, id primitive.ObjectID, userID primitive.ObjectID) (*domain.Driver, error) {
 	pipeline := mongo.Pipeline{
 		{{Key: "$match",
 			Value: bson.M{
-				"_id": id,
+				"_id":     id,
+				"user_id": userID,
 			},
 		}},
 		{{
@@ -124,8 +135,11 @@ func (r *driverRepository) Update(ctx context.Context, driver *domain.Driver) er
 	return nil
 }
 
-func (r *driverRepository) Delete(ctx context.Context, id primitive.ObjectID) error {
-	result, err := r.drivers.DeleteOne(ctx, bson.M{"_id": id})
+func (r *driverRepository) Delete(ctx context.Context, id, userID primitive.ObjectID) error {
+	result, err := r.drivers.DeleteOne(ctx, bson.M{
+		"_id":     id,
+		"user_id": userID,
+	})
 	if err != nil {
 		return fmt.Errorf("failed to delete driver: %w", err)
 	}
@@ -148,20 +162,17 @@ func (r *driverRepository) List(ctx context.Context, filter domain.DriverFilter)
 		filter.Offset = 0
 	}
 
-	filterQuery := bson.M{}
+	filterQuery := bson.M{"user_id": filter.UserID}
 
 	if filter.LicenseState != "" {
 		filterQuery["license_state"] = filter.LicenseState
 	}
-
 	if filter.Phone != "" {
 		filterQuery["phone"] = filter.Phone
 	}
-
 	if filter.Email != "" {
 		filterQuery["email"] = filter.Email
 	}
-
 	if filter.EmploymentStatus != "" {
 		filterQuery["employment_status"] = filter.EmploymentStatus
 	}
@@ -172,6 +183,7 @@ func (r *driverRepository) List(ctx context.Context, filter domain.DriverFilter)
 	}
 
 	pipeline := mongo.Pipeline{
+		{{Key: "$match", Value: filterQuery}},
 		{{Key: "$sort", Value: bson.M{"_id": -1}}},
 		{{Key: "$skip", Value: filter.Offset}},
 		{{Key: "$limit", Value: filter.Limit}},

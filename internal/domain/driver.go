@@ -40,6 +40,7 @@ const (
 
 type Driver struct {
 	ID                primitive.ObjectID         `bson:"_id,omitempty" json:"id,omitempty"`
+	UserID            primitive.ObjectID         `bson:"user_id" json:"user_id"`
 	FirstName         string                     `bson:"first_name" json:"first_name"`
 	LastName          string                     `bson:"last_name" json:"last_name"`
 	DOB               string                     `bson:"dob" json:"dob"`
@@ -63,6 +64,7 @@ type Address struct {
 }
 
 func NewDriver(
+	userID primitive.ObjectID,
 	firstName,
 	lastName,
 	dateOfBirth,
@@ -86,6 +88,7 @@ func NewDriver(
 	now := time.Now()
 
 	driver := &Driver{
+		UserID:            userID,
 		FirstName:         firstName,
 		LastName:          lastName,
 		DOB:               dateOfBirth,
@@ -108,6 +111,7 @@ func NewDriver(
 }
 
 type DriverFilter struct {
+	UserID           primitive.ObjectID
 	LicenseState     string
 	Phone            PhoneNumber
 	Email            Email
