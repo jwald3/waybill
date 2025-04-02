@@ -155,6 +155,7 @@ func NewTruck(
 }
 
 type TruckFilter struct {
+	UserID           primitive.ObjectID
 	VIN              string
 	Status           TruckStatus
 	AssignedDriverID *primitive.ObjectID
@@ -168,6 +169,7 @@ func NewTruckFilter() TruckFilter {
 	return TruckFilter{
 		Limit:  10,
 		Offset: 0,
+		UserID: primitive.NilObjectID,
 	}
 }
 

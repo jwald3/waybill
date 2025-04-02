@@ -30,16 +30,6 @@ type ListDriversResult struct {
 	Total   int64
 }
 
-type DriverFilter struct {
-	UserID           primitive.ObjectID
-	LicenseState     string
-	Phone            domain.PhoneNumber
-	Email            domain.Email
-	EmploymentStatus domain.EmploymentStatus
-	Limit            int64
-	Offset           int64
-}
-
 func NewDriverRepository(db *database.MongoDB) DriverRepository {
 	return &driverRepository{
 		drivers: db.Database.Collection("drivers"),

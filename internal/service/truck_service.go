@@ -16,16 +16,16 @@ var (
 
 type TruckService interface {
 	Create(ctx context.Context, truck *domain.Truck) error
-	GetById(ctx context.Context, id primitive.ObjectID) (*domain.Truck, error)
+	GetById(ctx context.Context, id, userID primitive.ObjectID) (*domain.Truck, error)
 	Update(ctx context.Context, truck *domain.Truck) error
-	Delete(ctx context.Context, id primitive.ObjectID) error
+	Delete(ctx context.Context, id, userID primitive.ObjectID) error
 	List(ctx context.Context, filter domain.TruckFilter) (*repository.ListTrucksResult, error)
-	SetTruckInTransit(ctx context.Context, id primitive.ObjectID) error
-	SetTruckInMaintenance(ctx context.Context, id primitive.ObjectID) error
-	RetireTruck(ctx context.Context, id primitive.ObjectID) error
-	MakeTruckAvailable(ctx context.Context, id primitive.ObjectID) error
-	UpdateTruckMileage(ctx context.Context, id primitive.ObjectID, newMileage int) error
-	UpdateTruckMaintenance(ctx context.Context, id primitive.ObjectID, lastMaintenance string) error
+	SetTruckInTransit(ctx context.Context, id, userID primitive.ObjectID) error
+	SetTruckInMaintenance(ctx context.Context, id, userID primitive.ObjectID) error
+	RetireTruck(ctx context.Context, id, userID primitive.ObjectID) error
+	MakeTruckAvailable(ctx context.Context, id, userID primitive.ObjectID) error
+	UpdateTruckMileage(ctx context.Context, id, userID primitive.ObjectID, newMileage int) error
+	UpdateTruckMaintenance(ctx context.Context, id, userID primitive.ObjectID, lastMaintenance string) error
 }
 
 type truckService struct {
@@ -48,8 +48,8 @@ func (s *truckService) Create(ctx context.Context, truck *domain.Truck) error {
 	return nil
 }
 
-func (s *truckService) GetById(ctx context.Context, id primitive.ObjectID) (*domain.Truck, error) {
-	truck, err := s.truckRepo.GetById(ctx, id)
+func (s *truckService) GetById(ctx context.Context, id, userID primitive.ObjectID) (*domain.Truck, error) {
+	truck, err := s.truckRepo.GetById(ctx, id, userID)
 	if err != nil {
 		return nil, fmt.Errorf(truckNotFound, err)
 	}
@@ -69,8 +69,8 @@ func (s *truckService) Update(ctx context.Context, truck *domain.Truck) error {
 	return nil
 }
 
-func (s *truckService) Delete(ctx context.Context, id primitive.ObjectID) error {
-	if err := s.truckRepo.Delete(ctx, id); err != nil {
+func (s *truckService) Delete(ctx context.Context, id, userID primitive.ObjectID) error {
+	if err := s.truckRepo.Delete(ctx, id, userID); err != nil {
 		if err == domain.ErrTruckNotFound {
 			return err
 		}
@@ -100,8 +100,8 @@ func (s *truckService) List(ctx context.Context, filter domain.TruckFilter) (*re
 
 // atomic methods
 
-func (s *truckService) SetTruckInTransit(ctx context.Context, id primitive.ObjectID) error {
-	truck, err := s.truckRepo.GetById(ctx, id)
+func (s *truckService) SetTruckInTransit(ctx context.Context, id, userID primitive.ObjectID) error {
+	truck, err := s.truckRepo.GetById(ctx, id, userID)
 
 	if err != nil {
 		return fmt.Errorf(truckNotFound, err)
@@ -122,8 +122,8 @@ func (s *truckService) SetTruckInTransit(ctx context.Context, id primitive.Objec
 	return s.truckRepo.Update(ctx, truck)
 }
 
-func (s *truckService) SetTruckInMaintenance(ctx context.Context, id primitive.ObjectID) error {
-	truck, err := s.truckRepo.GetById(ctx, id)
+func (s *truckService) SetTruckInMaintenance(ctx context.Context, id, userID primitive.ObjectID) error {
+	truck, err := s.truckRepo.GetById(ctx, id, userID)
 
 	if err != nil {
 		return fmt.Errorf(truckNotFound, err)
@@ -144,8 +144,8 @@ func (s *truckService) SetTruckInMaintenance(ctx context.Context, id primitive.O
 	return s.truckRepo.Update(ctx, truck)
 }
 
-func (s *truckService) RetireTruck(ctx context.Context, id primitive.ObjectID) error {
-	truck, err := s.truckRepo.GetById(ctx, id)
+func (s *truckService) RetireTruck(ctx context.Context, id, userID primitive.ObjectID) error {
+	truck, err := s.truckRepo.GetById(ctx, id, userID)
 
 	if err != nil {
 		return fmt.Errorf(truckNotFound, err)
@@ -166,8 +166,8 @@ func (s *truckService) RetireTruck(ctx context.Context, id primitive.ObjectID) e
 	return s.truckRepo.Update(ctx, truck)
 }
 
-func (s *truckService) MakeTruckAvailable(ctx context.Context, id primitive.ObjectID) error {
-	truck, err := s.truckRepo.GetById(ctx, id)
+func (s *truckService) MakeTruckAvailable(ctx context.Context, id, userID primitive.ObjectID) error {
+	truck, err := s.truckRepo.GetById(ctx, id, userID)
 
 	if err != nil {
 		return fmt.Errorf(truckNotFound, err)
@@ -188,8 +188,8 @@ func (s *truckService) MakeTruckAvailable(ctx context.Context, id primitive.Obje
 	return s.truckRepo.Update(ctx, truck)
 }
 
-func (s *truckService) UpdateTruckMileage(ctx context.Context, id primitive.ObjectID, newMileage int) error {
-	truck, err := s.truckRepo.GetById(ctx, id)
+func (s *truckService) UpdateTruckMileage(ctx context.Context, id, userID primitive.ObjectID, newMileage int) error {
+	truck, err := s.truckRepo.GetById(ctx, id, userID)
 	if err != nil {
 		return fmt.Errorf(truckNotFound, err)
 	}
@@ -199,8 +199,8 @@ func (s *truckService) UpdateTruckMileage(ctx context.Context, id primitive.Obje
 	return s.truckRepo.Update(ctx, truck)
 }
 
-func (s *truckService) UpdateTruckMaintenance(ctx context.Context, id primitive.ObjectID, lastMaintenance string) error {
-	truck, err := s.truckRepo.GetById(ctx, id)
+func (s *truckService) UpdateTruckMaintenance(ctx context.Context, id, userID primitive.ObjectID, lastMaintenance string) error {
+	truck, err := s.truckRepo.GetById(ctx, id, userID)
 	if err != nil {
 		return fmt.Errorf(truckNotFound, err)
 	}
