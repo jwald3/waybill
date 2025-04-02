@@ -75,6 +75,7 @@ func NewFacility(
 }
 
 type FacilityFilter struct {
+	UserID          primitive.ObjectID
 	StateCode       string
 	Type            string
 	ServicesInclude []FacilityService
@@ -90,6 +91,7 @@ func NewFacilityFilter() FacilityFilter {
 	return FacilityFilter{
 		Limit:  10,
 		Offset: 0,
+		UserID: primitive.NilObjectID,
 	}
 }
 

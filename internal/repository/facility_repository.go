@@ -10,7 +10,6 @@ import (
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
-	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
 type facilityRepository struct {
@@ -19,11 +18,11 @@ type facilityRepository struct {
 
 type FacilityRepository interface {
 	Create(ctx context.Context, facility *domain.Facility) error
-	GetById(ctx context.Context, id primitive.ObjectID) (*domain.Facility, error)
+	GetById(ctx context.Context, id, userID primitive.ObjectID) (*domain.Facility, error)
 	Update(ctx context.Context, facility *domain.Facility) error
-	Delete(ctx context.Context, id primitive.ObjectID) error
+	Delete(ctx context.Context, id, userID primitive.ObjectID) error
 	ListWithFilter(ctx context.Context, filter domain.FacilityFilter) (*ListFacilitiesResult, error)
-	UpdateAvailableFacilityServices(ctx context.Context, id primitive.ObjectID, servicesAvailable []domain.FacilityService) error
+	UpdateAvailableFacilityServices(ctx context.Context, id, userID primitive.ObjectID, servicesAvailable []domain.FacilityService) error
 }
 
 type ListFacilitiesResult struct {
@@ -50,8 +49,8 @@ func (r *facilityRepository) Create(ctx context.Context, facility *domain.Facili
 	return nil
 }
 
-func (r *facilityRepository) GetById(ctx context.Context, id primitive.ObjectID) (*domain.Facility, error) {
-	filter := bson.M{"_id": id}
+func (r *facilityRepository) GetById(ctx context.Context, id, userID primitive.ObjectID) (*domain.Facility, error) {
+	filter := bson.M{"_id": id, "user_id": userID}
 
 	var facility domain.Facility
 	err := r.facilities.FindOne(ctx, filter).Decode(&facility)
@@ -91,8 +90,8 @@ func (r *facilityRepository) Update(ctx context.Context, facility *domain.Facili
 	return nil
 }
 
-func (r *facilityRepository) Delete(ctx context.Context, id primitive.ObjectID) error {
-	result, err := r.facilities.DeleteOne(ctx, bson.M{"_id": id})
+func (r *facilityRepository) Delete(ctx context.Context, id, userID primitive.ObjectID) error {
+	result, err := r.facilities.DeleteOne(ctx, bson.M{"_id": id, "user_id": userID})
 	if err != nil {
 		return fmt.Errorf("failed to delete facility: %w", err)
 	}
@@ -118,6 +117,10 @@ func (r *facilityRepository) ListWithFilter(ctx context.Context, filter domain.F
 	}
 
 	filterQuery := bson.M{}
+
+	if filter.UserID != primitive.NilObjectID {
+		filterQuery["user_id"] = filter.UserID
+	}
 
 	// go through each of the filter options and add them to the filter query if they're not empty
 	if filter.StateCode != "" {
@@ -157,13 +160,15 @@ func (r *facilityRepository) ListWithFilter(ctx context.Context, filter domain.F
 		return nil, fmt.Errorf("unable to get total count: %w", err)
 	}
 
-	findOptions := options.Find()
-	findOptions.SetLimit(filter.Limit)
-	findOptions.SetSkip(filter.Offset)
-	findOptions.SetSort(bson.D{{Key: "_id", Value: -1}})
+	pipeline := mongo.Pipeline{
+		{{Key: "$match", Value: filterQuery}},
+		{{Key: "$sort", Value: bson.M{"_id": -1}}},
+		{{Key: "$skip", Value: filter.Offset}},
+		{{Key: "$limit", Value: filter.Limit}},
+	}
 
 	// find the facilities that match the filter and return paginated results
-	cursor, err := r.facilities.Find(ctx, filterQuery, findOptions)
+	cursor, err := r.facilities.Aggregate(ctx, pipeline)
 	if err != nil {
 		return nil, fmt.Errorf("failed to retrieve list of facilities: %w", err)
 	}
@@ -180,8 +185,8 @@ func (r *facilityRepository) ListWithFilter(ctx context.Context, filter domain.F
 	}, nil
 }
 
-func (r *facilityRepository) UpdateAvailableFacilityServices(ctx context.Context, id primitive.ObjectID, servicesAvailable []domain.FacilityService) error {
-	filter := bson.M{"_id": id}
+func (r *facilityRepository) UpdateAvailableFacilityServices(ctx context.Context, id, userID primitive.ObjectID, servicesAvailable []domain.FacilityService) error {
+	filter := bson.M{"_id": id, "user_id": userID}
 	update := bson.M{
 		"$set": bson.M{
 			"services_available": servicesAvailable,
