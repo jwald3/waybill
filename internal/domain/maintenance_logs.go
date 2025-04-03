@@ -66,6 +66,7 @@ func NewMaintenanceLog(
 }
 
 type MaintenanceLogFilter struct {
+	UserID      primitive.ObjectID
 	TruckID     *primitive.ObjectID
 	ServiceType MaintenanceServiceType
 	Limit       int64

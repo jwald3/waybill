@@ -18,7 +18,7 @@ type truckRepository struct {
 
 type TruckRepository interface {
 	Create(ctx context.Context, truck *domain.Truck) error
-	GetById(ctx context.Context, id primitive.ObjectID, userID primitive.ObjectID) (*domain.Truck, error)
+	GetById(ctx context.Context, id, userID primitive.ObjectID) (*domain.Truck, error)
 	Update(ctx context.Context, truck *domain.Truck) error
 	Delete(ctx context.Context, id, userID primitive.ObjectID) error
 	List(ctx context.Context, filter domain.TruckFilter) (*ListTrucksResult, error)
