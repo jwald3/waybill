@@ -4,8 +4,10 @@ import (
 	"fmt"
 	"net/http"
 
+	"github.com/golang-jwt/jwt/v5"
 	"github.com/gorilla/mux"
 	"github.com/jwald3/waybill/internal/domain"
+	"github.com/jwald3/waybill/internal/middleware"
 	"github.com/jwald3/waybill/internal/service"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
@@ -127,6 +129,24 @@ func (h *MaintenanceLogHandler) Create(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *MaintenanceLogHandler) GetById(w http.ResponseWriter, r *http.Request) {
+	claims, ok := r.Context().Value(middleware.UserContextKey).(jwt.MapClaims)
+	if !ok {
+		WriteJSON(w, http.StatusUnauthorized, Response{Error: "unauthorized"})
+		return
+	}
+
+	userIDStr, ok := claims["user_id"].(string)
+	if !ok {
+		WriteJSON(w, http.StatusUnauthorized, Response{Error: "invalid user id in token"})
+		return
+	}
+
+	userID, err := primitive.ObjectIDFromHex(userIDStr)
+	if err != nil {
+		WriteJSON(w, http.StatusUnauthorized, Response{Error: "invalid user id format"})
+		return
+	}
+
 	idStr := mux.Vars(r)["id"]
 	objectID, err := primitive.ObjectIDFromHex(idStr)
 	if err != nil {
@@ -134,7 +154,7 @@ func (h *MaintenanceLogHandler) GetById(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 
-	maintenanceLog, err := h.maintenanceLogService.GetById(r.Context(), objectID)
+	maintenanceLog, err := h.maintenanceLogService.GetById(r.Context(), objectID, userID)
 	if err != nil {
 		WriteJSON(w, http.StatusNotFound, Response{Error: "maintenance log not found"})
 		return
@@ -174,6 +194,24 @@ func (h *MaintenanceLogHandler) Update(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *MaintenanceLogHandler) Delete(w http.ResponseWriter, r *http.Request) {
+	claims, ok := r.Context().Value(middleware.UserContextKey).(jwt.MapClaims)
+	if !ok {
+		WriteJSON(w, http.StatusUnauthorized, Response{Error: "unauthorized"})
+		return
+	}
+
+	userIDStr, ok := claims["user_id"].(string)
+	if !ok {
+		WriteJSON(w, http.StatusUnauthorized, Response{Error: "invalid user id in token"})
+		return
+	}
+
+	userID, err := primitive.ObjectIDFromHex(userIDStr)
+	if err != nil {
+		WriteJSON(w, http.StatusUnauthorized, Response{Error: "invalid user id format"})
+		return
+	}
+
 	idStr := mux.Vars(r)["id"]
 	objectID, err := primitive.ObjectIDFromHex(idStr)
 	if err != nil {
@@ -181,7 +219,7 @@ func (h *MaintenanceLogHandler) Delete(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err := h.maintenanceLogService.Delete(r.Context(), objectID); err != nil {
+	if err := h.maintenanceLogService.Delete(r.Context(), objectID, userID); err != nil {
 		WriteJSON(w, http.StatusInternalServerError, Response{Error: "failed to delete maintenance log"})
 		return
 	}
@@ -190,7 +228,26 @@ func (h *MaintenanceLogHandler) Delete(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *MaintenanceLogHandler) List(w http.ResponseWriter, r *http.Request) {
+	claims, ok := r.Context().Value(middleware.UserContextKey).(jwt.MapClaims)
+	if !ok {
+		WriteJSON(w, http.StatusUnauthorized, Response{Error: "unauthorized"})
+		return
+	}
+
+	userIDStr, ok := claims["user_id"].(string)
+	if !ok {
+		WriteJSON(w, http.StatusUnauthorized, Response{Error: "invalid user id in token"})
+		return
+	}
+
+	userID, err := primitive.ObjectIDFromHex(userIDStr)
+	if err != nil {
+		WriteJSON(w, http.StatusUnauthorized, Response{Error: "invalid user id format"})
+		return
+	}
+
 	filter := domain.NewMaintenanceLogFilter()
+	filter.UserID = userID
 
 	if truckId := r.URL.Query().Get("truckID"); truckId != "" {
 		if id, err := primitive.ObjectIDFromHex(truckId); err != nil {

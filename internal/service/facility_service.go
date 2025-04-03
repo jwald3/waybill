@@ -16,11 +16,11 @@ var (
 
 type FacilityService interface {
 	Create(ctx context.Context, facility *domain.Facility) error
-	GetById(ctx context.Context, id primitive.ObjectID) (*domain.Facility, error)
+	GetById(ctx context.Context, id, userID primitive.ObjectID) (*domain.Facility, error)
 	Update(ctx context.Context, facility *domain.Facility) error
-	Delete(ctx context.Context, id primitive.ObjectID) error
+	Delete(ctx context.Context, id, userID primitive.ObjectID) error
 	ListWithFilter(ctx context.Context, filter domain.FacilityFilter) (*repository.ListFacilitiesResult, error)
-	UpdateAvailableFacilityServices(ctx context.Context, id primitive.ObjectID, servicesAvailable []domain.FacilityService) error
+	UpdateAvailableFacilityServices(ctx context.Context, id, userID primitive.ObjectID, servicesAvailable []domain.FacilityService) error
 }
 
 type facilityService struct {
@@ -43,8 +43,8 @@ func (s *facilityService) Create(ctx context.Context, facility *domain.Facility)
 	return nil
 }
 
-func (s *facilityService) GetById(ctx context.Context, id primitive.ObjectID) (*domain.Facility, error) {
-	facility, err := s.facilityRepo.GetById(ctx, id)
+func (s *facilityService) GetById(ctx context.Context, id, userID primitive.ObjectID) (*domain.Facility, error) {
+	facility, err := s.facilityRepo.GetById(ctx, id, userID)
 	if err != nil {
 		return nil, fmt.Errorf(facilityNotFound, err)
 	}
@@ -64,8 +64,8 @@ func (s *facilityService) Update(ctx context.Context, facility *domain.Facility)
 	return nil
 }
 
-func (s *facilityService) Delete(ctx context.Context, id primitive.ObjectID) error {
-	if err := s.facilityRepo.Delete(ctx, id); err != nil {
+func (s *facilityService) Delete(ctx context.Context, id, userID primitive.ObjectID) error {
+	if err := s.facilityRepo.Delete(ctx, id, userID); err != nil {
 		if err == domain.ErrFacilityNotFound {
 			return err
 		}
@@ -93,7 +93,7 @@ func (s *facilityService) ListWithFilter(ctx context.Context, filter domain.Faci
 }
 
 // atomic methods
-func (s *facilityService) UpdateAvailableFacilityServices(ctx context.Context, id primitive.ObjectID, servicesAvailable []domain.FacilityService) error {
+func (s *facilityService) UpdateAvailableFacilityServices(ctx context.Context, id, userID primitive.ObjectID, servicesAvailable []domain.FacilityService) error {
 	// Validate services first
 	for _, service := range servicesAvailable {
 		if !service.IsValid() {
@@ -102,7 +102,7 @@ func (s *facilityService) UpdateAvailableFacilityServices(ctx context.Context, i
 	}
 
 	// Check if facility exists
-	facility, err := s.facilityRepo.GetById(ctx, id)
+	facility, err := s.facilityRepo.GetById(ctx, id, userID)
 	if err != nil {
 		return fmt.Errorf("failed to get facility: %w", err)
 	}
@@ -111,7 +111,7 @@ func (s *facilityService) UpdateAvailableFacilityServices(ctx context.Context, i
 	}
 
 	// Update the services
-	if err := s.facilityRepo.UpdateAvailableFacilityServices(ctx, id, servicesAvailable); err != nil {
+	if err := s.facilityRepo.UpdateAvailableFacilityServices(ctx, id, userID, servicesAvailable); err != nil {
 		return fmt.Errorf("failed to update available facility services: %w", err)
 	}
 

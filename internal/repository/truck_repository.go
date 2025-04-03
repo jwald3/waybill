@@ -18,9 +18,9 @@ type truckRepository struct {
 
 type TruckRepository interface {
 	Create(ctx context.Context, truck *domain.Truck) error
-	GetById(ctx context.Context, id primitive.ObjectID) (*domain.Truck, error)
+	GetById(ctx context.Context, id, userID primitive.ObjectID) (*domain.Truck, error)
 	Update(ctx context.Context, truck *domain.Truck) error
-	Delete(ctx context.Context, id primitive.ObjectID) error
+	Delete(ctx context.Context, id, userID primitive.ObjectID) error
 	List(ctx context.Context, filter domain.TruckFilter) (*ListTrucksResult, error)
 }
 
@@ -48,10 +48,13 @@ func (r *truckRepository) Create(ctx context.Context, truck *domain.Truck) error
 	return nil
 }
 
-func (r *truckRepository) GetById(ctx context.Context, id primitive.ObjectID) (*domain.Truck, error) {
+func (r *truckRepository) GetById(ctx context.Context, id, userID primitive.ObjectID) (*domain.Truck, error) {
 	pipeline := mongo.Pipeline{
 		{{
-			Key: "$match", Value: bson.M{"_id": id},
+			Key: "$match", Value: bson.M{
+				"_id":     id,
+				"user_id": userID,
+			},
 		}},
 		{{
 			Key: "$lookup", Value: bson.M{
@@ -118,8 +121,11 @@ func (r *truckRepository) Update(ctx context.Context, truck *domain.Truck) error
 	return nil
 }
 
-func (r *truckRepository) Delete(ctx context.Context, id primitive.ObjectID) error {
-	result, err := r.trucks.DeleteOne(ctx, bson.M{"_id": id})
+func (r *truckRepository) Delete(ctx context.Context, id, userID primitive.ObjectID) error {
+	result, err := r.trucks.DeleteOne(ctx, bson.M{
+		"_id":     id,
+		"user_id": userID,
+	})
 	if err != nil {
 		return fmt.Errorf("failed to delete truck: %w", err)
 	}
@@ -144,6 +150,10 @@ func (r *truckRepository) List(ctx context.Context, filter domain.TruckFilter) (
 
 	filterQuery := bson.M{}
 
+	if filter.UserID != primitive.NilObjectID {
+		filterQuery["user_id"] = filter.UserID
+	}
+
 	if filter.TrailerType != "" {
 		filterQuery["trailer_type"] = filter.TrailerType
 	}
@@ -166,6 +176,7 @@ func (r *truckRepository) List(ctx context.Context, filter domain.TruckFilter) (
 	}
 
 	pipeline := mongo.Pipeline{
+		{{Key: "$match", Value: filterQuery}},
 		{{Key: "$sort", Value: bson.M{"_id": -1}}},
 		{{Key: "$skip", Value: filter.Offset}},
 		{{Key: "$limit", Value: filter.Limit}},

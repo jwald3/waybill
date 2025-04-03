@@ -83,6 +83,7 @@ func NewIncidentReport(
 }
 
 type IncidentReportFilter struct {
+	UserID   primitive.ObjectID
 	TripID   *primitive.ObjectID
 	TruckID  *primitive.ObjectID
 	DriverID *primitive.ObjectID
@@ -95,5 +96,6 @@ func NewIncidentReportFilter() IncidentReportFilter {
 	return IncidentReportFilter{
 		Limit:  10,
 		Offset: 0,
+		UserID: primitive.NilObjectID,
 	}
 }

@@ -5,8 +5,10 @@ import (
 	"strings"
 	"time"
 
+	"github.com/golang-jwt/jwt/v5"
 	"github.com/gorilla/mux"
 	"github.com/jwald3/waybill/internal/domain"
+	"github.com/jwald3/waybill/internal/middleware"
 	"github.com/jwald3/waybill/internal/service"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
@@ -169,6 +171,24 @@ func (h *TripHandler) Create(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *TripHandler) GetById(w http.ResponseWriter, r *http.Request) {
+	claims, ok := r.Context().Value(middleware.UserContextKey).(jwt.MapClaims)
+	if !ok {
+		WriteJSON(w, http.StatusUnauthorized, Response{Error: "unauthorized"})
+		return
+	}
+
+	userIDStr, ok := claims["user_id"].(string)
+	if !ok {
+		WriteJSON(w, http.StatusUnauthorized, Response{Error: "invalid user id in token"})
+		return
+	}
+
+	userID, err := primitive.ObjectIDFromHex(userIDStr)
+	if err != nil {
+		WriteJSON(w, http.StatusUnauthorized, Response{Error: "invalid user id format"})
+		return
+	}
+
 	idStr := mux.Vars(r)["id"]
 	objectID, err := primitive.ObjectIDFromHex(idStr)
 	if err != nil {
@@ -176,7 +196,7 @@ func (h *TripHandler) GetById(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	trip, err := h.tripService.GetById(r.Context(), objectID)
+	trip, err := h.tripService.GetById(r.Context(), objectID, userID)
 	if err != nil {
 		WriteJSON(w, http.StatusNotFound, Response{Error: "trip not found"})
 		return
@@ -216,6 +236,24 @@ func (h *TripHandler) Update(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *TripHandler) Delete(w http.ResponseWriter, r *http.Request) {
+	claims, ok := r.Context().Value(middleware.UserContextKey).(jwt.MapClaims)
+	if !ok {
+		WriteJSON(w, http.StatusUnauthorized, Response{Error: "unauthorized"})
+		return
+	}
+
+	userIDStr, ok := claims["user_id"].(string)
+	if !ok {
+		WriteJSON(w, http.StatusUnauthorized, Response{Error: "invalid user id in token"})
+		return
+	}
+
+	userID, err := primitive.ObjectIDFromHex(userIDStr)
+	if err != nil {
+		WriteJSON(w, http.StatusUnauthorized, Response{Error: "invalid user id format"})
+		return
+	}
+
 	idStr := mux.Vars(r)["id"]
 	objectID, err := primitive.ObjectIDFromHex(idStr)
 	if err != nil {
@@ -223,7 +261,7 @@ func (h *TripHandler) Delete(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = h.tripService.Delete(r.Context(), objectID)
+	err = h.tripService.Delete(r.Context(), objectID, userID)
 	if err != nil {
 		if err == domain.ErrTripNotFound {
 			WriteJSON(w, http.StatusNotFound, Response{Error: "trip not found"})
@@ -237,7 +275,27 @@ func (h *TripHandler) Delete(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *TripHandler) List(w http.ResponseWriter, r *http.Request) {
+	claims, ok := r.Context().Value(middleware.UserContextKey).(jwt.MapClaims)
+	if !ok {
+		WriteJSON(w, http.StatusUnauthorized, Response{Error: "unauthorized"})
+		return
+	}
+
+	userIDStr, ok := claims["user_id"].(string)
+	if !ok {
+		WriteJSON(w, http.StatusUnauthorized, Response{Error: "invalid user id in token"})
+		return
+	}
+
+	userID, err := primitive.ObjectIDFromHex(userIDStr)
+	if err != nil {
+		WriteJSON(w, http.StatusUnauthorized, Response{Error: "invalid user id format"})
+		return
+	}
+
 	filter := domain.NewTripFilter()
+
+	filter.UserID = userID
 
 	if driverId := r.URL.Query().Get("driverID"); driverId != "" {
 		if id, err := primitive.ObjectIDFromHex(driverId); err != nil {
@@ -295,6 +353,24 @@ func (h *TripHandler) List(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *TripHandler) AddNote(w http.ResponseWriter, r *http.Request) {
+	claims, ok := r.Context().Value(middleware.UserContextKey).(jwt.MapClaims)
+	if !ok {
+		WriteJSON(w, http.StatusUnauthorized, Response{Error: "unauthorized"})
+		return
+	}
+
+	userIDStr, ok := claims["user_id"].(string)
+	if !ok {
+		WriteJSON(w, http.StatusUnauthorized, Response{Error: "invalid user id in token"})
+		return
+	}
+
+	userID, err := primitive.ObjectIDFromHex(userIDStr)
+	if err != nil {
+		WriteJSON(w, http.StatusUnauthorized, Response{Error: "invalid user id format"})
+		return
+	}
+
 	idStr := mux.Vars(r)["id"]
 	objectID, err := primitive.ObjectIDFromHex(idStr)
 	if err != nil {
@@ -313,13 +389,13 @@ func (h *TripHandler) AddNote(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err := h.tripService.AddNote(r.Context(), objectID, req.Content); err != nil {
+	if err := h.tripService.AddNote(r.Context(), objectID, userID, req.Content); err != nil {
 		WriteJSON(w, http.StatusInternalServerError, Response{Error: err.Error()})
 		return
 	}
 
 	// Get the updated trip to return in the response
-	updatedTrip, err := h.tripService.GetById(r.Context(), objectID)
+	updatedTrip, err := h.tripService.GetById(r.Context(), objectID, userID)
 	if err != nil {
 		WriteJSON(w, http.StatusInternalServerError, Response{Error: "note added but failed to fetch updated trip"})
 		return
@@ -329,6 +405,24 @@ func (h *TripHandler) AddNote(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *TripHandler) BeginTrip(w http.ResponseWriter, r *http.Request) {
+	claims, ok := r.Context().Value(middleware.UserContextKey).(jwt.MapClaims)
+	if !ok {
+		WriteJSON(w, http.StatusUnauthorized, Response{Error: "unauthorized"})
+		return
+	}
+
+	userIDStr, ok := claims["user_id"].(string)
+	if !ok {
+		WriteJSON(w, http.StatusUnauthorized, Response{Error: "invalid user id in token"})
+		return
+	}
+
+	userID, err := primitive.ObjectIDFromHex(userIDStr)
+	if err != nil {
+		WriteJSON(w, http.StatusUnauthorized, Response{Error: "invalid user id format"})
+		return
+	}
+
 	idStr := mux.Vars(r)["id"]
 	objectID, err := primitive.ObjectIDFromHex(idStr)
 	if err != nil {
@@ -347,7 +441,7 @@ func (h *TripHandler) BeginTrip(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err := h.tripService.BeginTrip(r.Context(), objectID, req.DepartureTime); err != nil {
+	if err := h.tripService.BeginTrip(r.Context(), objectID, userID, req.DepartureTime); err != nil {
 		// attempt to parse the error into the type "TripStateError". If it parses correctly,
 		// that means it is actually a trip state error and it needs to be handled as such
 		if _, ok := err.(*domain.TripStateError); ok {
@@ -358,7 +452,7 @@ func (h *TripHandler) BeginTrip(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	updatedTrip, err := h.tripService.GetById(r.Context(), objectID)
+	updatedTrip, err := h.tripService.GetById(r.Context(), objectID, userID)
 	if err != nil {
 		WriteJSON(w, http.StatusInternalServerError, Response{Error: "departure time set but failed to fetch updated trip"})
 		return
@@ -368,6 +462,24 @@ func (h *TripHandler) BeginTrip(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *TripHandler) CancelTrip(w http.ResponseWriter, r *http.Request) {
+	claims, ok := r.Context().Value(middleware.UserContextKey).(jwt.MapClaims)
+	if !ok {
+		WriteJSON(w, http.StatusUnauthorized, Response{Error: "unauthorized"})
+		return
+	}
+
+	userIDStr, ok := claims["user_id"].(string)
+	if !ok {
+		WriteJSON(w, http.StatusUnauthorized, Response{Error: "invalid user id in token"})
+		return
+	}
+
+	userID, err := primitive.ObjectIDFromHex(userIDStr)
+	if err != nil {
+		WriteJSON(w, http.StatusUnauthorized, Response{Error: "invalid user id format"})
+		return
+	}
+
 	idStr := mux.Vars(r)["id"]
 	objectID, err := primitive.ObjectIDFromHex(idStr)
 	if err != nil {
@@ -375,12 +487,12 @@ func (h *TripHandler) CancelTrip(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err := h.tripService.CancelTrip(r.Context(), objectID); err != nil {
+	if err := h.tripService.CancelTrip(r.Context(), objectID, userID); err != nil {
 		WriteJSON(w, http.StatusInternalServerError, Response{Error: err.Error()})
 		return
 	}
 
-	updatedTrip, err := h.tripService.GetById(r.Context(), objectID)
+	updatedTrip, err := h.tripService.GetById(r.Context(), objectID, userID)
 	if err != nil {
 		WriteJSON(w, http.StatusInternalServerError, Response{Error: "trip cancelled but failed to fetch updated trip"})
 		return
@@ -390,6 +502,24 @@ func (h *TripHandler) CancelTrip(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *TripHandler) FinishTripSuccessfully(w http.ResponseWriter, r *http.Request) {
+	claims, ok := r.Context().Value(middleware.UserContextKey).(jwt.MapClaims)
+	if !ok {
+		WriteJSON(w, http.StatusUnauthorized, Response{Error: "unauthorized"})
+		return
+	}
+
+	userIDStr, ok := claims["user_id"].(string)
+	if !ok {
+		WriteJSON(w, http.StatusUnauthorized, Response{Error: "invalid user id in token"})
+		return
+	}
+
+	userID, err := primitive.ObjectIDFromHex(userIDStr)
+	if err != nil {
+		WriteJSON(w, http.StatusUnauthorized, Response{Error: "invalid user id format"})
+		return
+	}
+
 	idStr := mux.Vars(r)["id"]
 	objectID, err := primitive.ObjectIDFromHex(idStr)
 	if err != nil {
@@ -408,12 +538,12 @@ func (h *TripHandler) FinishTripSuccessfully(w http.ResponseWriter, r *http.Requ
 		return
 	}
 
-	if err := h.tripService.FinishTripSuccessfully(r.Context(), objectID, req.ArrivalTime); err != nil {
+	if err := h.tripService.FinishTripSuccessfully(r.Context(), objectID, userID, req.ArrivalTime); err != nil {
 		WriteJSON(w, http.StatusInternalServerError, Response{Error: err.Error()})
 		return
 	}
 
-	updatedTrip, err := h.tripService.GetById(r.Context(), objectID)
+	updatedTrip, err := h.tripService.GetById(r.Context(), objectID, userID)
 	if err != nil {
 		WriteJSON(w, http.StatusInternalServerError, Response{Error: "arrival time set but failed to fetch updated trip"})
 		return
@@ -423,6 +553,24 @@ func (h *TripHandler) FinishTripSuccessfully(w http.ResponseWriter, r *http.Requ
 }
 
 func (h *TripHandler) FinishTripUnsuccessfully(w http.ResponseWriter, r *http.Request) {
+	claims, ok := r.Context().Value(middleware.UserContextKey).(jwt.MapClaims)
+	if !ok {
+		WriteJSON(w, http.StatusUnauthorized, Response{Error: "unauthorized"})
+		return
+	}
+
+	userIDStr, ok := claims["user_id"].(string)
+	if !ok {
+		WriteJSON(w, http.StatusUnauthorized, Response{Error: "invalid user id in token"})
+		return
+	}
+
+	userID, err := primitive.ObjectIDFromHex(userIDStr)
+	if err != nil {
+		WriteJSON(w, http.StatusUnauthorized, Response{Error: "invalid user id format"})
+		return
+	}
+
 	idStr := mux.Vars(r)["id"]
 	objectID, err := primitive.ObjectIDFromHex(idStr)
 	if err != nil {
@@ -441,12 +589,12 @@ func (h *TripHandler) FinishTripUnsuccessfully(w http.ResponseWriter, r *http.Re
 		return
 	}
 
-	if err := h.tripService.FinishTripUnsuccessfully(r.Context(), objectID, req.ArrivalTime); err != nil {
+	if err := h.tripService.FinishTripUnsuccessfully(r.Context(), objectID, userID, req.ArrivalTime); err != nil {
 		WriteJSON(w, http.StatusInternalServerError, Response{Error: err.Error()})
 		return
 	}
 
-	updatedTrip, err := h.tripService.GetById(r.Context(), objectID)
+	updatedTrip, err := h.tripService.GetById(r.Context(), objectID, userID)
 	if err != nil {
 		WriteJSON(w, http.StatusInternalServerError, Response{Error: "arrival time set but failed to fetch updated trip"})
 		return

@@ -18,9 +18,9 @@ type tripRepository struct {
 
 type TripRepository interface {
 	Create(ctx context.Context, trip *domain.Trip) error
-	GetById(ctx context.Context, id primitive.ObjectID) (*domain.Trip, error)
+	GetById(ctx context.Context, id, userID primitive.ObjectID) (*domain.Trip, error)
 	Update(ctx context.Context, trip *domain.Trip) error
-	Delete(ctx context.Context, id primitive.ObjectID) error
+	Delete(ctx context.Context, id, userID primitive.ObjectID) error
 	List(ctx context.Context, filter domain.TripFilter) (*ListTripsResult, error)
 }
 
@@ -48,9 +48,12 @@ func (r *tripRepository) Create(ctx context.Context, trip *domain.Trip) error {
 	return nil
 }
 
-func (r *tripRepository) GetById(ctx context.Context, id primitive.ObjectID) (*domain.Trip, error) {
+func (r *tripRepository) GetById(ctx context.Context, id, userID primitive.ObjectID) (*domain.Trip, error) {
 	pipeline := mongo.Pipeline{
-		{{Key: "$match", Value: bson.M{"_id": id}}},
+		{{Key: "$match", Value: bson.M{
+			"_id":     id,
+			"user_id": userID,
+		}}},
 		{{Key: "$lookup", Value: bson.M{
 			"from":         "drivers",
 			"localField":   "driver_id",
@@ -152,8 +155,11 @@ func (r *tripRepository) Update(ctx context.Context, trip *domain.Trip) error {
 	return nil
 }
 
-func (r *tripRepository) Delete(ctx context.Context, id primitive.ObjectID) error {
-	result, err := r.trips.DeleteOne(ctx, bson.M{"_id": id})
+func (r *tripRepository) Delete(ctx context.Context, id, userID primitive.ObjectID) error {
+	result, err := r.trips.DeleteOne(ctx, bson.M{
+		"_id":     id,
+		"user_id": userID,
+	})
 	if err != nil {
 		return fmt.Errorf("failed to delete trip: %w", err)
 	}
@@ -178,12 +184,9 @@ func (r *tripRepository) List(ctx context.Context, filter domain.TripFilter) (*L
 
 	filterQuery := bson.M{}
 
-	/*
-		DriverID        *primitive.ObjectID
-		TruckID         *primitive.ObjectID
-		StartFacilityID *primitive.ObjectID
-		EndFacilityID   *primitive.ObjectID
-	*/
+	if filter.UserID != primitive.NilObjectID {
+		filterQuery["user_id"] = filter.UserID
+	}
 
 	if filter.DriverID != &primitive.NilObjectID {
 		filterQuery["driver_id"] = filter.DriverID
@@ -207,6 +210,7 @@ func (r *tripRepository) List(ctx context.Context, filter domain.TripFilter) (*L
 	}
 
 	pipeline := mongo.Pipeline{
+		{{Key: "$match", Value: filterQuery}},
 		{{Key: "$sort", Value: bson.M{"_id": -1}}},
 		{{Key: "$skip", Value: filter.Offset}},
 		{{Key: "$limit", Value: filter.Limit}},

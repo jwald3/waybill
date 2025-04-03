@@ -16,13 +16,13 @@ var (
 
 type DriverService interface {
 	Create(ctx context.Context, driver *domain.Driver) error
-	GetById(ctx context.Context, id primitive.ObjectID) (*domain.Driver, error)
+	GetById(ctx context.Context, id, userID primitive.ObjectID) (*domain.Driver, error)
 	Update(ctx context.Context, driver *domain.Driver) error
-	Delete(ctx context.Context, id primitive.ObjectID) error
+	Delete(ctx context.Context, id, userID primitive.ObjectID) error
 	List(ctx context.Context, filter domain.DriverFilter) (*repository.ListDriversResult, error)
-	SuspendDriver(ctx context.Context, id primitive.ObjectID) error
-	TerminateDriver(ctx context.Context, id primitive.ObjectID) error
-	ActivateDriver(ctx context.Context, id primitive.ObjectID) error
+	SuspendDriver(ctx context.Context, id, userID primitive.ObjectID) error
+	TerminateDriver(ctx context.Context, id, userID primitive.ObjectID) error
+	ActivateDriver(ctx context.Context, id, userID primitive.ObjectID) error
 }
 
 type driverService struct {
@@ -45,8 +45,8 @@ func (s *driverService) Create(ctx context.Context, driver *domain.Driver) error
 	return nil
 }
 
-func (s *driverService) GetById(ctx context.Context, id primitive.ObjectID) (*domain.Driver, error) {
-	driver, err := s.driverRepo.GetById(ctx, id)
+func (s *driverService) GetById(ctx context.Context, id, userID primitive.ObjectID) (*domain.Driver, error) {
+	driver, err := s.driverRepo.GetById(ctx, id, userID)
 	if err != nil {
 		return nil, fmt.Errorf(driverNotFound, err)
 	}
@@ -66,8 +66,8 @@ func (s *driverService) Update(ctx context.Context, driver *domain.Driver) error
 	return nil
 }
 
-func (s *driverService) Delete(ctx context.Context, id primitive.ObjectID) error {
-	if err := s.driverRepo.Delete(ctx, id); err != nil {
+func (s *driverService) Delete(ctx context.Context, id, userID primitive.ObjectID) error {
+	if err := s.driverRepo.Delete(ctx, id, userID); err != nil {
 		if err == domain.ErrDriverNotFound {
 			return err
 		}
@@ -95,8 +95,8 @@ func (s *driverService) List(ctx context.Context, filter domain.DriverFilter) (*
 }
 
 // Atomic methods
-func (s *driverService) SuspendDriver(ctx context.Context, id primitive.ObjectID) error {
-	driver, err := s.driverRepo.GetById(ctx, id)
+func (s *driverService) SuspendDriver(ctx context.Context, id, userID primitive.ObjectID) error {
+	driver, err := s.driverRepo.GetById(ctx, id, userID)
 	if err != nil {
 		return fmt.Errorf("failed to get driver: %w", err)
 	}
@@ -115,8 +115,8 @@ func (s *driverService) SuspendDriver(ctx context.Context, id primitive.ObjectID
 	return s.driverRepo.Update(ctx, driver)
 }
 
-func (s *driverService) TerminateDriver(ctx context.Context, id primitive.ObjectID) error {
-	driver, err := s.driverRepo.GetById(ctx, id)
+func (s *driverService) TerminateDriver(ctx context.Context, id, userID primitive.ObjectID) error {
+	driver, err := s.driverRepo.GetById(ctx, id, userID)
 	if err != nil {
 		return fmt.Errorf("failed to get driver: %w", err)
 	}
@@ -135,8 +135,8 @@ func (s *driverService) TerminateDriver(ctx context.Context, id primitive.Object
 	return s.driverRepo.Update(ctx, driver)
 }
 
-func (s *driverService) ActivateDriver(ctx context.Context, id primitive.ObjectID) error {
-	driver, err := s.driverRepo.GetById(ctx, id)
+func (s *driverService) ActivateDriver(ctx context.Context, id, userID primitive.ObjectID) error {
+	driver, err := s.driverRepo.GetById(ctx, id, userID)
 	if err != nil {
 		return fmt.Errorf("failed to get driver: %w", err)
 	}

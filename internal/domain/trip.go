@@ -98,6 +98,7 @@ func NewTrip(
 }
 
 type TripFilter struct {
+	UserID          primitive.ObjectID
 	DriverID        *primitive.ObjectID
 	TruckID         *primitive.ObjectID
 	StartFacilityID *primitive.ObjectID
@@ -110,6 +111,7 @@ func NewTripFilter() TripFilter {
 	return TripFilter{
 		Limit:  10,
 		Offset: 0,
+		UserID: primitive.NilObjectID,
 	}
 }
 

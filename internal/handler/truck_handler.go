@@ -4,8 +4,10 @@ import (
 	"fmt"
 	"net/http"
 
+	"github.com/golang-jwt/jwt/v5"
 	"github.com/gorilla/mux"
 	"github.com/jwald3/waybill/internal/domain"
+	"github.com/jwald3/waybill/internal/middleware"
 	"github.com/jwald3/waybill/internal/service"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
@@ -180,6 +182,24 @@ func (h *TruckHandler) Create(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *TruckHandler) GetById(w http.ResponseWriter, r *http.Request) {
+	claims, ok := r.Context().Value(middleware.UserContextKey).(jwt.MapClaims)
+	if !ok {
+		WriteJSON(w, http.StatusUnauthorized, Response{Error: "unauthorized"})
+		return
+	}
+
+	userIDStr, ok := claims["user_id"].(string)
+	if !ok {
+		WriteJSON(w, http.StatusUnauthorized, Response{Error: "invalid user id in token"})
+		return
+	}
+
+	userID, err := primitive.ObjectIDFromHex(userIDStr)
+	if err != nil {
+		WriteJSON(w, http.StatusUnauthorized, Response{Error: "invalid user id format"})
+		return
+	}
+
 	idStr := mux.Vars(r)["id"]
 	objectID, err := primitive.ObjectIDFromHex(idStr)
 	if err != nil {
@@ -187,7 +207,7 @@ func (h *TruckHandler) GetById(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	truck, err := h.truckService.GetById(r.Context(), objectID)
+	truck, err := h.truckService.GetById(r.Context(), objectID, userID)
 	if err != nil {
 		WriteJSON(w, http.StatusNotFound, Response{Error: "truck not found"})
 		return
@@ -227,6 +247,24 @@ func (h *TruckHandler) Update(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *TruckHandler) Delete(w http.ResponseWriter, r *http.Request) {
+	claims, ok := r.Context().Value(middleware.UserContextKey).(jwt.MapClaims)
+	if !ok {
+		WriteJSON(w, http.StatusUnauthorized, Response{Error: "unauthorized"})
+		return
+	}
+
+	userIDStr, ok := claims["user_id"].(string)
+	if !ok {
+		WriteJSON(w, http.StatusUnauthorized, Response{Error: "invalid user id in token"})
+		return
+	}
+
+	userID, err := primitive.ObjectIDFromHex(userIDStr)
+	if err != nil {
+		WriteJSON(w, http.StatusUnauthorized, Response{Error: "invalid user id format"})
+		return
+	}
+
 	idStr := mux.Vars(r)["id"]
 	objectID, err := primitive.ObjectIDFromHex(idStr)
 	if err != nil {
@@ -234,7 +272,7 @@ func (h *TruckHandler) Delete(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = h.truckService.Delete(r.Context(), objectID)
+	err = h.truckService.Delete(r.Context(), objectID, userID)
 	if err != nil {
 		if err == domain.ErrTruckNotFound {
 			WriteJSON(w, http.StatusNotFound, Response{Error: "truck not found"})
@@ -249,7 +287,26 @@ func (h *TruckHandler) Delete(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *TruckHandler) List(w http.ResponseWriter, r *http.Request) {
+	claims, ok := r.Context().Value(middleware.UserContextKey).(jwt.MapClaims)
+	if !ok {
+		WriteJSON(w, http.StatusUnauthorized, Response{Error: "unauthorized"})
+		return
+	}
+
+	userIDStr, ok := claims["user_id"].(string)
+	if !ok {
+		WriteJSON(w, http.StatusUnauthorized, Response{Error: "invalid user id in token"})
+		return
+	}
+
+	userID, err := primitive.ObjectIDFromHex(userIDStr)
+	if err != nil {
+		WriteJSON(w, http.StatusUnauthorized, Response{Error: "invalid user id format"})
+		return
+	}
+
 	filter := domain.NewTruckFilter()
+	filter.UserID = userID
 
 	if vin := r.URL.Query().Get("vin"); vin != "" {
 		filter.VIN = vin
@@ -306,6 +363,24 @@ func (h *TruckHandler) List(w http.ResponseWriter, r *http.Request) {
 
 // atomic methods
 func (h *TruckHandler) MakeTruckAvailable(w http.ResponseWriter, r *http.Request) {
+	claims, ok := r.Context().Value(middleware.UserContextKey).(jwt.MapClaims)
+	if !ok {
+		WriteJSON(w, http.StatusUnauthorized, Response{Error: "unauthorized"})
+		return
+	}
+
+	userIDStr, ok := claims["user_id"].(string)
+	if !ok {
+		WriteJSON(w, http.StatusUnauthorized, Response{Error: "invalid user id in token"})
+		return
+	}
+
+	userID, err := primitive.ObjectIDFromHex(userIDStr)
+	if err != nil {
+		WriteJSON(w, http.StatusUnauthorized, Response{Error: "invalid user id format"})
+		return
+	}
+
 	idStr := mux.Vars(r)["id"]
 	objectID, err := primitive.ObjectIDFromHex(idStr)
 	if err != nil {
@@ -313,12 +388,12 @@ func (h *TruckHandler) MakeTruckAvailable(w http.ResponseWriter, r *http.Request
 		return
 	}
 
-	if err := h.truckService.MakeTruckAvailable(r.Context(), objectID); err != nil {
+	if err := h.truckService.MakeTruckAvailable(r.Context(), objectID, userID); err != nil {
 		WriteJSON(w, http.StatusInternalServerError, Response{Error: err.Error()})
 		return
 	}
 
-	updatedTruck, err := h.truckService.GetById(r.Context(), objectID)
+	updatedTruck, err := h.truckService.GetById(r.Context(), objectID, userID)
 	if err != nil {
 		WriteJSON(w, http.StatusInternalServerError, Response{Error: "status updated but failed to fetch updated truck"})
 		return
@@ -328,6 +403,24 @@ func (h *TruckHandler) MakeTruckAvailable(w http.ResponseWriter, r *http.Request
 }
 
 func (h *TruckHandler) RetireTruck(w http.ResponseWriter, r *http.Request) {
+	claims, ok := r.Context().Value(middleware.UserContextKey).(jwt.MapClaims)
+	if !ok {
+		WriteJSON(w, http.StatusUnauthorized, Response{Error: "unauthorized"})
+		return
+	}
+
+	userIDStr, ok := claims["user_id"].(string)
+	if !ok {
+		WriteJSON(w, http.StatusUnauthorized, Response{Error: "invalid user id in token"})
+		return
+	}
+
+	userID, err := primitive.ObjectIDFromHex(userIDStr)
+	if err != nil {
+		WriteJSON(w, http.StatusUnauthorized, Response{Error: "invalid user id format"})
+		return
+	}
+
 	idStr := mux.Vars(r)["id"]
 	objectID, err := primitive.ObjectIDFromHex(idStr)
 	if err != nil {
@@ -335,12 +428,12 @@ func (h *TruckHandler) RetireTruck(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err := h.truckService.RetireTruck(r.Context(), objectID); err != nil {
+	if err := h.truckService.RetireTruck(r.Context(), objectID, userID); err != nil {
 		WriteJSON(w, http.StatusInternalServerError, Response{Error: err.Error()})
 		return
 	}
 
-	updatedTruck, err := h.truckService.GetById(r.Context(), objectID)
+	updatedTruck, err := h.truckService.GetById(r.Context(), objectID, userID)
 	if err != nil {
 		WriteJSON(w, http.StatusInternalServerError, Response{Error: "status updated but failed to fetch updated truck"})
 		return
@@ -350,6 +443,24 @@ func (h *TruckHandler) RetireTruck(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *TruckHandler) SetTruckInTransit(w http.ResponseWriter, r *http.Request) {
+	claims, ok := r.Context().Value(middleware.UserContextKey).(jwt.MapClaims)
+	if !ok {
+		WriteJSON(w, http.StatusUnauthorized, Response{Error: "unauthorized"})
+		return
+	}
+
+	userIDStr, ok := claims["user_id"].(string)
+	if !ok {
+		WriteJSON(w, http.StatusUnauthorized, Response{Error: "invalid user id in token"})
+		return
+	}
+
+	userID, err := primitive.ObjectIDFromHex(userIDStr)
+	if err != nil {
+		WriteJSON(w, http.StatusUnauthorized, Response{Error: "invalid user id format"})
+		return
+	}
+
 	idStr := mux.Vars(r)["id"]
 	objectID, err := primitive.ObjectIDFromHex(idStr)
 	if err != nil {
@@ -357,12 +468,12 @@ func (h *TruckHandler) SetTruckInTransit(w http.ResponseWriter, r *http.Request)
 		return
 	}
 
-	if err := h.truckService.SetTruckInTransit(r.Context(), objectID); err != nil {
+	if err := h.truckService.SetTruckInTransit(r.Context(), objectID, userID); err != nil {
 		WriteJSON(w, http.StatusInternalServerError, Response{Error: err.Error()})
 		return
 	}
 
-	updatedTruck, err := h.truckService.GetById(r.Context(), objectID)
+	updatedTruck, err := h.truckService.GetById(r.Context(), objectID, userID)
 	if err != nil {
 		WriteJSON(w, http.StatusInternalServerError, Response{Error: "status updated but failed to fetch updated truck"})
 		return
@@ -372,6 +483,24 @@ func (h *TruckHandler) SetTruckInTransit(w http.ResponseWriter, r *http.Request)
 }
 
 func (h *TruckHandler) SetTruckInMaintenance(w http.ResponseWriter, r *http.Request) {
+	claims, ok := r.Context().Value(middleware.UserContextKey).(jwt.MapClaims)
+	if !ok {
+		WriteJSON(w, http.StatusUnauthorized, Response{Error: "unauthorized"})
+		return
+	}
+
+	userIDStr, ok := claims["user_id"].(string)
+	if !ok {
+		WriteJSON(w, http.StatusUnauthorized, Response{Error: "invalid user id in token"})
+		return
+	}
+
+	userID, err := primitive.ObjectIDFromHex(userIDStr)
+	if err != nil {
+		WriteJSON(w, http.StatusUnauthorized, Response{Error: "invalid user id format"})
+		return
+	}
+
 	idStr := mux.Vars(r)["id"]
 	objectID, err := primitive.ObjectIDFromHex(idStr)
 	if err != nil {
@@ -379,12 +508,12 @@ func (h *TruckHandler) SetTruckInMaintenance(w http.ResponseWriter, r *http.Requ
 		return
 	}
 
-	if err := h.truckService.SetTruckInMaintenance(r.Context(), objectID); err != nil {
+	if err := h.truckService.SetTruckInMaintenance(r.Context(), objectID, userID); err != nil {
 		WriteJSON(w, http.StatusInternalServerError, Response{Error: err.Error()})
 		return
 	}
 
-	updatedTruck, err := h.truckService.GetById(r.Context(), objectID)
+	updatedTruck, err := h.truckService.GetById(r.Context(), objectID, userID)
 	if err != nil {
 		WriteJSON(w, http.StatusInternalServerError, Response{Error: "status updated but failed to fetch updated truck"})
 		return
@@ -394,6 +523,24 @@ func (h *TruckHandler) SetTruckInMaintenance(w http.ResponseWriter, r *http.Requ
 }
 
 func (h *TruckHandler) UpdateTruckMileage(w http.ResponseWriter, r *http.Request) {
+	claims, ok := r.Context().Value(middleware.UserContextKey).(jwt.MapClaims)
+	if !ok {
+		WriteJSON(w, http.StatusUnauthorized, Response{Error: "unauthorized"})
+		return
+	}
+
+	userIDStr, ok := claims["user_id"].(string)
+	if !ok {
+		WriteJSON(w, http.StatusUnauthorized, Response{Error: "invalid user id in token"})
+		return
+	}
+
+	userID, err := primitive.ObjectIDFromHex(userIDStr)
+	if err != nil {
+		WriteJSON(w, http.StatusUnauthorized, Response{Error: "invalid user id format"})
+		return
+	}
+
 	idStr := mux.Vars(r)["id"]
 	objectID, err := primitive.ObjectIDFromHex(idStr)
 	if err != nil {
@@ -407,12 +554,12 @@ func (h *TruckHandler) UpdateTruckMileage(w http.ResponseWriter, r *http.Request
 		return
 	}
 
-	if err := h.truckService.UpdateTruckMileage(r.Context(), objectID, req.Mileage); err != nil {
+	if err := h.truckService.UpdateTruckMileage(r.Context(), objectID, userID, req.Mileage); err != nil {
 		WriteJSON(w, http.StatusInternalServerError, Response{Error: err.Error()})
 		return
 	}
 
-	updatedTruck, err := h.truckService.GetById(r.Context(), objectID)
+	updatedTruck, err := h.truckService.GetById(r.Context(), objectID, userID)
 	if err != nil {
 		WriteJSON(w, http.StatusInternalServerError, Response{Error: "mileage updated but failed to fetch updated truck"})
 		return
@@ -422,6 +569,24 @@ func (h *TruckHandler) UpdateTruckMileage(w http.ResponseWriter, r *http.Request
 }
 
 func (h *TruckHandler) UpdateTruckLastMaintenance(w http.ResponseWriter, r *http.Request) {
+	claims, ok := r.Context().Value(middleware.UserContextKey).(jwt.MapClaims)
+	if !ok {
+		WriteJSON(w, http.StatusUnauthorized, Response{Error: "unauthorized"})
+		return
+	}
+
+	userIDStr, ok := claims["user_id"].(string)
+	if !ok {
+		WriteJSON(w, http.StatusUnauthorized, Response{Error: "invalid user id in token"})
+		return
+	}
+
+	userID, err := primitive.ObjectIDFromHex(userIDStr)
+	if err != nil {
+		WriteJSON(w, http.StatusUnauthorized, Response{Error: "invalid user id format"})
+		return
+	}
+
 	idStr := mux.Vars(r)["id"]
 	objectID, err := primitive.ObjectIDFromHex(idStr)
 	if err != nil {
@@ -435,12 +600,12 @@ func (h *TruckHandler) UpdateTruckLastMaintenance(w http.ResponseWriter, r *http
 		return
 	}
 
-	if err := h.truckService.UpdateTruckMaintenance(r.Context(), objectID, req.LastMaintenance); err != nil {
+	if err := h.truckService.UpdateTruckMaintenance(r.Context(), objectID, userID, req.LastMaintenance); err != nil {
 		WriteJSON(w, http.StatusInternalServerError, Response{Error: err.Error()})
 		return
 	}
 
-	updatedTruck, err := h.truckService.GetById(r.Context(), objectID)
+	updatedTruck, err := h.truckService.GetById(r.Context(), objectID, userID)
 	if err != nil {
 		WriteJSON(w, http.StatusInternalServerError, Response{Error: "maintenance updated but failed to fetch updated truck"})
 		return

@@ -18,9 +18,9 @@ type maintenanceLogRepository struct {
 
 type MaintenanceLogRepository interface {
 	Create(ctx context.Context, maintenanceLog *domain.MaintenanceLog) error
-	GetById(ctx context.Context, id primitive.ObjectID) (*domain.MaintenanceLog, error)
+	GetById(ctx context.Context, id, userID primitive.ObjectID) (*domain.MaintenanceLog, error)
 	Update(ctx context.Context, maintenanceLog *domain.MaintenanceLog) error
-	Delete(ctx context.Context, id primitive.ObjectID) error
+	Delete(ctx context.Context, id, userID primitive.ObjectID) error
 	List(ctx context.Context, filter domain.MaintenanceLogFilter) (*ListMaintenanceLogsResult, error)
 }
 
@@ -48,9 +48,9 @@ func (r *maintenanceLogRepository) Create(ctx context.Context, maintenanceLog *d
 	return nil
 }
 
-func (r *maintenanceLogRepository) GetById(ctx context.Context, id primitive.ObjectID) (*domain.MaintenanceLog, error) {
+func (r *maintenanceLogRepository) GetById(ctx context.Context, id, userID primitive.ObjectID) (*domain.MaintenanceLog, error) {
 	pipeline := mongo.Pipeline{
-		{{Key: "$match", Value: bson.M{"_id": id}}},
+		{{Key: "$match", Value: bson.M{"_id": id, "user_id": userID}}},
 		{{Key: "$lookup", Value: bson.M{
 			"from":         "trucks",
 			"localField":   "truck_id",
@@ -113,8 +113,8 @@ func (r *maintenanceLogRepository) Update(ctx context.Context, maintenanceLog *d
 	return nil
 }
 
-func (r *maintenanceLogRepository) Delete(ctx context.Context, id primitive.ObjectID) error {
-	result, err := r.maintenanceLogs.DeleteOne(ctx, bson.M{"_id": id})
+func (r *maintenanceLogRepository) Delete(ctx context.Context, id, userID primitive.ObjectID) error {
+	result, err := r.maintenanceLogs.DeleteOne(ctx, bson.M{"_id": id, "user_id": userID})
 	if err != nil {
 		return fmt.Errorf("failed to delete maintenance log %w", err)
 	}
@@ -139,6 +139,10 @@ func (r *maintenanceLogRepository) List(ctx context.Context, filter domain.Maint
 
 	filterQuery := bson.M{}
 
+	if filter.UserID != primitive.NilObjectID {
+		filterQuery["user_id"] = filter.UserID
+	}
+
 	if filter.TruckID != &primitive.NilObjectID {
 		filterQuery["truck_id"] = filter.TruckID
 	}
@@ -153,6 +157,7 @@ func (r *maintenanceLogRepository) List(ctx context.Context, filter domain.Maint
 	}
 
 	pipeline := mongo.Pipeline{
+		{{Key: "$match", Value: filterQuery}},
 		{{Key: "$sort", Value: bson.M{"_id": -1}}},
 		{{Key: "$skip", Value: filter.Offset}},
 		{{Key: "$limit", Value: filter.Limit}},

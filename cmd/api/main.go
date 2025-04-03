@@ -32,7 +32,7 @@ func main() {
 	}
 	defer db.Close()
 
-	handlers := initializeHandlers(db)
+	handlers := initializeHandlers(db, cfg)
 
 	router := mux.NewRouter()
 	router.Use(middleware.Logging(log))
@@ -42,13 +42,18 @@ func main() {
 	router.HandleFunc("/health", handler.HealthCheck).Methods(http.MethodGet)
 
 	v1 := router.PathPrefix("/api/v1").Subrouter()
-	registerDriverRoutes(v1, handlers.driver)
-	registerFacilityRoutes(v1, handlers.facility)
-	registerFuelLogRoutes(v1, handlers.fuelLog)
-	registerIncidentReportRoutes(v1, handlers.incidentReport)
-	registerMaintenanceLogRoutes(v1, handlers.maintenanceLog)
-	registerTripRoutes(v1, handlers.trip)
-	registerTruckRoutes(v1, handlers.truck)
+	registerAuthRoutes(v1, handlers.auth)
+
+	protected := v1.NewRoute().Subrouter()
+	protected.Use(middleware.Auth([]byte(cfg.Auth.JWTKey)))
+
+	registerDriverRoutes(protected, handlers.driver)
+	registerFacilityRoutes(protected, handlers.facility)
+	registerFuelLogRoutes(protected, handlers.fuelLog)
+	registerIncidentReportRoutes(protected, handlers.incidentReport)
+	registerMaintenanceLogRoutes(protected, handlers.maintenanceLog)
+	registerTripRoutes(protected, handlers.trip)
+	registerTruckRoutes(protected, handlers.truck)
 
 	server := &http.Server{
 		Addr:         fmt.Sprintf("%s:%s", cfg.Server.Host, cfg.Server.Port),
@@ -92,9 +97,10 @@ type handlers struct {
 	maintenanceLog *handler.MaintenanceLogHandler
 	trip           *handler.TripHandler
 	truck          *handler.TruckHandler
+	auth           *handler.AuthHandler
 }
 
-func initializeHandlers(db *database.MongoDB) *handlers {
+func initializeHandlers(db *database.MongoDB, cfg *config.Config) *handlers {
 	// Initialize repositories
 	driverRepo := repository.NewDriverRepository(db)
 	facilityRepo := repository.NewFacilityRepository(db)
@@ -103,6 +109,7 @@ func initializeHandlers(db *database.MongoDB) *handlers {
 	maintenanceLogRepo := repository.NewMaintenanceLogRepository(db)
 	tripRepo := repository.NewTripRepository(db)
 	truckRepo := repository.NewTruckRepository(db)
+	userRepo := repository.NewUserRepository(db)
 
 	// Initialize services
 	driverService := service.NewDriverService(db, driverRepo)
@@ -112,6 +119,7 @@ func initializeHandlers(db *database.MongoDB) *handlers {
 	maintenanceLogService := service.NewMaintenanceLogService(db, maintenanceLogRepo)
 	tripService := service.NewTripService(db, tripRepo)
 	truckService := service.NewTruckService(db, truckRepo)
+	authService := service.NewAuthService(db, userRepo, cfg.Auth.JWTKey)
 
 	// Initialize handlers
 	return &handlers{
@@ -122,6 +130,7 @@ func initializeHandlers(db *database.MongoDB) *handlers {
 		maintenanceLog: handler.NewMaintenanceLogHandler(maintenanceLogService),
 		trip:           handler.NewTripHandler(tripService),
 		truck:          handler.NewTruckHandler(truckService),
+		auth:           handler.NewAuthHandler(authService),
 	}
 }
 
@@ -194,4 +203,9 @@ func registerTruckRoutes(r *mux.Router, h *handler.TruckHandler) {
 	r.HandleFunc("/trucks/{id}/status/retire", h.RetireTruck).Methods(http.MethodPatch)
 	r.HandleFunc("/trucks/{id}/mileage", h.UpdateTruckMileage).Methods(http.MethodPatch)
 	r.HandleFunc("/trucks/{id}/maintenance", h.UpdateTruckLastMaintenance).Methods(http.MethodPatch)
+}
+
+func registerAuthRoutes(r *mux.Router, h *handler.AuthHandler) {
+	r.HandleFunc("/auth/register", h.Register).Methods(http.MethodPost)
+	r.HandleFunc("/auth/login", h.Login).Methods(http.MethodPost)
 }

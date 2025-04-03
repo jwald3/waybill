@@ -6,8 +6,10 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/golang-jwt/jwt/v5"
 	"github.com/gorilla/mux"
 	"github.com/jwald3/waybill/internal/domain"
+	"github.com/jwald3/waybill/internal/middleware"
 	"github.com/jwald3/waybill/internal/service"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
@@ -137,6 +139,24 @@ func (h *FacilityHandler) Create(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *FacilityHandler) GetById(w http.ResponseWriter, r *http.Request) {
+	claims, ok := r.Context().Value(middleware.UserContextKey).(jwt.MapClaims)
+	if !ok {
+		WriteJSON(w, http.StatusUnauthorized, Response{Error: "unauthorized"})
+		return
+	}
+
+	userIDStr, ok := claims["user_id"].(string)
+	if !ok {
+		WriteJSON(w, http.StatusUnauthorized, Response{Error: "invalid user id in token"})
+		return
+	}
+
+	userID, err := primitive.ObjectIDFromHex(userIDStr)
+	if err != nil {
+		WriteJSON(w, http.StatusUnauthorized, Response{Error: "invalid user id format"})
+		return
+	}
+
 	idStr := mux.Vars(r)["id"]
 	objectID, err := primitive.ObjectIDFromHex(idStr)
 	if err != nil {
@@ -144,7 +164,7 @@ func (h *FacilityHandler) GetById(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	facility, err := h.facilityService.GetById(r.Context(), objectID)
+	facility, err := h.facilityService.GetById(r.Context(), objectID, userID)
 	if err != nil {
 		WriteJSON(w, http.StatusNotFound, Response{Error: "facility not found"})
 		return
@@ -184,6 +204,24 @@ func (h *FacilityHandler) Update(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *FacilityHandler) Delete(w http.ResponseWriter, r *http.Request) {
+	claims, ok := r.Context().Value(middleware.UserContextKey).(jwt.MapClaims)
+	if !ok {
+		WriteJSON(w, http.StatusUnauthorized, Response{Error: "unauthorized"})
+		return
+	}
+
+	userIDStr, ok := claims["user_id"].(string)
+	if !ok {
+		WriteJSON(w, http.StatusUnauthorized, Response{Error: "invalid user id in token"})
+		return
+	}
+
+	userID, err := primitive.ObjectIDFromHex(userIDStr)
+	if err != nil {
+		WriteJSON(w, http.StatusUnauthorized, Response{Error: "invalid user id format"})
+		return
+	}
+
 	idStr := mux.Vars(r)["id"]
 	objectID, err := primitive.ObjectIDFromHex(idStr)
 	if err != nil {
@@ -191,7 +229,7 @@ func (h *FacilityHandler) Delete(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = h.facilityService.Delete(r.Context(), objectID)
+	err = h.facilityService.Delete(r.Context(), objectID, userID)
 	if err != nil {
 		if err == domain.ErrFacilityNotFound {
 			WriteJSON(w, http.StatusNotFound, Response{Error: "facility not found"})
@@ -206,7 +244,27 @@ func (h *FacilityHandler) Delete(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *FacilityHandler) List(w http.ResponseWriter, r *http.Request) {
+	claims, ok := r.Context().Value(middleware.UserContextKey).(jwt.MapClaims)
+	if !ok {
+		WriteJSON(w, http.StatusUnauthorized, Response{Error: "unauthorized"})
+		return
+	}
+
+	userIDStr, ok := claims["user_id"].(string)
+	if !ok {
+		WriteJSON(w, http.StatusUnauthorized, Response{Error: "invalid user id in token"})
+		return
+	}
+
+	userID, err := primitive.ObjectIDFromHex(userIDStr)
+	if err != nil {
+		WriteJSON(w, http.StatusUnauthorized, Response{Error: "invalid user id format"})
+		return
+	}
+
 	filter := domain.NewFacilityFilter()
+
+	filter.UserID = userID
 
 	// Parse query parameters, adding them to the filter if they're present
 	// any unrecognized query params will be ignored and not added to the filter
@@ -275,6 +333,24 @@ func (h *FacilityHandler) List(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *FacilityHandler) UpdateAvailableFacilityServices(w http.ResponseWriter, r *http.Request) {
+	claims, ok := r.Context().Value(middleware.UserContextKey).(jwt.MapClaims)
+	if !ok {
+		WriteJSON(w, http.StatusUnauthorized, Response{Error: "unauthorized"})
+		return
+	}
+
+	userIDStr, ok := claims["user_id"].(string)
+	if !ok {
+		WriteJSON(w, http.StatusUnauthorized, Response{Error: "invalid user id in token"})
+		return
+	}
+
+	userID, err := primitive.ObjectIDFromHex(userIDStr)
+	if err != nil {
+		WriteJSON(w, http.StatusUnauthorized, Response{Error: "invalid user id format"})
+		return
+	}
+
 	// Get facility ID from URL
 	idStr := mux.Vars(r)["id"]
 	objectID, err := primitive.ObjectIDFromHex(idStr)
@@ -299,7 +375,7 @@ func (h *FacilityHandler) UpdateAvailableFacilityServices(w http.ResponseWriter,
 	}
 
 	// Update services
-	err = h.facilityService.UpdateAvailableFacilityServices(r.Context(), objectID, req.AvailableServices)
+	err = h.facilityService.UpdateAvailableFacilityServices(r.Context(), objectID, userID, req.AvailableServices)
 	if err != nil {
 		switch {
 		case err == domain.ErrFacilityNotFound:
@@ -311,7 +387,7 @@ func (h *FacilityHandler) UpdateAvailableFacilityServices(w http.ResponseWriter,
 	}
 
 	// Fetch updated facility to return in response
-	updatedFacility, err := h.facilityService.GetById(r.Context(), objectID)
+	updatedFacility, err := h.facilityService.GetById(r.Context(), objectID, userID)
 	if err != nil {
 		WriteJSON(w, http.StatusInternalServerError, Response{Error: "services updated but failed to fetch updated facility"})
 		return

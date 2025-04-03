@@ -17,15 +17,15 @@ var (
 
 type TripService interface {
 	Create(ctx context.Context, trip *domain.Trip) error
-	GetById(ctx context.Context, id primitive.ObjectID) (*domain.Trip, error)
+	GetById(ctx context.Context, id, userID primitive.ObjectID) (*domain.Trip, error)
 	Update(ctx context.Context, trip *domain.Trip) error
-	Delete(ctx context.Context, id primitive.ObjectID) error
+	Delete(ctx context.Context, id, userID primitive.ObjectID) error
 	List(ctx context.Context, filter domain.TripFilter) (*repository.ListTripsResult, error)
-	AddNote(ctx context.Context, id primitive.ObjectID, content string) error
-	BeginTrip(ctx context.Context, id primitive.ObjectID, departureTime time.Time) error
-	CancelTrip(ctx context.Context, id primitive.ObjectID) error
-	FinishTripSuccessfully(ctx context.Context, id primitive.ObjectID, arrivalTime time.Time) error
-	FinishTripUnsuccessfully(ctx context.Context, id primitive.ObjectID, arrivalTime time.Time) error
+	AddNote(ctx context.Context, id, userID primitive.ObjectID, content string) error
+	BeginTrip(ctx context.Context, id, userID primitive.ObjectID, departureTime time.Time) error
+	CancelTrip(ctx context.Context, id, userID primitive.ObjectID) error
+	FinishTripSuccessfully(ctx context.Context, id, userID primitive.ObjectID, arrivalTime time.Time) error
+	FinishTripUnsuccessfully(ctx context.Context, id, userID primitive.ObjectID, arrivalTime time.Time) error
 }
 
 type tripService struct {
@@ -48,8 +48,8 @@ func (s *tripService) Create(ctx context.Context, trip *domain.Trip) error {
 	return nil
 }
 
-func (s *tripService) GetById(ctx context.Context, id primitive.ObjectID) (*domain.Trip, error) {
-	trip, err := s.tripRepo.GetById(ctx, id)
+func (s *tripService) GetById(ctx context.Context, id, userID primitive.ObjectID) (*domain.Trip, error) {
+	trip, err := s.tripRepo.GetById(ctx, id, userID)
 	if err != nil {
 		return nil, fmt.Errorf(tripNotFound, err)
 	}
@@ -78,8 +78,8 @@ func (s *tripService) Update(ctx context.Context, trip *domain.Trip) error {
 	return nil
 }
 
-func (s *tripService) Delete(ctx context.Context, id primitive.ObjectID) error {
-	if err := s.tripRepo.Delete(ctx, id); err != nil {
+func (s *tripService) Delete(ctx context.Context, id, userID primitive.ObjectID) error {
+	if err := s.tripRepo.Delete(ctx, id, userID); err != nil {
 		if err == domain.ErrTripNotFound {
 			return err
 		}
@@ -107,8 +107,8 @@ func (s *tripService) List(ctx context.Context, filter domain.TripFilter) (*repo
 	return result, nil
 }
 
-func (s *tripService) AddNote(ctx context.Context, id primitive.ObjectID, content string) error {
-	trip, err := s.tripRepo.GetById(ctx, id)
+func (s *tripService) AddNote(ctx context.Context, id, userID primitive.ObjectID, content string) error {
+	trip, err := s.tripRepo.GetById(ctx, id, userID)
 
 	if trip == nil {
 		return fmt.Errorf("trip with ID %v not found", id)
@@ -125,8 +125,8 @@ func (s *tripService) AddNote(ctx context.Context, id primitive.ObjectID, conten
 	return s.tripRepo.Update(ctx, trip)
 }
 
-func (s *tripService) CancelTrip(ctx context.Context, id primitive.ObjectID) error {
-	trip, err := s.tripRepo.GetById(ctx, id)
+func (s *tripService) CancelTrip(ctx context.Context, id, userID primitive.ObjectID) error {
+	trip, err := s.tripRepo.GetById(ctx, id, userID)
 
 	if err != nil {
 		return fmt.Errorf(tripNotFound, err)
@@ -148,8 +148,8 @@ func (s *tripService) CancelTrip(ctx context.Context, id primitive.ObjectID) err
 	return s.tripRepo.Update(ctx, trip)
 }
 
-func (s *tripService) BeginTrip(ctx context.Context, id primitive.ObjectID, departureTime time.Time) error {
-	trip, err := s.tripRepo.GetById(ctx, id)
+func (s *tripService) BeginTrip(ctx context.Context, id, userID primitive.ObjectID, departureTime time.Time) error {
+	trip, err := s.tripRepo.GetById(ctx, id, userID)
 
 	if err != nil {
 		return fmt.Errorf(tripNotFound, err)
@@ -171,8 +171,8 @@ func (s *tripService) BeginTrip(ctx context.Context, id primitive.ObjectID, depa
 	return s.tripRepo.Update(ctx, trip)
 }
 
-func (s *tripService) FinishTripSuccessfully(ctx context.Context, id primitive.ObjectID, arrivalTime time.Time) error {
-	trip, err := s.tripRepo.GetById(ctx, id)
+func (s *tripService) FinishTripSuccessfully(ctx context.Context, id, userID primitive.ObjectID, arrivalTime time.Time) error {
+	trip, err := s.tripRepo.GetById(ctx, id, userID)
 
 	if err != nil {
 		return fmt.Errorf(tripNotFound, err)
@@ -194,8 +194,8 @@ func (s *tripService) FinishTripSuccessfully(ctx context.Context, id primitive.O
 	return s.tripRepo.Update(ctx, trip)
 }
 
-func (s *tripService) FinishTripUnsuccessfully(ctx context.Context, id primitive.ObjectID, arrivalTime time.Time) error {
-	trip, err := s.tripRepo.GetById(ctx, id)
+func (s *tripService) FinishTripUnsuccessfully(ctx context.Context, id, userID primitive.ObjectID, arrivalTime time.Time) error {
+	trip, err := s.tripRepo.GetById(ctx, id, userID)
 
 	if err != nil {
 		return fmt.Errorf(tripNotFound, err)

@@ -4,8 +4,10 @@ import (
 	"fmt"
 	"net/http"
 
+	"github.com/golang-jwt/jwt/v5"
 	"github.com/gorilla/mux"
 	"github.com/jwald3/waybill/internal/domain"
+	"github.com/jwald3/waybill/internal/middleware"
 	"github.com/jwald3/waybill/internal/service"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
@@ -141,6 +143,24 @@ func (h *IncidentReportHandler) Create(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *IncidentReportHandler) GetById(w http.ResponseWriter, r *http.Request) {
+	claims, ok := r.Context().Value(middleware.UserContextKey).(jwt.MapClaims)
+	if !ok {
+		WriteJSON(w, http.StatusUnauthorized, Response{Error: "unauthorized"})
+		return
+	}
+
+	userIDStr, ok := claims["user_id"].(string)
+	if !ok {
+		WriteJSON(w, http.StatusUnauthorized, Response{Error: "invalid user id in token"})
+		return
+	}
+
+	userID, err := primitive.ObjectIDFromHex(userIDStr)
+	if err != nil {
+		WriteJSON(w, http.StatusUnauthorized, Response{Error: "invalid user id format"})
+		return
+	}
+
 	idStr := mux.Vars(r)["id"]
 	objectID, err := primitive.ObjectIDFromHex(idStr)
 	if err != nil {
@@ -148,7 +168,7 @@ func (h *IncidentReportHandler) GetById(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 
-	incidentReport, err := h.incidentReportService.GetById(r.Context(), objectID)
+	incidentReport, err := h.incidentReportService.GetById(r.Context(), objectID, userID)
 	if err != nil {
 		WriteJSON(w, http.StatusNotFound, Response{Error: "incident report not found"})
 		return
@@ -188,6 +208,24 @@ func (h *IncidentReportHandler) Update(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *IncidentReportHandler) Delete(w http.ResponseWriter, r *http.Request) {
+	claims, ok := r.Context().Value(middleware.UserContextKey).(jwt.MapClaims)
+	if !ok {
+		WriteJSON(w, http.StatusUnauthorized, Response{Error: "unauthorized"})
+		return
+	}
+
+	userIDStr, ok := claims["user_id"].(string)
+	if !ok {
+		WriteJSON(w, http.StatusUnauthorized, Response{Error: "invalid user id in token"})
+		return
+	}
+
+	userID, err := primitive.ObjectIDFromHex(userIDStr)
+	if err != nil {
+		WriteJSON(w, http.StatusUnauthorized, Response{Error: "invalid user id format"})
+		return
+	}
+
 	idStr := mux.Vars(r)["id"]
 	objectID, err := primitive.ObjectIDFromHex(idStr)
 	if err != nil {
@@ -195,7 +233,7 @@ func (h *IncidentReportHandler) Delete(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = h.incidentReportService.Delete(r.Context(), objectID)
+	err = h.incidentReportService.Delete(r.Context(), objectID, userID)
 	if err != nil {
 		if err == domain.ErrIncidentReportNotFound {
 			WriteJSON(w, http.StatusNotFound, Response{Error: "incident report not found"})
@@ -210,7 +248,27 @@ func (h *IncidentReportHandler) Delete(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *IncidentReportHandler) List(w http.ResponseWriter, r *http.Request) {
+	claims, ok := r.Context().Value(middleware.UserContextKey).(jwt.MapClaims)
+	if !ok {
+		WriteJSON(w, http.StatusUnauthorized, Response{Error: "unauthorized"})
+		return
+	}
+
+	userIDStr, ok := claims["user_id"].(string)
+	if !ok {
+		WriteJSON(w, http.StatusUnauthorized, Response{Error: "invalid user id in token"})
+		return
+	}
+
+	userID, err := primitive.ObjectIDFromHex(userIDStr)
+	if err != nil {
+		WriteJSON(w, http.StatusUnauthorized, Response{Error: "invalid user id format"})
+		return
+	}
+
 	filter := domain.NewIncidentReportFilter()
+
+	filter.UserID = userID
 
 	/*
 		TripID   *primitive.ObjectID

@@ -16,9 +16,9 @@ var (
 
 type MaintenanceLogService interface {
 	Create(ctx context.Context, maintenanceLog *domain.MaintenanceLog) error
-	GetById(ctx context.Context, id primitive.ObjectID) (*domain.MaintenanceLog, error)
+	GetById(ctx context.Context, id, userID primitive.ObjectID) (*domain.MaintenanceLog, error)
 	Update(ctx context.Context, maintenanceLog *domain.MaintenanceLog) error
-	Delete(ctx context.Context, id primitive.ObjectID) error
+	Delete(ctx context.Context, id, userID primitive.ObjectID) error
 	List(ctx context.Context, filter domain.MaintenanceLogFilter) (*repository.ListMaintenanceLogsResult, error)
 }
 
@@ -42,8 +42,8 @@ func (s *maintenanceLogService) Create(ctx context.Context, maintenanceLog *doma
 	return nil
 }
 
-func (s *maintenanceLogService) GetById(ctx context.Context, id primitive.ObjectID) (*domain.MaintenanceLog, error) {
-	maintenanceLog, err := s.maintenanceLogRepo.GetById(ctx, id)
+func (s *maintenanceLogService) GetById(ctx context.Context, id, userID primitive.ObjectID) (*domain.MaintenanceLog, error) {
+	maintenanceLog, err := s.maintenanceLogRepo.GetById(ctx, id, userID)
 	if err != nil {
 		return nil, fmt.Errorf(maintenanceLogNotFound, err)
 	}
@@ -63,8 +63,8 @@ func (s *maintenanceLogService) Update(ctx context.Context, maintenanceLog *doma
 	return nil
 }
 
-func (s *maintenanceLogService) Delete(ctx context.Context, id primitive.ObjectID) error {
-	if err := s.maintenanceLogRepo.Delete(ctx, id); err != nil {
+func (s *maintenanceLogService) Delete(ctx context.Context, id, userID primitive.ObjectID) error {
+	if err := s.maintenanceLogRepo.Delete(ctx, id, userID); err != nil {
 		if err == domain.ErrMaintenanceLogNotFound {
 			return err
 		}
