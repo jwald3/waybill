@@ -18,9 +18,9 @@ type incidentReportRepository struct {
 
 type IncidentReportRepository interface {
 	Create(ctx context.Context, incidentReport *domain.IncidentReport) error
-	GetById(ctx context.Context, id primitive.ObjectID) (*domain.IncidentReport, error)
+	GetById(ctx context.Context, id, userID primitive.ObjectID) (*domain.IncidentReport, error)
 	Update(ctx context.Context, incidentReport *domain.IncidentReport) error
-	Delete(ctx context.Context, id primitive.ObjectID) error
+	Delete(ctx context.Context, id, userID primitive.ObjectID) error
 	List(ctx context.Context, filter domain.IncidentReportFilter) (*ListIncidentReportsResult, error)
 }
 
@@ -48,9 +48,9 @@ func (r *incidentReportRepository) Create(ctx context.Context, incidentReport *d
 	return nil
 }
 
-func (r *incidentReportRepository) GetById(ctx context.Context, id primitive.ObjectID) (*domain.IncidentReport, error) {
+func (r *incidentReportRepository) GetById(ctx context.Context, id, userID primitive.ObjectID) (*domain.IncidentReport, error) {
 	pipeline := mongo.Pipeline{
-		{{Key: "$match", Value: bson.M{"_id": id}}},
+		{{Key: "$match", Value: bson.M{"_id": id, "user_id": userID}}},
 		{{Key: "$lookup", Value: bson.M{
 			"from":         "trips",
 			"localField":   "trip_id",
@@ -136,8 +136,8 @@ func (r *incidentReportRepository) Update(ctx context.Context, incidentReport *d
 	return nil
 }
 
-func (r *incidentReportRepository) Delete(ctx context.Context, id primitive.ObjectID) error {
-	result, err := r.incidentReports.DeleteOne(ctx, bson.M{"_id": id})
+func (r *incidentReportRepository) Delete(ctx context.Context, id, userID primitive.ObjectID) error {
+	result, err := r.incidentReports.DeleteOne(ctx, bson.M{"_id": id, "user_id": userID})
 	if err != nil {
 		return fmt.Errorf("failed to delete incidentReport: %w", err)
 	}
@@ -162,6 +162,10 @@ func (r *incidentReportRepository) List(ctx context.Context, filter domain.Incid
 
 	filterQuery := bson.M{}
 
+	if filter.UserID != primitive.NilObjectID {
+		filterQuery["user_id"] = filter.UserID
+	}
+
 	if filter.TripID != &primitive.NilObjectID {
 		filterQuery["trip_id"] = filter.TripID
 	}
@@ -184,6 +188,7 @@ func (r *incidentReportRepository) List(ctx context.Context, filter domain.Incid
 	}
 
 	pipeline := mongo.Pipeline{
+		{{Key: "$match", Value: filterQuery}},
 		{{Key: "$sort", Value: bson.M{"_id": -1}}},
 		{{Key: "$skip", Value: filter.Offset}},
 		{{Key: "$limit", Value: filter.Limit}},

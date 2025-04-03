@@ -16,9 +16,9 @@ var (
 
 type IncidentReportService interface {
 	Create(ctx context.Context, incidentReport *domain.IncidentReport) error
-	GetById(ctx context.Context, id primitive.ObjectID) (*domain.IncidentReport, error)
+	GetById(ctx context.Context, id, userID primitive.ObjectID) (*domain.IncidentReport, error)
 	Update(ctx context.Context, incidentReport *domain.IncidentReport) error
-	Delete(ctx context.Context, id primitive.ObjectID) error
+	Delete(ctx context.Context, id, userID primitive.ObjectID) error
 	List(ctx context.Context, filter domain.IncidentReportFilter) (*repository.ListIncidentReportsResult, error)
 }
 
@@ -42,8 +42,8 @@ func (s *incidentReportService) Create(ctx context.Context, incidentReport *doma
 	return nil
 }
 
-func (s *incidentReportService) GetById(ctx context.Context, id primitive.ObjectID) (*domain.IncidentReport, error) {
-	incidentReport, err := s.incidentReportRepo.GetById(ctx, id)
+func (s *incidentReportService) GetById(ctx context.Context, id, userID primitive.ObjectID) (*domain.IncidentReport, error) {
+	incidentReport, err := s.incidentReportRepo.GetById(ctx, id, userID)
 	if err != nil {
 		return nil, fmt.Errorf(incidentReportNotFound, err)
 	}
@@ -63,8 +63,8 @@ func (s *incidentReportService) Update(ctx context.Context, incidentReport *doma
 	return nil
 }
 
-func (s *incidentReportService) Delete(ctx context.Context, id primitive.ObjectID) error {
-	if err := s.incidentReportRepo.Delete(ctx, id); err != nil {
+func (s *incidentReportService) Delete(ctx context.Context, id, userID primitive.ObjectID) error {
+	if err := s.incidentReportRepo.Delete(ctx, id, userID); err != nil {
 		if err == domain.ErrIncidentReportNotFound {
 			return err
 		}
