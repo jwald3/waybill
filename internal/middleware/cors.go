@@ -10,7 +10,6 @@ func CORS(next http.Handler) http.Handler {
 		allowedOrigins := []string{
 			"https://getwaybill.com",
 			"https://www.getwaybill.com",
-			"http://localhost:5173", // Keep for local development
 		}
 
 		// Set appropriate CORS headers based on origin
