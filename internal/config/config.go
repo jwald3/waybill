@@ -69,7 +69,7 @@ func Load() *Config {
 	config.App.LogLevel = getEnv("LOG_LEVEL", "info")
 	config.App.APIVersion = getEnv("API_VERSION", "v1")
 	config.App.DebugMode = getBoolEnv("DEBUG_MODE", true)
-	config.App.CORSOrigins = getSliceEnv("CORS_ORIGINS", []string{"http://localhost:3000"})
+	config.App.CORSOrigins = getSliceEnv("CORS_ORIGINS", []string{"https://getwaybill.com"})
 
 	config.RateLimit.Enabled = getBoolEnv("RATE_LIMIT_ENABLED", true)
 	config.RateLimit.Requests = getIntEnv("RATE_LIMIT_REQUESTS", 100)
