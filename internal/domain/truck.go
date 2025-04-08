@@ -81,7 +81,8 @@ const (
 )
 
 type Truck struct {
-	ID               primitive.ObjectID         `bson:"_id,omitempty" json:"id"`
+	ID               primitive.ObjectID         `bson:"_id,omitempty" json:"id,omitempty"`
+	UserID           primitive.ObjectID         `bson:"user_id" json:"user_id"`
 	TruckNumber      string                     `bson:"truck_number" json:"truck_number"`
 	VIN              string                     `bson:"vin" json:"vin"`
 	Make             string                     `bson:"make" json:"make"`
@@ -107,6 +108,7 @@ type LicensePlate struct {
 }
 
 func NewTruck(
+	userID primitive.ObjectID,
 	truckNumber,
 	vin,
 	vehicleMake,
@@ -130,6 +132,7 @@ func NewTruck(
 	now := time.Now()
 
 	truck := &Truck{
+		UserID:           userID,
 		TruckNumber:      truckNumber,
 		VIN:              vin,
 		Make:             vehicleMake,

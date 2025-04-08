@@ -94,8 +94,9 @@ type ListTrucksResponse struct {
 	Trucks []TruckResponse `json:"trucks"`
 }
 
-func truckRequestToDomainCreate(req TruckCreateRequest) (*domain.Truck, error) {
+func truckRequestToDomainCreate(userID primitive.ObjectID, req TruckCreateRequest) (*domain.Truck, error) {
 	return domain.NewTruck(
+		userID,
 		req.TruckNumber,
 		req.VIN,
 		req.Make,
@@ -160,6 +161,24 @@ func truckDomainToResponse(t *domain.Truck) TruckResponse {
 
 // =================================================================
 func (h *TruckHandler) Create(w http.ResponseWriter, r *http.Request) {
+	claims, ok := r.Context().Value(middleware.UserContextKey).(jwt.MapClaims)
+	if !ok {
+		WriteJSON(w, http.StatusUnauthorized, Response{Error: "unauthorized"})
+		return
+	}
+
+	userIDStr, ok := claims["user_id"].(string)
+	if !ok {
+		WriteJSON(w, http.StatusUnauthorized, Response{Error: "invalid user id in token"})
+		return
+	}
+
+	userID, err := primitive.ObjectIDFromHex(userIDStr)
+	if err != nil {
+		WriteJSON(w, http.StatusUnauthorized, Response{Error: "invalid user id format"})
+		return
+	}
+
 	var req TruckCreateRequest
 
 	if err := ReadJSON(r, &req); err != nil {
@@ -167,7 +186,7 @@ func (h *TruckHandler) Create(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	truck, err := truckRequestToDomainCreate(req)
+	truck, err := truckRequestToDomainCreate(userID, req)
 	if err != nil {
 		WriteJSON(w, http.StatusBadRequest, Response{Error: err.Error()})
 		return
