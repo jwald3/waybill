@@ -91,8 +91,9 @@ type ListTripsResponse struct {
 	Trips []TripResponse `json:"trips"`
 }
 
-func tripRequestToDomainCreate(req TripCreateRequest) (*domain.Trip, error) {
+func tripRequestToDomainCreate(userID primitive.ObjectID, req TripCreateRequest) (*domain.Trip, error) {
 	return domain.NewTrip(
+		userID,
 		req.TripNumber,
 		req.DriverID,
 		req.TruckID,
@@ -149,6 +150,24 @@ func tripDomainToResponse(t *domain.Trip) TripResponse {
 // =================================================================
 
 func (h *TripHandler) Create(w http.ResponseWriter, r *http.Request) {
+	claims, ok := r.Context().Value(middleware.UserContextKey).(jwt.MapClaims)
+	if !ok {
+		WriteJSON(w, http.StatusUnauthorized, Response{Error: "unauthorized"})
+		return
+	}
+
+	userIDStr, ok := claims["user_id"].(string)
+	if !ok {
+		WriteJSON(w, http.StatusUnauthorized, Response{Error: "invalid user id in token"})
+		return
+	}
+
+	userID, err := primitive.ObjectIDFromHex(userIDStr)
+	if err != nil {
+		WriteJSON(w, http.StatusUnauthorized, Response{Error: "invalid user id format"})
+		return
+	}
+
 	var req TripCreateRequest
 
 	if err := ReadJSON(r, &req); err != nil {
@@ -156,7 +175,7 @@ func (h *TripHandler) Create(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	trip, err := tripRequestToDomainCreate(req)
+	trip, err := tripRequestToDomainCreate(userID, req)
 	if err != nil {
 		WriteJSON(w, http.StatusBadRequest, Response{Error: err.Error()})
 		return

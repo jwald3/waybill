@@ -22,6 +22,7 @@ const (
 
 type Trip struct {
 	ID              primitive.ObjectID         `bson:"_id,omitempty" json:"id,omitempty"`
+	UserID          primitive.ObjectID         `bson:"user_id" json:"user_id"`
 	TripNumber      string                     `bson:"trip_number" json:"trip_number"`
 	DriverID        *primitive.ObjectID        `bson:"driver_id,omitempty" json:"driver_id,omitempty"`
 	Driver          *Driver                    `bson:"driver,omitempty" json:"driver,omitempty"`
@@ -60,6 +61,7 @@ type Cargo struct {
 }
 
 func NewTrip(
+	userID primitive.ObjectID,
 	tripNumber string,
 	driverId,
 	truckId,
@@ -74,6 +76,7 @@ func NewTrip(
 	now := time.Now()
 
 	trip := &Trip{
+		UserID:          userID,
 		TripNumber:      tripNumber,
 		DriverID:        driverId,
 		TruckID:         truckId,
