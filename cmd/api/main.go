@@ -37,7 +37,12 @@ func main() {
 	router := mux.NewRouter()
 	router.Use(middleware.Logging(log))
 	router.Use(middleware.Recovery(log))
-	router.Use(middleware.CORS)
+	router.Use(middleware.CORS())
+
+	router.Methods(http.MethodOptions).HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		// The CORS middleware will handle setting the appropriate headers
+		w.WriteHeader(http.StatusOK)
+	})
 
 	router.HandleFunc("/health", handler.HealthCheck).Methods(http.MethodGet)
 
@@ -206,6 +211,6 @@ func registerTruckRoutes(r *mux.Router, h *handler.TruckHandler) {
 }
 
 func registerAuthRoutes(r *mux.Router, h *handler.AuthHandler) {
-	r.HandleFunc("/auth/register", h.Register).Methods(http.MethodPost)
-	r.HandleFunc("/auth/login", h.Login).Methods(http.MethodPost)
+	r.HandleFunc("/auth/register", h.Register).Methods(http.MethodPost, http.MethodOptions)
+	r.HandleFunc("/auth/login", h.Login).Methods(http.MethodPost, http.MethodOptions)
 }
