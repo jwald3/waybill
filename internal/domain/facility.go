@@ -29,6 +29,7 @@ func (f FacilityService) IsValid() bool {
 
 type Facility struct {
 	ID                primitive.ObjectID `bson:"_id,omitempty" json:"id,omitempty"`
+	UserID            primitive.ObjectID `bson:"user_id" json:"user_id"`
 	FacilityNumber    string             `bson:"facility_number" json:"facility_number"`
 	Name              string             `bson:"name" json:"name"`
 	Type              string             `bson:"type" json:"type"`
@@ -46,6 +47,7 @@ type ContactInfo struct {
 }
 
 func NewFacility(
+	userID primitive.ObjectID,
 	facilityNumber string,
 	name string,
 	facilityType string,
@@ -62,6 +64,7 @@ func NewFacility(
 	}
 
 	return &Facility{
+		UserID:            userID,
 		FacilityNumber:    facilityNumber,
 		Name:              name,
 		Type:              facilityType,

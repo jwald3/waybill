@@ -69,8 +69,9 @@ type ListFacilitiesResponse struct {
 	Facilities []FacilityResponse `json:"facilities"`
 }
 
-func facilityRequestToDomainCreate(req FacilityCreateRequest) (*domain.Facility, error) {
+func facilityRequestToDomainCreate(userId primitive.ObjectID, req FacilityCreateRequest) (*domain.Facility, error) {
 	return domain.NewFacility(
+		userId,
 		req.FacilityNumber,
 		req.Name,
 		req.Type,
@@ -117,6 +118,24 @@ func facilityDomainToResponse(f *domain.Facility) FacilityResponse {
 // =================================================================
 
 func (h *FacilityHandler) Create(w http.ResponseWriter, r *http.Request) {
+	claims, ok := r.Context().Value(middleware.UserContextKey).(jwt.MapClaims)
+	if !ok {
+		WriteJSON(w, http.StatusUnauthorized, Response{Error: "unauthorized"})
+		return
+	}
+
+	userIDStr, ok := claims["user_id"].(string)
+	if !ok {
+		WriteJSON(w, http.StatusUnauthorized, Response{Error: "invalid user id in token"})
+		return
+	}
+
+	userID, err := primitive.ObjectIDFromHex(userIDStr)
+	if err != nil {
+		WriteJSON(w, http.StatusUnauthorized, Response{Error: "invalid user id format"})
+		return
+	}
+
 	var req FacilityCreateRequest
 
 	if err := ReadJSON(r, &req); err != nil {
@@ -124,7 +143,7 @@ func (h *FacilityHandler) Create(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	facility, err := facilityRequestToDomainCreate(req)
+	facility, err := facilityRequestToDomainCreate(userID, req)
 	if err != nil {
 		WriteJSON(w, http.StatusBadRequest, Response{Error: err.Error()})
 		return
