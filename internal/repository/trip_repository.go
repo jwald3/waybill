@@ -182,25 +182,21 @@ func (r *tripRepository) List(ctx context.Context, filter domain.TripFilter) (*L
 		filter.Offset = 0
 	}
 
-	filterQuery := bson.M{}
+	filterQuery := bson.M{"user_id": filter.UserID}
 
-	if filter.UserID != primitive.NilObjectID {
-		filterQuery["user_id"] = filter.UserID
-	}
-
-	if filter.DriverID != &primitive.NilObjectID {
+	if filter.DriverID != nil {
 		filterQuery["driver_id"] = filter.DriverID
 	}
 
-	if filter.TruckID != &primitive.NilObjectID {
+	if filter.TruckID != nil {
 		filterQuery["truck_id"] = filter.TruckID
 	}
 
-	if filter.StartFacilityID != &primitive.NilObjectID {
+	if filter.StartFacilityID != nil {
 		filterQuery["start_facility_id"] = filter.StartFacilityID
 	}
 
-	if filter.EndFacilityID != &primitive.NilObjectID {
+	if filter.EndFacilityID != nil {
 		filterQuery["end_facility_id"] = filter.EndFacilityID
 	}
 

@@ -114,7 +114,6 @@ func NewTripFilter() TripFilter {
 	return TripFilter{
 		Limit:  10,
 		Offset: 0,
-		UserID: primitive.NilObjectID,
 	}
 }
 

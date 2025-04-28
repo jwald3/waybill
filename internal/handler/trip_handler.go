@@ -313,29 +313,28 @@ func (h *TripHandler) List(w http.ResponseWriter, r *http.Request) {
 	}
 
 	filter := domain.NewTripFilter()
-
 	filter.UserID = userID
 
 	if driverId := r.URL.Query().Get("driverID"); driverId != "" {
-		if id, err := primitive.ObjectIDFromHex(driverId); err != nil {
-			filter.TruckID = &id
+		if id, err := primitive.ObjectIDFromHex(driverId); err == nil {
+			filter.DriverID = &id
 		}
 	}
 
 	if truckId := r.URL.Query().Get("truckID"); truckId != "" {
-		if id, err := primitive.ObjectIDFromHex(truckId); err != nil {
+		if id, err := primitive.ObjectIDFromHex(truckId); err == nil {
 			filter.TruckID = &id
 		}
 	}
 
 	if startFacilityId := r.URL.Query().Get("startFacilityID"); startFacilityId != "" {
-		if id, err := primitive.ObjectIDFromHex(startFacilityId); err != nil {
+		if id, err := primitive.ObjectIDFromHex(startFacilityId); err == nil {
 			filter.StartFacilityID = &id
 		}
 	}
 
 	if endFacilityId := r.URL.Query().Get("endFacilityID"); endFacilityId != "" {
-		if id, err := primitive.ObjectIDFromHex(endFacilityId); err != nil {
+		if id, err := primitive.ObjectIDFromHex(endFacilityId); err == nil {
 			filter.EndFacilityID = &id
 		}
 	}
