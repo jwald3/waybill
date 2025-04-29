@@ -160,21 +160,17 @@ func (r *incidentReportRepository) List(ctx context.Context, filter domain.Incid
 		filter.Offset = 0
 	}
 
-	filterQuery := bson.M{}
+	filterQuery := bson.M{"user_id": filter.UserID}
 
-	if filter.UserID != primitive.NilObjectID {
-		filterQuery["user_id"] = filter.UserID
-	}
-
-	if filter.TripID != &primitive.NilObjectID {
+	if filter.TripID != nil {
 		filterQuery["trip_id"] = filter.TripID
 	}
 
-	if filter.TruckID != &primitive.NilObjectID {
+	if filter.TruckID != nil {
 		filterQuery["truck_id"] = filter.TruckID
 	}
 
-	if filter.DriverID != &primitive.NilObjectID {
+	if filter.DriverID != nil {
 		filterQuery["driver_id"] = filter.DriverID
 	}
 

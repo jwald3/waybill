@@ -69,8 +69,9 @@ type ListIncidentReportsResponse struct {
 	IncidentReports []IncidentReportResponse `json:"fuel_logs"`
 }
 
-func incidentReportRequestToDomainCreate(req IncidentReportCreateRequest) (*domain.IncidentReport, error) {
+func incidentReportRequestToDomainCreate(userID primitive.ObjectID, req IncidentReportCreateRequest) (*domain.IncidentReport, error) {
 	return domain.NewIncidentReport(
+		userID,
 		req.TripID,
 		req.TruckID,
 		req.DriverID,
@@ -121,6 +122,24 @@ func incidentReportDomainToResponse(i *domain.IncidentReport) IncidentReportResp
 // =================================================================
 
 func (h *IncidentReportHandler) Create(w http.ResponseWriter, r *http.Request) {
+	claims, ok := r.Context().Value(middleware.UserContextKey).(jwt.MapClaims)
+	if !ok {
+		WriteJSON(w, http.StatusUnauthorized, Response{Error: "unauthorized"})
+		return
+	}
+
+	userIDStr, ok := claims["user_id"].(string)
+	if !ok {
+		WriteJSON(w, http.StatusUnauthorized, Response{Error: "invalid user id in token"})
+		return
+	}
+
+	userID, err := primitive.ObjectIDFromHex(userIDStr)
+	if err != nil {
+		WriteJSON(w, http.StatusUnauthorized, Response{Error: "invalid user id format"})
+		return
+	}
+
 	var req IncidentReportCreateRequest
 
 	if err := ReadJSON(r, &req); err != nil {
@@ -128,7 +147,7 @@ func (h *IncidentReportHandler) Create(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	incidentReport, err := incidentReportRequestToDomainCreate(req)
+	incidentReport, err := incidentReportRequestToDomainCreate(userID, req)
 	if err != nil {
 		WriteJSON(w, http.StatusBadRequest, Response{Error: err.Error()})
 		return
@@ -269,12 +288,6 @@ func (h *IncidentReportHandler) List(w http.ResponseWriter, r *http.Request) {
 	filter := domain.NewIncidentReportFilter()
 
 	filter.UserID = userID
-
-	/*
-		TripID   *primitive.ObjectID
-		TruckID  *primitive.ObjectID
-		DriverID *primitive.ObjectID
-	*/
 
 	if tripId := r.URL.Query().Get("tripID"); tripId != "" {
 		if id, err := primitive.ObjectIDFromHex(tripId); err != nil {
