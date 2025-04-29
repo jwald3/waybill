@@ -137,13 +137,9 @@ func (r *maintenanceLogRepository) List(ctx context.Context, filter domain.Maint
 		filter.Offset = 0
 	}
 
-	filterQuery := bson.M{}
+	filterQuery := bson.M{"user_id": filter.UserID}
 
-	if filter.UserID != primitive.NilObjectID {
-		filterQuery["user_id"] = filter.UserID
-	}
-
-	if filter.TruckID != &primitive.NilObjectID {
+	if filter.TruckID != nil {
 		filterQuery["truck_id"] = filter.TruckID
 	}
 

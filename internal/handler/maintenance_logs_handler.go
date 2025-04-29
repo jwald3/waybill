@@ -60,9 +60,10 @@ type ListMaintenanceLogsResponse struct {
 	MaintenanceLogs []MaintenanceLogResponse `json:"maintenance_logs"`
 }
 
-func maintenanceLogRequestToDomainCreate(req MaintenanceLogCreateRequest) (*domain.MaintenanceLog, error) {
+func maintenanceLogRequestToDomainCreate(userID primitive.ObjectID, req MaintenanceLogCreateRequest) (*domain.MaintenanceLog, error) {
 	return domain.NewMaintenanceLog(
 		req.TruckID,
+		userID,
 		req.Date,
 		req.ServiceType,
 		req.Notes,
@@ -107,6 +108,24 @@ func maintenanceLogDomainToResponse(m *domain.MaintenanceLog) MaintenanceLogResp
 // =================================================================
 
 func (h *MaintenanceLogHandler) Create(w http.ResponseWriter, r *http.Request) {
+	claims, ok := r.Context().Value(middleware.UserContextKey).(jwt.MapClaims)
+	if !ok {
+		WriteJSON(w, http.StatusUnauthorized, Response{Error: "unauthorized"})
+		return
+	}
+
+	userIDStr, ok := claims["user_id"].(string)
+	if !ok {
+		WriteJSON(w, http.StatusUnauthorized, Response{Error: "invalid user id in token"})
+		return
+	}
+
+	userID, err := primitive.ObjectIDFromHex(userIDStr)
+	if err != nil {
+		WriteJSON(w, http.StatusUnauthorized, Response{Error: "invalid user id format"})
+		return
+	}
+
 	var req MaintenanceLogCreateRequest
 
 	if err := ReadJSON(r, &req); err != nil {
@@ -114,7 +133,7 @@ func (h *MaintenanceLogHandler) Create(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	maintenanceLog, err := maintenanceLogRequestToDomainCreate(req)
+	maintenanceLog, err := maintenanceLogRequestToDomainCreate(userID, req)
 	if err != nil {
 		WriteJSON(w, http.StatusBadRequest, Response{Error: err.Error()})
 		return
