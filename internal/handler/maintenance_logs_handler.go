@@ -269,8 +269,11 @@ func (h *MaintenanceLogHandler) List(w http.ResponseWriter, r *http.Request) {
 	filter.UserID = userID
 
 	if truckId := r.URL.Query().Get("truckID"); truckId != "" {
-		if id, err := primitive.ObjectIDFromHex(truckId); err != nil {
+		if id, err := primitive.ObjectIDFromHex(truckId); err == nil {
 			filter.TruckID = &id
+		} else {
+			WriteJSON(w, http.StatusBadRequest, Response{Error: "invalid truck ID format"})
+			return
 		}
 	}
 
