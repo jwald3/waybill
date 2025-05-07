@@ -94,12 +94,6 @@ func (r *tripRepository) GetById(ctx context.Context, id, userID primitive.Objec
 			"path":                       "$end_facility",
 			"preserveNullAndEmptyArrays": true,
 		}}},
-		{{Key: "$project", Value: bson.M{
-			"driver_id":         0,
-			"truck_id":          0,
-			"start_facility_id": 0,
-			"end_facility_id":   0,
-		}}},
 	}
 
 	var result domain.Trip
@@ -124,7 +118,31 @@ func (r *tripRepository) GetById(ctx context.Context, id, userID primitive.Objec
 }
 
 func (r *tripRepository) Update(ctx context.Context, trip *domain.Trip) error {
-	filter := bson.M{"_id": trip.ID}
+	filter := bson.M{
+		"_id":     trip.ID,
+		"user_id": trip.UserID,
+	}
+
+	// First get the existing trip to preserve any fields we don't want to lose
+	existingTrip, err := r.GetById(ctx, trip.ID, trip.UserID)
+	if err != nil {
+		return fmt.Errorf("failed to fetch existing trip: %w", err)
+	}
+
+	// Preserve the IDs from the existing trip if they're not being updated
+	if trip.DriverID == nil {
+		trip.DriverID = existingTrip.DriverID
+	}
+	if trip.TruckID == nil {
+		trip.TruckID = existingTrip.TruckID
+	}
+	if trip.StartFacilityID == nil {
+		trip.StartFacilityID = existingTrip.StartFacilityID
+	}
+	if trip.EndFacilityID == nil {
+		trip.EndFacilityID = existingTrip.EndFacilityID
+	}
+
 	update := bson.M{
 		"$set": bson.M{
 			"trip_number":        trip.TripNumber,
@@ -140,6 +158,7 @@ func (r *tripRepository) Update(ctx context.Context, trip *domain.Trip) error {
 			"distance_miles":     trip.DistanceMiles,
 			"notes":              trip.Notes,
 			"updated_at":         primitive.NewDateTimeFromTime(time.Now()),
+			"user_id":            trip.UserID,
 		},
 	}
 
@@ -151,6 +170,13 @@ func (r *tripRepository) Update(ctx context.Context, trip *domain.Trip) error {
 	if result.MatchedCount == 0 {
 		return fmt.Errorf("trip not found")
 	}
+
+	updatedTrip, err := r.GetById(ctx, trip.ID, trip.UserID)
+	if err != nil {
+		return fmt.Errorf("failed to fetch updated trip: %w", err)
+	}
+
+	*trip = *updatedTrip
 
 	return nil
 }

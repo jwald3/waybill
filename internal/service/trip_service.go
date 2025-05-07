@@ -127,7 +127,6 @@ func (s *tripService) AddNote(ctx context.Context, id, userID primitive.ObjectID
 
 func (s *tripService) CancelTrip(ctx context.Context, id, userID primitive.ObjectID) error {
 	trip, err := s.tripRepo.GetById(ctx, id, userID)
-
 	if err != nil {
 		return fmt.Errorf(tripNotFound, err)
 	}
@@ -136,7 +135,6 @@ func (s *tripService) CancelTrip(ctx context.Context, id, userID primitive.Objec
 		return fmt.Errorf("trip with ID %v not found", id)
 	}
 
-	// Initialize the state machine for the retrieved trip
 	if err := trip.InitializeStateMachine(); err != nil {
 		return fmt.Errorf("failed to initialize state machine: %w", err)
 	}
@@ -150,7 +148,6 @@ func (s *tripService) CancelTrip(ctx context.Context, id, userID primitive.Objec
 
 func (s *tripService) BeginTrip(ctx context.Context, id, userID primitive.ObjectID, departureTime time.Time) error {
 	trip, err := s.tripRepo.GetById(ctx, id, userID)
-
 	if err != nil {
 		return fmt.Errorf(tripNotFound, err)
 	}
@@ -168,12 +165,12 @@ func (s *tripService) BeginTrip(ctx context.Context, id, userID primitive.Object
 		return fmt.Errorf("an error occurred when attempting to begin trip: %w", err)
 	}
 
+	// Update with the full trip object that contains all references
 	return s.tripRepo.Update(ctx, trip)
 }
 
 func (s *tripService) FinishTripSuccessfully(ctx context.Context, id, userID primitive.ObjectID, arrivalTime time.Time) error {
 	trip, err := s.tripRepo.GetById(ctx, id, userID)
-
 	if err != nil {
 		return fmt.Errorf(tripNotFound, err)
 	}
@@ -182,7 +179,6 @@ func (s *tripService) FinishTripSuccessfully(ctx context.Context, id, userID pri
 		return fmt.Errorf("trip with ID %v not found", id)
 	}
 
-	// Initialize the state machine for the retrieved trip
 	if err := trip.InitializeStateMachine(); err != nil {
 		return fmt.Errorf("failed to initialize state machine: %w", err)
 	}
@@ -196,7 +192,6 @@ func (s *tripService) FinishTripSuccessfully(ctx context.Context, id, userID pri
 
 func (s *tripService) FinishTripUnsuccessfully(ctx context.Context, id, userID primitive.ObjectID, arrivalTime time.Time) error {
 	trip, err := s.tripRepo.GetById(ctx, id, userID)
-
 	if err != nil {
 		return fmt.Errorf(tripNotFound, err)
 	}
@@ -205,7 +200,6 @@ func (s *tripService) FinishTripUnsuccessfully(ctx context.Context, id, userID p
 		return fmt.Errorf("trip with ID %v not found", id)
 	}
 
-	// Initialize the state machine for the retrieved trip
 	if err := trip.InitializeStateMachine(); err != nil {
 		return fmt.Errorf("failed to initialize state machine: %w", err)
 	}

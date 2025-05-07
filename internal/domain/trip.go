@@ -152,6 +152,9 @@ func (t *Trip) InitializeStateMachine() error {
 }
 
 func (t *Trip) BeginTrip(departureTime time.Time) error {
+	// Store references
+	oldTrip := *t
+
 	if err := t.StateMachine.Transition(TripStatusInTransit); err != nil {
 		return fmt.Errorf("failed to start trip from status %s: %w", t.Status, err)
 	}
@@ -164,6 +167,9 @@ func (t *Trip) BeginTrip(departureTime time.Time) error {
 	}
 
 	t.UpdatedAt = primitive.NewDateTimeFromTime(time.Now())
+
+	// Preserve references
+	t.PreserveReferences(&oldTrip)
 	return nil
 }
 
@@ -224,4 +230,12 @@ func (t *Trip) AddNote(content string) error {
 	t.Notes = append(t.Notes, note)
 
 	return nil
+}
+
+// preserve references when updating
+func (t *Trip) PreserveReferences(other *Trip) {
+	t.Driver = other.Driver
+	t.Truck = other.Truck
+	t.StartFacility = other.StartFacility
+	t.EndFacility = other.EndFacility
 }
